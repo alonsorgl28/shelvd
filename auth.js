@@ -21,8 +21,25 @@ const usernameError = document.getElementById('username-error');
 const cardStamp = document.getElementById('library-card-stamp');
 const cardNumber = document.getElementById('library-card-number');
 
+// ─── Check if viewing a public profile ───
+function getPublicUsername() {
+    const path = window.location.pathname;
+    const match = path.match(/^\/@([a-zA-Z0-9_]+)/);
+    return match ? match[1].toLowerCase() : null;
+}
+
 // ─── Check session on load ───
 async function checkAuth() {
+    const publicUsername = getPublicUsername();
+
+    // If visiting /@username → load public profile, no login needed
+    if (publicUsername) {
+        authScreen.style.display = 'none';
+        enterLibrary(publicUsername, true);
+        return;
+    }
+
+    // Otherwise check if logged in
     const { data: { session } } = await sb.auth.getSession();
 
     if (!session) {
@@ -147,7 +164,7 @@ usernameForm.addEventListener('submit', async (e) => {
 });
 
 // ─── Enter library ───
-function enterLibrary(username) {
+function enterLibrary(username, isPublic) {
     const usernameEl = document.getElementById('library-user-username');
     if (usernameEl) usernameEl.textContent = '@' + username;
 
@@ -159,13 +176,21 @@ function enterLibrary(username) {
     shareBtn.style.display = '';
     shareBtn.setAttribute('data-username', username);
 
-    authScreen.classList.add('exiting');
-    setTimeout(() => {
+    if (isPublic) {
+        // Public view — skip auth animation, start immediately
         authScreen.style.display = 'none';
         window.dispatchEvent(new CustomEvent('shelvd:authenticated', {
-            detail: { username }
+            detail: { username, isPublic: true }
         }));
-    }, 600);
+    } else {
+        authScreen.classList.add('exiting');
+        setTimeout(() => {
+            authScreen.style.display = 'none';
+            window.dispatchEvent(new CustomEvent('shelvd:authenticated', {
+                detail: { username }
+            }));
+        }, 600);
+    }
 }
 
 // ─── Share Button ───
