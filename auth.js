@@ -40,7 +40,8 @@ async function checkAuth() {
     }
 
     // Otherwise check if logged in
-    const { data: { session } } = await sb.auth.getSession();
+    const { data: { session }, error: sessionErr } = await sb.auth.getSession();
+    console.log('Session check:', session ? 'found' : 'none', sessionErr || '');
 
     if (!session) {
         authScreen.style.display = 'flex';
