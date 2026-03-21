@@ -3,23 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shelvd — @alonso</title>
-    <meta name="description" content="Alonso's personal book library — Shelvd">
-    <meta property="og:title" content="Shelvd — @alonso">
-    <meta property="og:description" content="96 books, stacked and browsable in 3D">
+    <title>Shelvd</title>
+    <meta name="description" content="Your personal book library in 3D — Shelvd">
+    <meta property="og:title" content="Shelvd">
+    <meta property="og:description" content="Your personal book library, stacked and browsable in 3D">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+<!-- ── Login: Library Card ── -->
+<div class="auth-screen" id="auth-screen">
+    <div class="library-card" id="library-card">
+        <div class="library-card-header">
+            <div class="library-card-logo"><span class="lc-s">S</span>helvd</div>
+            <div class="library-card-subtitle">LIBRARY CARD</div>
+        </div>
+        <div class="library-card-stamp" id="library-card-stamp"></div>
+        <div class="library-card-body" id="auth-form-container">
+            <!-- Step 1: Email -->
+            <form id="auth-email-form" class="auth-step">
+                <label class="auth-label">Email</label>
+                <input type="email" id="auth-email" class="auth-input" placeholder="you@email.com" required autocomplete="email">
+                <button type="submit" class="auth-button" id="auth-submit-btn">Send magic link</button>
+            </form>
+            <!-- Step 2: Check email -->
+            <div id="auth-check-email" class="auth-step" style="display:none;">
+                <div class="auth-check-icon">&#9993;</div>
+                <div class="auth-check-text">Check your email</div>
+                <div class="auth-check-sub">We sent a login link to <strong id="auth-sent-email"></strong></div>
+                <button class="auth-link-btn" id="auth-back-btn">Use a different email</button>
+            </div>
+            <!-- Step 3: Choose username (new users) -->
+            <form id="auth-username-form" class="auth-step" style="display:none;">
+                <label class="auth-label">Choose your username</label>
+                <div class="auth-username-preview">shelvd.app/<strong id="username-preview-text">@</strong></div>
+                <input type="text" id="auth-username" class="auth-input" placeholder="username" required minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]+">
+                <button type="submit" class="auth-button">Claim your shelf</button>
+                <div class="auth-error" id="username-error"></div>
+            </form>
+        </div>
+        <div class="library-card-footer">
+            <div class="library-card-number" id="library-card-number">No. ------</div>
+        </div>
+    </div>
+</div>
 
 <!-- Logo -->
 <a href="/" class="shelvd-logo"><span class="shelvd-logo-s">S</span><span class="shelvd-logo-text">helvd</span></a>
 
 <!-- User Header -->
-<div class="library-user-header">
+<div class="library-user-header" style="display:none;">
     <div class="library-user-header-content">
-        <div class="library-user-username">@alonso</div>
+        <div class="library-user-username" id="library-user-username">@user</div>
         <div class="library-user-stats">
-            <span id="header-book-count">96 books</span>
+            <span id="header-book-count">0 books</span>
         </div>
     </div>
 </div>
@@ -82,6 +119,7 @@
 <!-- Grid View (hidden by default) -->
 <div class="grid-view" id="grid-view" style="display:none;"></div>
 
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script type="importmap">
 {
     "imports": {
@@ -90,6 +128,7 @@
     }
 }
 </script>
+<script type="module" src="auth.js"></script>
 <script type="module" src="app.js"></script>
 </body>
 </html>

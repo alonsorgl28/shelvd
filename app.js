@@ -1145,4 +1145,11 @@ function onResize() {
 }
 
 // ─── Start ───
-init();
+// Wait for auth before starting
+window.addEventListener('shelvd:authenticated', () => init());
+
+// Also start if no auth screen (direct access / dev)
+if (!document.getElementById('auth-screen') ||
+    document.getElementById('auth-screen').style.display === 'none') {
+    init();
+}
