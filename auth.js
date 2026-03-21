@@ -262,7 +262,6 @@ document.getElementById('share-btn').addEventListener('click', function () {
 });
 
 // ─── Add Book Modal ───
-const SUPABASE_URL = 'https://ttdxdcxighxlauwcmhgk.supabase.co';
 
 const addBtn = document.getElementById('add-book-btn');
 const addModal = document.getElementById('add-book-modal');
