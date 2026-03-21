@@ -16,9 +16,10 @@ const container = document.getElementById('library-3d-container');
 async function init() {
     const booksData = await fetch('books.json').then(r => r.json());
 
-    // Scene
+    // Scene — deep navy ink
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0a0a);
+    scene.background = new THREE.Color(0x0a0f1a);
+    scene.fog = new THREE.Fog(0x0a0f1a, 6, 14); // subtle depth fade
 
     // Camera
     const isMobile = window.innerWidth <= 768;
@@ -49,12 +50,12 @@ async function init() {
     controls.target.set(0, 5, 0);
     controls.update();
 
-    // Lighting
-    const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+    // Lighting — warm desk lamp feel
+    const ambient = new THREE.AmbientLight(0xc8b8a0, 0.4); // warm ambient, slightly dimmer
     scene.add(ambient);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(10, 10, 5);
+    const dirLight = new THREE.DirectionalLight(0xffe4c4, 0.9); // warm peach key light
+    dirLight.position.set(8, 12, 5);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 4096;
     dirLight.shadow.mapSize.height = 4096;
@@ -69,9 +70,12 @@ async function init() {
     dirLight.shadow.radius = 2;
     scene.add(dirLight);
 
-    const pointLight = new THREE.PointLight(0xffffff, 0.3);
+    const pointLight = new THREE.PointLight(0xffd6a5, 0.25); // warm fill from opposite side
     pointLight.position.set(-10, 10, -10);
     scene.add(pointLight);
+
+    // Dust particles
+    createDustParticles();
 
     // Raycaster
     raycaster = new THREE.Raycaster();
@@ -303,6 +307,72 @@ function hexToRgb(hex) {
         g: parseInt(clean.substring(2, 4), 16) || 0,
         b: parseInt(clean.substring(4, 6), 16) || 0
     };
+}
+
+// ─── Dust Particles ───
+let dustParticles;
+function createDustParticles() {
+    const count = 120;
+    const positions = new Float32Array(count * 3);
+    const velocities = [];
+
+    for (let i = 0; i < count; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 6;     // x: around the stack
+        positions[i * 3 + 1] = Math.random() * 20;          // y: full stack height
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 4;  // z: depth
+        velocities.push({
+            x: (Math.random() - 0.5) * 0.002,
+            y: (Math.random() - 0.5) * 0.003,
+            z: (Math.random() - 0.5) * 0.002
+        });
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    const material = new THREE.PointsMaterial({
+        color: 0xffe4c4,
+        size: 0.012,
+        transparent: true,
+        opacity: 0.3,
+        sizeAttenuation: true,
+        depthWrite: false
+    });
+
+    dustParticles = new THREE.Points(geometry, material);
+    dustParticles.userData.velocities = velocities;
+    scene.add(dustParticles);
+}
+
+function animateDust() {
+    if (!dustParticles) return;
+    const positions = dustParticles.geometry.attributes.position.array;
+    const velocities = dustParticles.userData.velocities;
+
+    for (let i = 0; i < velocities.length; i++) {
+        positions[i * 3] += velocities[i].x;
+        positions[i * 3 + 1] += velocities[i].y;
+        positions[i * 3 + 2] += velocities[i].z;
+
+        // Gentle drift — slowly change direction
+        velocities[i].x += (Math.random() - 0.5) * 0.0003;
+        velocities[i].y += (Math.random() - 0.5) * 0.0003;
+        velocities[i].z += (Math.random() - 0.5) * 0.0003;
+
+        // Clamp velocity
+        velocities[i].x = Math.max(-0.004, Math.min(0.004, velocities[i].x));
+        velocities[i].y = Math.max(-0.005, Math.min(0.005, velocities[i].y));
+        velocities[i].z = Math.max(-0.004, Math.min(0.004, velocities[i].z));
+
+        // Wrap around bounds
+        if (positions[i * 3] > 3) positions[i * 3] = -3;
+        if (positions[i * 3] < -3) positions[i * 3] = 3;
+        if (positions[i * 3 + 1] > 22) positions[i * 3 + 1] = -1;
+        if (positions[i * 3 + 1] < -1) positions[i * 3 + 1] = 22;
+        if (positions[i * 3 + 2] > 2) positions[i * 3 + 2] = -2;
+        if (positions[i * 3 + 2] < -2) positions[i * 3 + 2] = 2;
+    }
+    dustParticles.geometry.attributes.position.needsUpdate = true;
 }
 
 // ─── Color Generation ───
@@ -777,6 +847,9 @@ function renderGridView() {
 function animate() {
     requestAnimationFrame(animate);
     if (controls) controls.update();
+
+    // Dust
+    animateDust();
 
     // Interactive movement for pulled-out book
     if (pulledOutBook && pulledOutBook.userData.basePosition && camera) {
