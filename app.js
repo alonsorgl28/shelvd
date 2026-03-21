@@ -544,8 +544,8 @@ function arrangeBooksInStack() {
 
 // ─── Cover Loading ───
 async function loadCoversProgressively(booksData) {
-    // Load from localStorage cache (v2 = with Google Books fallback)
-    const CACHE_VERSION = 'v2';
+    // Load from localStorage cache (v3 = parallel + Google Books first)
+    const CACHE_VERSION = 'v3';
     try {
         const ver = localStorage.getItem('book-covers-version');
         if (ver === CACHE_VERSION) {
@@ -557,36 +557,57 @@ async function loadCoversProgressively(booksData) {
         }
     } catch (e) { /* ignore */ }
 
+    // First pass: apply cached covers immediately
+    const uncached = [];
     for (const bookData of booksData) {
         const cacheKey = `${bookData.title}|${bookData.author}`;
         if (coverCache[cacheKey]) {
             applyCoverToBook(bookData.id, coverCache[cacheKey]);
-            continue;
+        } else {
+            uncached.push(bookData);
         }
-
-        const coverUrl = await fetchCoverWithFallbacks(bookData.title, bookData.author);
-        if (coverUrl) {
-            coverCache[cacheKey] = coverUrl;
-            applyCoverToBook(bookData.id, coverUrl);
-        }
-
-        await new Promise(r => setTimeout(r, 120));
     }
 
-    // Save cache
-    try {
-        localStorage.setItem('book-covers-cache', JSON.stringify(coverCache));
-    } catch (e) { /* ignore */ }
+    // Second pass: fetch uncached in parallel batches of 6
+    const BATCH_SIZE = 6;
+    for (let i = 0; i < uncached.length; i += BATCH_SIZE) {
+        const batch = uncached.slice(i, i + BATCH_SIZE);
+        const results = await Promise.all(
+            batch.map(bookData => fetchCoverWithFallbacks(bookData.title, bookData.author))
+        );
+
+        results.forEach((coverUrl, idx) => {
+            const bookData = batch[idx];
+            const cacheKey = `${bookData.title}|${bookData.author}`;
+            if (coverUrl) {
+                coverCache[cacheKey] = coverUrl;
+                applyCoverToBook(bookData.id, coverUrl);
+            }
+        });
+
+        // Save cache after each batch
+        try {
+            localStorage.setItem('book-covers-cache', JSON.stringify(coverCache));
+        } catch (e) { /* ignore */ }
+    }
+}
+
+// Fetch with timeout
+function fetchWithTimeout(url, ms = 5000) {
+    return Promise.race([
+        fetch(url),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))
+    ]);
 }
 
 async function fetchCoverWithFallbacks(title, author) {
-    // 1: Open Library (title + author)
-    const olCover = await fetchOpenLibraryCover(title, author);
-    if (olCover) return olCover;
-
-    // 2: Google Books API (better for Spanish/international)
+    // 1: Google Books API first (faster, better intl coverage)
     const gbCover = await fetchGoogleBooksCover(title, author);
     if (gbCover) return gbCover;
+
+    // 2: Open Library (title + author)
+    const olCover = await fetchOpenLibraryCover(title, author);
+    if (olCover) return olCover;
 
     // 3: Open Library title only (broader match)
     const olTitleOnly = await fetchOpenLibraryCover(title, null);
@@ -600,7 +621,7 @@ async function fetchOpenLibraryCover(title, author) {
         const query = author
             ? encodeURIComponent(`${title} ${author}`)
             : encodeURIComponent(title);
-        const resp = await fetch(`https://openlibrary.org/search.json?q=${query}&limit=1&fields=cover_i`);
+        const resp = await fetchWithTimeout(`https://openlibrary.org/search.json?q=${query}&limit=1&fields=cover_i`);
         const data = await resp.json();
         if (data.docs && data.docs[0] && data.docs[0].cover_i) {
             return `https://covers.openlibrary.org/b/id/${data.docs[0].cover_i}-L.jpg`;
@@ -612,7 +633,7 @@ async function fetchOpenLibraryCover(title, author) {
 async function fetchGoogleBooksCover(title, author) {
     try {
         const query = encodeURIComponent(`${title} ${author}`);
-        const resp = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1`);
+        const resp = await fetchWithTimeout(`https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1`);
         const data = await resp.json();
         if (data.items && data.items[0]) {
             const info = data.items[0].volumeInfo;
