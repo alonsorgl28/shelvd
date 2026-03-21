@@ -139,7 +139,7 @@ function createBook(bookData, index) {
     }
 
     // Create spine text texture immediately
-    const spineTexture = createSpineTexture(bookData.title, baseHeight, bookSpineWidth, defaultColor);
+    const spineTexture = createSpineTexture(bookData.title, bookData.author, bookData.pages, baseHeight, bookSpineWidth, defaultColor);
     materials[1] = new THREE.MeshStandardMaterial({
         map: spineTexture,
         roughness: 1.0,
@@ -170,7 +170,7 @@ function createBook(bookData, index) {
 }
 
 // ─── Spine Texture ───
-function createSpineTexture(text, bookHeight, bookSpineWidth, bgColor) {
+function createSpineTexture(title, author, pages, bookHeight, bookSpineWidth, bgColor) {
     const baseResolution = 2048;
     const aspectRatio = bookHeight / bookSpineWidth;
 
@@ -194,38 +194,99 @@ function createSpineTexture(text, bookHeight, bookSpineWidth, bgColor) {
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
     const ctx = canvas.getContext('2d');
-
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
-    // Background color
-    if (typeof bgColor === 'number') {
-        ctx.fillStyle = '#' + bgColor.toString(16).padStart(6, '0');
-    } else {
-        ctx.fillStyle = bgColor || '#2a2a2a';
-    }
+    // ── Background: subtle vertical gradient ──
+    const bgHex = typeof bgColor === 'number'
+        ? '#' + bgColor.toString(16).padStart(6, '0')
+        : (bgColor || '#2a2a2a');
+    const bgRgb = hexToRgb(bgHex);
+    const darkerBg = `rgb(${Math.max(0, bgRgb.r - 25)},${Math.max(0, bgRgb.g - 25)},${Math.max(0, bgRgb.b - 25)})`;
+
+    const grad = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+    grad.addColorStop(0, bgHex);
+    grad.addColorStop(1, darkerBg);
+    ctx.fillStyle = grad;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-    // Text
-    ctx.fillStyle = '#000000';
-    const maxTextWidth = canvasWidth * 0.9;
-    let fontSize = Math.min(192, Math.max(48, canvasWidth * 3.2));
+    // ── Bottom band (8% height) ──
+    const bandHeight = Math.round(canvasHeight * 0.08);
+    const bandColor = `rgb(${Math.max(0, bgRgb.r - 45)},${Math.max(0, bgRgb.g - 45)},${Math.max(0, bgRgb.b - 45)})`;
+    ctx.fillStyle = bandColor;
+    ctx.fillRect(0, canvasHeight - bandHeight, canvasWidth, bandHeight);
 
-    ctx.font = `bold ${fontSize}px Helvetica, Arial, sans-serif`;
-    let metrics = ctx.measureText(text);
-    if (metrics.width > maxTextWidth) {
-        fontSize = Math.max(48, Math.floor(fontSize * (maxTextWidth / metrics.width)));
-        ctx.font = `bold ${fontSize}px Helvetica, Arial, sans-serif`;
+    // ── Top accent line (2px) ──
+    ctx.fillStyle = `rgba(255,255,255,0.12)`;
+    ctx.fillRect(0, 0, canvasWidth, 2);
+
+    // ── Auto-contrast: light text on dark bg, dark text on light bg ──
+    const luminance = (bgRgb.r * 0.299 + bgRgb.g * 0.587 + bgRgb.b * 0.114) / 255;
+    const textColor = luminance > 0.45 ? '#000000' : '#ffffff';
+    const textAlpha = luminance > 0.45 ? 0.85 : 0.92;
+    const subtextAlpha = luminance > 0.45 ? 0.5 : 0.55;
+    const lineAlpha = luminance > 0.45 ? 0.15 : 0.2;
+
+    // All text is drawn rotated -90° (spine reads bottom-to-top)
+    ctx.save();
+    ctx.translate(canvasWidth / 2, canvasHeight / 2);
+    ctx.rotate(-Math.PI / 2);
+
+    // Now: x axis = along spine height, y axis = across spine width
+    // Available "width" for text = canvasHeight (minus bands), "height" = canvasWidth
+    const textAreaWidth = canvasHeight * 0.82; // leave margin for bands
+    const textAreaHeight = canvasWidth;
+
+    // ── Title: uppercase, tracked, condensed ──
+    const titleText = title.toUpperCase();
+    let titleSize = Math.min(160, Math.max(36, textAreaHeight * 0.38));
+    ctx.font = `700 ${titleSize}px "SF Mono", "Menlo", "Consolas", "Courier New", monospace`;
+    ctx.letterSpacing = '3px';
+    let metrics = ctx.measureText(titleText);
+    if (metrics.width > textAreaWidth * 0.85) {
+        titleSize = Math.max(28, Math.floor(titleSize * (textAreaWidth * 0.85) / metrics.width));
+        ctx.font = `700 ${titleSize}px "SF Mono", "Menlo", "Consolas", "Courier New", monospace`;
     }
 
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    ctx.fillStyle = textColor;
+    ctx.globalAlpha = textAlpha;
+    ctx.fillText(titleText, 0, -textAreaHeight * 0.08);
 
-    // Rotate text to follow spine
-    ctx.save();
-    ctx.translate(canvasWidth / 2, canvasHeight / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillText(text, 0, 0);
+    // ── Separator line ──
+    const separatorY = titleSize * 0.45;
+    const lineWidth = Math.min(metrics.width * 0.6, textAreaWidth * 0.3);
+    ctx.globalAlpha = lineAlpha;
+    ctx.fillStyle = textColor;
+    ctx.fillRect(-lineWidth / 2, separatorY - 1, lineWidth, 2);
+
+    // ── Author: smaller, lighter ──
+    const authorText = (author || '').toUpperCase();
+    let authorSize = Math.max(20, titleSize * 0.48);
+    ctx.font = `400 ${authorSize}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
+    ctx.globalAlpha = subtextAlpha;
+    ctx.fillStyle = textColor;
+
+    let authorMetrics = ctx.measureText(authorText);
+    if (authorMetrics.width > textAreaWidth * 0.75) {
+        authorSize = Math.max(16, Math.floor(authorSize * (textAreaWidth * 0.75) / authorMetrics.width));
+        ctx.font = `400 ${authorSize}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
+    }
+    ctx.fillText(authorText, 0, separatorY + authorSize * 1.1);
+
+    // ── Page count in bottom band area ──
+    if (pages) {
+        const pagesText = `${pages}p`;
+        const pagesSize = Math.max(14, titleSize * 0.28);
+        ctx.font = `300 ${pagesSize}px "SF Mono", "Menlo", "Consolas", monospace`;
+        ctx.globalAlpha = subtextAlpha * 0.6;
+        ctx.fillStyle = textColor;
+        // Position at the "bottom" of the spine (which is the left side in rotated space)
+        ctx.fillText(pagesText, (canvasHeight * 0.42) - (bandHeight * 0.5), 0);
+    }
+
+    ctx.globalAlpha = 1;
     ctx.restore();
 
     const texture = new THREE.CanvasTexture(canvas);
@@ -233,6 +294,15 @@ function createSpineTexture(text, bookHeight, bookSpineWidth, bgColor) {
     texture.magFilter = THREE.LinearFilter;
     texture.needsUpdate = true;
     return texture;
+}
+
+function hexToRgb(hex) {
+    const clean = hex.replace('#', '');
+    return {
+        r: parseInt(clean.substring(0, 2), 16) || 0,
+        g: parseInt(clean.substring(2, 4), 16) || 0,
+        b: parseInt(clean.substring(4, 6), 16) || 0
+    };
 }
 
 // ─── Color Generation ───
@@ -375,6 +445,8 @@ function applyCoverToBook(bookId, coverUrl) {
             // Update spine texture with dominant color
             const spineTexture = createSpineTexture(
                 book.userData.bookData.title,
+                book.userData.bookData.author,
+                book.userData.bookData.pages,
                 bookHeight, spineWidth, color
             );
             book.material[1] = new THREE.MeshStandardMaterial({
