@@ -29,7 +29,10 @@ function getPublicUsername() {
 }
 
 // ─── Check session on load ───
+let hasEnteredLibrary = false;
+
 async function checkAuth() {
+    if (hasEnteredLibrary) return;
     const publicUsername = getPublicUsername();
 
     // If visiting /@username → load public profile, no login needed
@@ -166,6 +169,9 @@ usernameForm.addEventListener('submit', async (e) => {
 
 // ─── Enter library ───
 function enterLibrary(username, isPublic) {
+    if (hasEnteredLibrary) return;
+    hasEnteredLibrary = true;
+
     const usernameEl = document.getElementById('library-user-username');
     if (usernameEl) usernameEl.textContent = '@' + username;
 

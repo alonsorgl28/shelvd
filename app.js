@@ -13,7 +13,12 @@ let coverCache = {}; // title → coverUrl
 const container = document.getElementById('library-3d-container');
 
 // ─── Init ───
+let initialized = false;
+
 async function init() {
+    if (initialized) return;
+    initialized = true;
+
     try {
     const booksData = await fetch('books.json').then(r => r.json());
 
@@ -49,6 +54,20 @@ async function init() {
     controls.panSpeed = 1.0;
     controls.screenSpacePanning = true;
     controls.target.set(0, 5, 0);
+
+    // Mobile: single finger = pan (scroll), two fingers = pinch zoom
+    controls.touches = {
+        ONE: THREE.TOUCH.PAN,
+        TWO: THREE.TOUCH.DOLLY_PAN
+    };
+
+    // Desktop: left click = pan (drag to scroll), wheel = zoom
+    controls.mouseButtons = {
+        LEFT: THREE.MOUSE.PAN,
+        MIDDLE: THREE.MOUSE.DOLLY,
+        RIGHT: THREE.MOUSE.PAN
+    };
+
     controls.update();
 
     // Lighting — warm desk lamp feel
@@ -842,6 +861,19 @@ function setupEventListeners() {
     renderer.domElement.addEventListener('mousemove', onMouseMoveTrack);
     window.addEventListener('mousemove', onMouseMoveTrack);
 
+    // Mouse wheel → scroll vertically through the stack
+    renderer.domElement.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        if (!window.stackBounds) return;
+        const scrollSpeed = 0.003;
+        const delta = e.deltaY * scrollSpeed;
+        const newY = camera.position.y - delta;
+        const clampedY = Math.max(window.stackBounds.bottom, Math.min(window.stackBounds.top, newY));
+        camera.position.y = clampedY;
+        controls.target.y = clampedY;
+        controls.update();
+    }, { passive: false });
+
     // Touch
     let touchStartPos = null;
     let touchStartTime = 0;
@@ -866,8 +898,8 @@ function setupEventListeners() {
             return;
         }
 
-        // Tap to select
-        if (Math.abs(dx) < 10 && Math.abs(dy) < 10 && duration < 300) {
+        // Tap to select (only if minimal movement)
+        if (Math.abs(dx) < 15 && Math.abs(dy) < 15 && duration < 300) {
             handleBookTap(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
         }
         touchStartPos = null;
