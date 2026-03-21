@@ -89,11 +89,21 @@ usernameForm.addEventListener('submit', async (e) => {
     });
 
     if (error) {
+        console.error('Profile insert error:', error);
         if (error.code === '23505') {
+            // Profile already exists — check if it's ours
+            const { data: existing } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('id', session.user.id)
+                .maybeSingle();
+            if (existing) {
+                enterLibrary(existing.username);
+                return;
+            }
             usernameError.textContent = 'Username already taken';
         } else {
             usernameError.textContent = error.message || 'Something went wrong';
-            console.error('Profile insert error:', error);
         }
         return;
     }
@@ -111,13 +121,15 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         cardNumber.textContent = 'No. ' + session.user.id.substring(0, 6).toUpperCase();
 
         // Check if user has a profile
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('username')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
 
-        if (profile) {
+        console.log('Profile lookup:', { profile, profileError, userId: session.user.id });
+
+        if (profile && profile.username) {
             window.shelvdAuth.currentProfile = profile;
             // Stamp the card
             cardStamp.classList.add('stamped');
