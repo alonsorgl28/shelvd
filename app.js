@@ -92,6 +92,9 @@ async function init() {
     // Load covers progressively
     loadCoversProgressively(booksData);
 
+    // Update book count
+    document.getElementById('header-book-count').textContent = booksData.length + ' books';
+
     // Hide loading
     document.getElementById('library-loading').style.display = 'none';
 
