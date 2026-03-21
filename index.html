@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shelvd — @alonso</title>
+    <meta name="description" content="Alonso's personal book library — Shelvd">
+    <meta property="og:title" content="Shelvd — @alonso">
+    <meta property="og:description" content="96 books, stacked and browsable in 3D">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Logo -->
+<a href="/" class="shelvd-logo"><span class="shelvd-logo-s">S</span><span class="shelvd-logo-text">helvd</span></a>
+
+<!-- User Header -->
+<div class="library-user-header">
+    <div class="library-user-header-content">
+        <div class="library-user-username">@alonso</div>
+        <div class="library-user-stats">
+            <span id="header-book-count">96 books</span>
+        </div>
+    </div>
+</div>
+
+<!-- View Toggle Pill (Bottom Center) -->
+<div class="library-view-toggle-pill" id="view-toggle-pill">
+    <div class="view-toggle">
+        <label>
+            <input type="radio" name="view" value="shelf" checked>
+            <div class="toggle-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <rect x="4" y="6.25" width="16" height="1.5" rx="0.75" fill="currentColor"/>
+                    <rect x="5" y="9.25" width="14" height="1.5" rx="0.75" fill="currentColor"/>
+                    <rect x="3" y="12.25" width="18" height="1.5" rx="0.75" fill="currentColor"/>
+                    <rect x="6" y="15.25" width="12" height="1.5" rx="0.75" fill="currentColor"/>
+                    <rect x="4" y="18.25" width="16" height="1.5" rx="0.75" fill="currentColor"/>
+                </svg>
+            </div>
+            <span>Shelf</span>
+        </label>
+        <label>
+            <input type="radio" name="view" value="grid">
+            <div class="toggle-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5"/>
+                    <rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5"/>
+                    <rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.5"/>
+                    <rect x="14" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+            </div>
+            <span>Grid</span>
+        </label>
+    </div>
+</div>
+
+<!-- Book Pull Out Arrow -->
+<div class="library-book-arrow" id="library-book-arrow">
+    <div class="library-book-arrow-button">
+        <svg viewBox="0 0 24 24">
+            <path d="M12 5v14M5 12l7-7 7 7"/>
+        </svg>
+    </div>
+    <div class="library-book-arrow-hint">Swipe up</div>
+</div>
+
+<!-- 3D Container -->
+<div class="library-3d-container" id="library-3d-container">
+    <div class="library-loading" id="library-loading">
+        <div class="loading-spinner"></div>
+    </div>
+</div>
+
+<!-- Stack Scrollbar -->
+<div class="stack-scrollbar" id="stack-scrollbar">
+    <div class="stack-scrollbar-track">
+        <div class="stack-scrollbar-thumb" id="stack-scrollbar-thumb"></div>
+    </div>
+</div>
+
+<!-- Grid View (hidden by default) -->
+<div class="grid-view" id="grid-view" style="display:none;"></div>
+
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+    }
+}
+</script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
