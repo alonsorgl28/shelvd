@@ -133,39 +133,32 @@ function createBook(bookData, index) {
     // Face 4 (+Z): front cover (will get texture)
     // Face 5 (-Z): back cover
     const defaultColor = generateBookColor(bookData.title);
+    const mobileMode = window.innerWidth <= 768;
+    const Mat = mobileMode ? THREE.MeshBasicMaterial : THREE.MeshStandardMaterial;
+    const matProps = mobileMode ? {} : { roughness: 1.0, metalness: 0.0 };
+
     const materials = [];
     for (let i = 0; i < 6; i++) {
         if (i === 0 || i === 2 || i === 3) {
-            // White pages/edges — matte
-            materials[i] = new THREE.MeshStandardMaterial({
-                color: 0xffffff,
-                roughness: 1.0,
-                metalness: 0.0
-            });
+            materials[i] = new Mat({ color: 0xffffff, ...matProps });
         } else {
-            materials[i] = new THREE.MeshStandardMaterial({
-                color: defaultColor,
-                roughness: 1.0,
-                metalness: 0.0
-            });
+            materials[i] = new Mat({ color: defaultColor, ...matProps });
         }
     }
 
     // Create spine text texture immediately
     const spineTexture = createSpineTexture(bookData.title, bookData.author, bookData.pages, baseHeight, bookSpineWidth, defaultColor);
-    materials[1] = new THREE.MeshStandardMaterial({
-        map: spineTexture,
-        roughness: 1.0,
-        metalness: 0.0
-    });
+    materials[1] = new Mat({ map: spineTexture, ...matProps });
 
-    // Create front cover placeholder (shown when no cover image is loaded)
-    const coverPlaceholder = createCoverPlaceholder(bookData.title, bookData.author, baseCoverWidth, baseHeight, defaultColor);
-    materials[4] = new THREE.MeshStandardMaterial({
-        map: coverPlaceholder,
-        roughness: 1.0,
-        metalness: 0.0
-    });
+    // Create front cover placeholder (skip on mobile to save GPU memory)
+    if (window.innerWidth > 768) {
+        const coverPlaceholder = createCoverPlaceholder(bookData.title, bookData.author, baseCoverWidth, baseHeight, defaultColor);
+        materials[4] = new THREE.MeshStandardMaterial({
+            map: coverPlaceholder,
+            roughness: 1.0,
+            metalness: 0.0
+        });
+    }
 
     const geometry = new THREE.BoxGeometry(baseCoverWidth, baseHeight, bookSpineWidth);
     const mesh = new THREE.Mesh(geometry, materials);
@@ -193,7 +186,7 @@ function createBook(bookData, index) {
 
 // ─── Spine Texture ───
 function createSpineTexture(title, author, pages, bookHeight, bookSpineWidth, bgColor) {
-    const baseResolution = 2048;
+    const baseResolution = window.innerWidth <= 768 ? 1024 : 2048;
     const aspectRatio = bookHeight / bookSpineWidth;
 
     let canvasWidth, canvasHeight;
@@ -921,26 +914,36 @@ function setupScrollbar() {
     const scrollbar = document.getElementById('stack-scrollbar');
     let isDragging = false;
 
-    thumb.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        e.preventDefault();
-    });
-
-    window.addEventListener('mousemove', (e) => {
-        if (!isDragging || !window.stackBounds) return;
+    function scrollTo(clientY) {
+        if (!window.stackBounds) return;
         const rect = scrollbar.getBoundingClientRect();
-        const trackTop = rect.top;
         const trackHeight = rect.height - thumb.offsetHeight;
-        const pct = Math.max(0, Math.min(1, (e.clientY - trackTop) / trackHeight));
-
-        // Scroll inverted: top of scrollbar = top of stack, bottom = bottom
+        const pct = Math.max(0, Math.min(1, (clientY - rect.top) / trackHeight));
         const targetY = window.stackBounds.top - pct * window.stackBounds.height;
         controls.target.y = targetY;
         camera.position.y = targetY;
         controls.update();
-    });
+    }
 
+    // Mouse
+    thumb.addEventListener('mousedown', (e) => { isDragging = true; e.preventDefault(); });
+    window.addEventListener('mousemove', (e) => { if (isDragging) scrollTo(e.clientY); });
     window.addEventListener('mouseup', () => { isDragging = false; });
+
+    // Touch — drag thumb or tap track
+    thumb.addEventListener('touchstart', (e) => { isDragging = true; e.preventDefault(); }, { passive: false });
+    scrollbar.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        scrollTo(e.touches[0].clientY);
+        e.preventDefault();
+    }, { passive: false });
+    window.addEventListener('touchmove', (e) => {
+        if (isDragging && e.touches.length === 1) {
+            scrollTo(e.touches[0].clientY);
+            e.preventDefault();
+        }
+    }, { passive: false });
+    window.addEventListener('touchend', () => { isDragging = false; });
 }
 
 function updateScrollbar() {
