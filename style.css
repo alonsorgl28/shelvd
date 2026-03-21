@@ -334,7 +334,7 @@ body {
 .grid-book-cover {
     width: 100%;
     aspect-ratio: 0.66;
-    background: #1a1a1a;
+    background: #111827;
     border-radius: 4px;
     overflow: hidden;
     position: relative;
