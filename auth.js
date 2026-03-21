@@ -76,8 +76,15 @@ usernameForm.addEventListener('submit', async (e) => {
         return;
     }
 
+    // Ensure we have a fresh session token
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        usernameError.textContent = 'Session expired — please reload';
+        return;
+    }
+
     const { error } = await supabase.from('profiles').insert({
-        id: window.shelvdAuth.currentUser.id,
+        id: session.user.id,
         username: username
     });
 
@@ -85,8 +92,8 @@ usernameForm.addEventListener('submit', async (e) => {
         if (error.code === '23505') {
             usernameError.textContent = 'Username already taken';
         } else {
-            usernameError.textContent = 'Something went wrong';
-            console.error('Profile error:', error);
+            usernameError.textContent = error.message || 'Something went wrong';
+            console.error('Profile insert error:', error);
         }
         return;
     }
