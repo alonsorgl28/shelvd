@@ -14,6 +14,7 @@ const container = document.getElementById('library-3d-container');
 
 // ─── Init ───
 async function init() {
+    try {
     const booksData = await fetch('books.json').then(r => r.json());
 
     // Scene — deep navy ink
@@ -28,12 +29,12 @@ async function init() {
     camera.position.set(initialDistance, 5, 0);
     camera.lookAt(0, 5, 0);
 
-    // Renderer
-    renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    // Renderer — lighter on mobile
+    renderer = new THREE.WebGLRenderer({ antialias: !isMobile, powerPreference: 'high-performance' });
     renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+    renderer.shadowMap.enabled = !isMobile;
+    if (!isMobile) renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
     // Controls — zoom + pan only, no rotation
@@ -56,7 +57,7 @@ async function init() {
 
     const dirLight = new THREE.DirectionalLight(0xffe4c4, 0.9); // warm peach key light
     dirLight.position.set(8, 12, 5);
-    dirLight.castShadow = true;
+    dirLight.castShadow = !isMobile;
     dirLight.shadow.mapSize.width = 4096;
     dirLight.shadow.mapSize.height = 4096;
     dirLight.shadow.camera.near = 0.1;
@@ -74,8 +75,8 @@ async function init() {
     pointLight.position.set(-10, 10, -10);
     scene.add(pointLight);
 
-    // Dust particles
-    createDustParticles();
+    // Dust particles (skip on mobile for performance)
+    if (!isMobile) createDustParticles();
 
     // Raycaster
     raycaster = new THREE.Raycaster();
@@ -110,6 +111,11 @@ async function init() {
     animate();
 
     window.addEventListener('resize', onResize);
+    } catch (err) {
+        console.error('Shelvd init error:', err);
+        document.getElementById('library-loading').innerHTML =
+            '<div style="color:rgba(255,255,255,0.5);font-size:13px;text-align:center;">Could not load library</div>';
+    }
 }
 
 // ─── Book Creation ───
@@ -165,8 +171,9 @@ function createBook(bookData, index) {
     const mesh = new THREE.Mesh(geometry, materials);
 
     mesh.rotation.y = Math.PI / 2;
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
+    const mobileShadow = window.innerWidth > 768;
+    mesh.castShadow = mobileShadow;
+    mesh.receiveShadow = mobileShadow;
 
     mesh.userData = {
         bookId: bookData.id,
@@ -568,8 +575,9 @@ async function loadCoversProgressively(booksData) {
         }
     }
 
-    // Second pass: fetch uncached in parallel batches of 6
-    const BATCH_SIZE = 6;
+    // Second pass: fetch uncached in parallel batches (smaller on mobile)
+    const isMobileCover = window.innerWidth <= 768;
+    const BATCH_SIZE = isMobileCover ? 2 : 6;
     for (let i = 0; i < uncached.length; i += BATCH_SIZE) {
         const batch = uncached.slice(i, i + BATCH_SIZE);
         const results = await Promise.all(
