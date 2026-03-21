@@ -443,10 +443,18 @@ function arrangeBooksInStack() {
 
 // ─── Cover Loading ───
 async function loadCoversProgressively(booksData) {
-    // Load from localStorage cache first
+    // Load from localStorage cache (v2 = with Google Books fallback)
+    const CACHE_VERSION = 'v2';
     try {
-        const cached = localStorage.getItem('book-covers-cache');
-        if (cached) coverCache = JSON.parse(cached);
+        const ver = localStorage.getItem('book-covers-version');
+        if (ver === CACHE_VERSION) {
+            const cached = localStorage.getItem('book-covers-cache');
+            if (cached) coverCache = JSON.parse(cached);
+        } else {
+            // Invalidate old cache to retry missing covers with new sources
+            localStorage.removeItem('book-covers-cache');
+            localStorage.setItem('book-covers-version', CACHE_VERSION);
+        }
     } catch (e) { /* ignore */ }
 
     for (const bookData of booksData) {
@@ -456,28 +464,76 @@ async function loadCoversProgressively(booksData) {
             continue;
         }
 
-        try {
-            const query = encodeURIComponent(`${bookData.title} ${bookData.author}`);
-            const resp = await fetch(`https://openlibrary.org/search.json?q=${query}&limit=1&fields=cover_i`);
-            const data = await resp.json();
-
-            if (data.docs && data.docs[0] && data.docs[0].cover_i) {
-                const coverUrl = `https://covers.openlibrary.org/b/id/${data.docs[0].cover_i}-L.jpg`;
-                coverCache[cacheKey] = coverUrl;
-                applyCoverToBook(bookData.id, coverUrl);
-            }
-
-            // Rate limit — 100ms between requests
-            await new Promise(r => setTimeout(r, 100));
-        } catch (e) {
-            // Silently skip failed covers
+        const coverUrl = await fetchCoverWithFallbacks(bookData.title, bookData.author);
+        if (coverUrl) {
+            coverCache[cacheKey] = coverUrl;
+            applyCoverToBook(bookData.id, coverUrl);
         }
+
+        // Rate limit
+        await new Promise(r => setTimeout(r, 120));
     }
 
     // Save cache
     try {
         localStorage.setItem('book-covers-cache', JSON.stringify(coverCache));
     } catch (e) { /* ignore */ }
+}
+
+async function fetchCoverWithFallbacks(title, author) {
+    // Strategy 1: Open Library (good for English titles)
+    const olCover = await fetchOpenLibraryCover(title, author);
+    if (olCover) return olCover;
+
+    // Strategy 2: Google Books API (better for Spanish/international)
+    const gbCover = await fetchGoogleBooksCover(title, author);
+    if (gbCover) return gbCover;
+
+    // Strategy 3: Open Library with title only (broader match)
+    const olTitleOnly = await fetchOpenLibraryCover(title, null);
+    if (olTitleOnly) return olTitleOnly;
+
+    return null;
+}
+
+async function fetchOpenLibraryCover(title, author) {
+    try {
+        const query = author
+            ? encodeURIComponent(`${title} ${author}`)
+            : encodeURIComponent(title);
+        const resp = await fetch(`https://openlibrary.org/search.json?q=${query}&limit=1&fields=cover_i`);
+        const data = await resp.json();
+
+        if (data.docs && data.docs[0] && data.docs[0].cover_i) {
+            return `https://covers.openlibrary.org/b/id/${data.docs[0].cover_i}-L.jpg`;
+        }
+    } catch (e) { /* skip */ }
+    return null;
+}
+
+async function fetchGoogleBooksCover(title, author) {
+    try {
+        const query = encodeURIComponent(`${title} ${author}`);
+        const resp = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1`);
+        const data = await resp.json();
+
+        if (data.items && data.items[0]) {
+            const info = data.items[0].volumeInfo;
+            if (info.imageLinks) {
+                // Prefer largest available, upgrade to zoom=2
+                const url = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail;
+                if (url) {
+                    // Google Books URLs: replace zoom=1 with zoom=2 for better quality
+                    // and ensure HTTPS
+                    return url
+                        .replace('http://', 'https://')
+                        .replace('zoom=1', 'zoom=2')
+                        .replace('&edge=curl', '');
+                }
+            }
+        }
+    } catch (e) { /* skip */ }
+    return null;
 }
 
 function applyCoverToBook(bookId, coverUrl) {
