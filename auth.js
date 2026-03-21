@@ -329,10 +329,14 @@ fileInput.addEventListener('change', async (e) => {
     try {
         const resp = await fetch(`${SUPABASE_URL}/functions/v1/analyze-book`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            },
             body: JSON.stringify({ image: base64 })
         });
         const data = await resp.json();
+        console.log('Vision result:', data);
 
         // Show confirm step
         stepAnalyzing.style.display = 'none';
