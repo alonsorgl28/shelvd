@@ -3,10 +3,8 @@
 const SUPABASE_URL = 'https://ttdxdcxighxlauwcmhgk.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0ZHhkY3hpZ2h4bGF1d2NtaGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTgzMzksImV4cCI6MjA4OTY5NDMzOX0.XLbEFU8xaCFk9B2yAjuyk2pRMW1casXn30zICv3bIu8';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// Make available globally
-window.shelvdAuth = { supabase, currentUser: null, currentProfile: null };
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window.shelvdAuth = { supabase: sb, currentUser: null, currentProfile: null };
 
 // ─── DOM refs ───
 const authScreen = document.getElementById('auth-screen');
@@ -23,6 +21,45 @@ const usernameError = document.getElementById('username-error');
 const cardStamp = document.getElementById('library-card-stamp');
 const cardNumber = document.getElementById('library-card-number');
 
+// ─── Check session on load ───
+async function checkAuth() {
+    const { data: { session } } = await sb.auth.getSession();
+
+    if (!session) {
+        authScreen.style.display = 'flex';
+        return;
+    }
+
+    window.shelvdAuth.currentUser = session.user;
+    cardNumber.textContent = 'No. ' + session.user.id.substring(0, 6).toUpperCase();
+
+    // Look up profile
+    const { data: profile } = await sb
+        .from('profiles')
+        .select('username')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+    if (profile && profile.username) {
+        window.shelvdAuth.currentProfile = profile;
+        cardStamp.classList.add('stamped');
+        enterLibrary(profile.username);
+    } else {
+        // New user — show username picker
+        emailForm.style.display = 'none';
+        checkEmail.style.display = 'none';
+        usernameForm.style.display = 'flex';
+        cardStamp.classList.add('stamped');
+    }
+}
+
+// ─── Listen for auth changes (magic link callback) ───
+sb.auth.onAuthStateChange(async (event) => {
+    if (event === 'SIGNED_IN') {
+        checkAuth();
+    }
+});
+
 // ─── Email form ───
 emailForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -32,7 +69,7 @@ emailForm.addEventListener('submit', async (e) => {
     submitBtn.disabled = true;
     submitBtn.textContent = 'Sending...';
 
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await sb.auth.signInWithOtp({
         email,
         options: {
             emailRedirectTo: window.location.origin + window.location.pathname
@@ -46,7 +83,6 @@ emailForm.addEventListener('submit', async (e) => {
         return;
     }
 
-    // Show "check email" step
     emailForm.style.display = 'none';
     checkEmail.style.display = 'flex';
     sentEmail.textContent = email;
@@ -76,23 +112,21 @@ usernameForm.addEventListener('submit', async (e) => {
         return;
     }
 
-    // Ensure we have a fresh session token
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await sb.auth.getSession();
     if (!session) {
         usernameError.textContent = 'Session expired — please reload';
         return;
     }
 
-    const { error } = await supabase.from('profiles').insert({
+    const { error } = await sb.from('profiles').insert({
         id: session.user.id,
         username: username
     });
 
     if (error) {
-        console.error('Profile insert error:', error);
         if (error.code === '23505') {
-            // Profile already exists — check if it's ours
-            const { data: existing } = await supabase
+            // Could be our own profile already exists
+            const { data: existing } = await sb
                 .from('profiles')
                 .select('username')
                 .eq('id', session.user.id)
@@ -112,67 +146,22 @@ usernameForm.addEventListener('submit', async (e) => {
     enterLibrary(username);
 });
 
-// ─── Auth state change ───
-supabase.auth.onAuthStateChange(async (event, session) => {
-    if (session?.user) {
-        window.shelvdAuth.currentUser = session.user;
-
-        // Update card number
-        cardNumber.textContent = 'No. ' + session.user.id.substring(0, 6).toUpperCase();
-
-        // Check if user has a profile
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('username')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-        console.log('Profile lookup:', { profile, profileError, userId: session.user.id });
-
-        if (profile && profile.username) {
-            window.shelvdAuth.currentProfile = profile;
-            // Stamp the card
-            cardStamp.classList.add('stamped');
-            setTimeout(() => enterLibrary(profile.username), 600);
-        } else {
-            // New user — show username picker
-            emailForm.style.display = 'none';
-            checkEmail.style.display = 'none';
-            usernameForm.style.display = 'flex';
-            cardStamp.classList.add('stamped');
-        }
-    }
-});
-
 // ─── Enter library ───
 function enterLibrary(username) {
-    // Update header
     const usernameEl = document.getElementById('library-user-username');
     if (usernameEl) usernameEl.textContent = '@' + username;
 
-    // Show header
     document.querySelector('.library-user-header').style.display = '';
-
-    // Update page title
     document.title = `Shelvd — @${username}`;
 
-    // Animate out auth screen
     authScreen.classList.add('exiting');
     setTimeout(() => {
         authScreen.style.display = 'none';
-        // Dispatch event so app.js knows to start
         window.dispatchEvent(new CustomEvent('shelvd:authenticated', {
             detail: { username }
         }));
     }, 600);
 }
 
-// ─── Check if already logged in on load ───
-(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-        // Not logged in — auth screen stays visible
-        authScreen.style.display = 'flex';
-    }
-    // If session exists, onAuthStateChange will handle it
-})();
+// ─── Start ───
+checkAuth();
