@@ -150,6 +150,14 @@ function createBook(bookData, index) {
         metalness: 0.0
     });
 
+    // Create front cover placeholder (shown when no cover image is loaded)
+    const coverPlaceholder = createCoverPlaceholder(bookData.title, bookData.author, baseCoverWidth, baseHeight, defaultColor);
+    materials[4] = new THREE.MeshStandardMaterial({
+        map: coverPlaceholder,
+        roughness: 1.0,
+        metalness: 0.0
+    });
+
     const geometry = new THREE.BoxGeometry(baseCoverWidth, baseHeight, bookSpineWidth);
     const mesh = new THREE.Mesh(geometry, materials);
 
@@ -307,6 +315,96 @@ function hexToRgb(hex) {
         g: parseInt(clean.substring(2, 4), 16) || 0,
         b: parseInt(clean.substring(4, 6), 16) || 0
     };
+}
+
+// ─── Cover Placeholder ───
+function createCoverPlaceholder(title, author, width, height, bgColor) {
+    const canvas = document.createElement('canvas');
+    const res = 1024;
+    canvas.width = res;
+    canvas.height = Math.round(res * (height / width));
+    const ctx = canvas.getContext('2d');
+
+    // Background — same color as book with subtle gradient
+    const colorStr = typeof bgColor === 'number'
+        ? '#' + bgColor.toString(16).padStart(6, '0')
+        : (bgColor || '#3a3a5c');
+    const rgb = hexToRgb(colorStr);
+
+    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    grad.addColorStop(0, `rgba(${rgb.r + 15}, ${rgb.g + 15}, ${rgb.b + 15}, 1)`);
+    grad.addColorStop(1, `rgba(${Math.max(0, rgb.r - 10)}, ${Math.max(0, rgb.g - 10)}, ${Math.max(0, rgb.b - 10)}, 1)`);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Subtle border
+    ctx.strokeStyle = `rgba(${Math.min(255, rgb.r + 40)}, ${Math.min(255, rgb.g + 40)}, ${Math.min(255, rgb.b + 40)}, 0.3)`;
+    ctx.lineWidth = 4;
+    const m = 30;
+    ctx.strokeRect(m, m, canvas.width - m * 2, canvas.height - m * 2);
+
+    // Text color — auto contrast
+    const lum = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+    const textColor = lum > 0.45
+        ? `rgba(0, 0, 0, 0.7)`
+        : `rgba(255, 255, 255, 0.75)`;
+    const subtextColor = lum > 0.45
+        ? `rgba(0, 0, 0, 0.4)`
+        : `rgba(255, 255, 255, 0.4)`;
+
+    // Title — centered, word wrap
+    ctx.fillStyle = textColor;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const titleSize = Math.round(canvas.width * 0.065);
+    ctx.font = `700 ${titleSize}px "SF Pro Display", "Helvetica Neue", sans-serif`;
+
+    const maxWidth = canvas.width * 0.7;
+    const words = title.toUpperCase().split(' ');
+    const lines = [];
+    let line = '';
+    for (const word of words) {
+        const test = line ? line + ' ' + word : word;
+        if (ctx.measureText(test).width > maxWidth && line) {
+            lines.push(line);
+            line = word;
+        } else {
+            line = test;
+        }
+    }
+    if (line) lines.push(line);
+
+    const lineHeight = titleSize * 1.3;
+    const totalTextHeight = lines.length * lineHeight;
+    const startY = canvas.height * 0.42 - totalTextHeight / 2;
+
+    for (let i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], canvas.width / 2, startY + i * lineHeight);
+    }
+
+    // Separator line
+    const sepY = startY + lines.length * lineHeight + titleSize * 0.6;
+    ctx.strokeStyle = textColor;
+    ctx.globalAlpha = 0.25;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(canvas.width * 0.3, sepY);
+    ctx.lineTo(canvas.width * 0.7, sepY);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Author
+    const authorSize = Math.round(canvas.width * 0.038);
+    ctx.fillStyle = subtextColor;
+    ctx.font = `400 ${authorSize}px "SF Pro Display", "Helvetica Neue", sans-serif`;
+    ctx.fillText(author, canvas.width / 2, sepY + authorSize * 2);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = true;
+    return texture;
 }
 
 // ─── Dust Particles ───
