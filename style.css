@@ -347,6 +347,279 @@
     }
 }
 
+/* ── Add Book Button ── */
+.add-book-btn {
+    position: fixed;
+    top: 20px;
+    right: 68px;
+    z-index: 50;
+    width: 36px;
+    height: 36px;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    cursor: pointer;
+    color: rgba(255,255,255,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    padding: 0;
+}
+
+.add-book-btn:hover {
+    background: rgba(0, 0, 0, 0.5);
+    border-color: rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.75);
+}
+
+/* ── Add Book Modal ── */
+.add-book-modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-book-backdrop {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.add-book-card {
+    position: relative;
+    width: 380px;
+    max-height: 90vh;
+    background: #111827;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 24px;
+    overflow-y: auto;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+}
+
+.add-step-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.add-step-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: #fff;
+}
+
+.add-close-btn {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.3);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.add-close-btn:hover {
+    color: rgba(255,255,255,0.6);
+}
+
+/* Capture zone */
+.add-capture-zone {
+    border: 2px dashed rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.add-capture-zone:hover {
+    border-color: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.02);
+}
+
+.add-capture-icon {
+    color: rgba(255,255,255,0.25);
+    margin-bottom: 12px;
+}
+
+.add-capture-text {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 4px;
+}
+
+.add-capture-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.25);
+}
+
+/* Analyzing */
+.add-analyzing {
+    text-align: center;
+    padding: 16px 0;
+}
+
+.add-preview-img {
+    width: 100%;
+    max-height: 220px;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    background: rgba(0,0,0,0.3);
+    overflow: hidden;
+}
+
+.add-preview-img img {
+    width: 100%;
+    height: 100%;
+    max-height: 220px;
+    object-fit: contain;
+}
+
+.add-analyzing-bar {
+    width: 100%;
+    height: 3px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.add-analyzing-progress {
+    width: 30%;
+    height: 100%;
+    background: rgba(255,255,255,0.4);
+    border-radius: 2px;
+    animation: analyzeSlide 1.5s ease-in-out infinite;
+}
+
+@keyframes analyzeSlide {
+    0% { transform: translateX(-100%); width: 30%; }
+    50% { width: 60%; }
+    100% { transform: translateX(400%); width: 30%; }
+}
+
+.add-analyzing-text {
+    font-size: 12px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.5px;
+}
+
+/* Confirm */
+.add-confirm-layout {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.add-confirm-layout .add-preview-img {
+    width: 120px;
+    min-width: 120px;
+    max-height: 180px;
+    flex-shrink: 0;
+}
+
+.add-confirm-fields {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.add-field-label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    margin-top: 4px;
+}
+
+.add-field-input {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 13px;
+    color: #fff;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.add-field-input:focus {
+    border-color: rgba(255,255,255,0.25);
+}
+
+.add-confirm-btn {
+    width: 100%;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.add-confirm-btn:hover {
+    background: rgba(255,255,255,0.15);
+}
+
+.add-retake-btn {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 10px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.3);
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.2s;
+}
+
+.add-retake-btn:hover {
+    color: rgba(255,255,255,0.5);
+}
+
+@media (max-width: 768px) {
+    .add-book-btn {
+        top: auto;
+        bottom: 70px;
+        right: 60px;
+    }
+
+    .add-book-card {
+        width: calc(100% - 24px);
+        max-width: 380px;
+        padding: 20px;
+    }
+
+    .add-confirm-layout {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .add-confirm-layout .add-preview-img {
+        width: 160px;
+    }
+}
+
 /* ── Shelvd Logo ── */
 .shelvd-logo {
     position: fixed;

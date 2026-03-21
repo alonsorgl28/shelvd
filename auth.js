@@ -176,6 +176,11 @@ function enterLibrary(username, isPublic) {
     shareBtn.style.display = '';
     shareBtn.setAttribute('data-username', username);
 
+    // Show add book button only for logged-in users (not public view)
+    if (!isPublic) {
+        document.getElementById('add-book-btn').style.display = '';
+    }
+
     if (isPublic) {
         // Public view — skip auth animation, start immediately
         authScreen.style.display = 'none';
@@ -254,6 +259,201 @@ document.getElementById('share-btn').addEventListener('click', function () {
         container.innerHTML = '';
     }, 2500);
 });
+
+// ─── Add Book Modal ───
+const SUPABASE_URL = 'https://ttdxdcxighxlauwcmhgk.supabase.co';
+
+const addBtn = document.getElementById('add-book-btn');
+const addModal = document.getElementById('add-book-modal');
+const addBackdrop = document.getElementById('add-book-backdrop');
+const captureZone = document.getElementById('add-capture-zone');
+const fileInput = document.getElementById('add-book-input');
+const stepCapture = document.getElementById('add-step-capture');
+const stepAnalyzing = document.getElementById('add-step-analyzing');
+const stepConfirm = document.getElementById('add-step-confirm');
+
+let currentImageBase64 = null;
+let currentImageBlob = null;
+
+function openAddModal() {
+    addModal.style.display = 'flex';
+    stepCapture.style.display = '';
+    stepAnalyzing.style.display = 'none';
+    stepConfirm.style.display = 'none';
+}
+
+function closeAddModal() {
+    addModal.style.display = 'none';
+    currentImageBase64 = null;
+    currentImageBlob = null;
+}
+
+addBtn.addEventListener('click', openAddModal);
+addBackdrop.addEventListener('click', closeAddModal);
+document.getElementById('add-close-btn').addEventListener('click', closeAddModal);
+document.getElementById('add-confirm-close').addEventListener('click', closeAddModal);
+
+captureZone.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    currentImageBlob = file;
+
+    // Resize image for API (max 1024px) and convert to base64
+    const base64 = await resizeAndEncode(file, 1024);
+    currentImageBase64 = base64;
+
+    // Show analyzing step
+    stepCapture.style.display = 'none';
+    stepAnalyzing.style.display = '';
+
+    // Show preview
+    const previewUrl = URL.createObjectURL(file);
+    document.getElementById('add-preview-analyzing').innerHTML =
+        `<img src="${previewUrl}" alt="preview">`;
+
+    // Call edge function
+    try {
+        const resp = await fetch(`${SUPABASE_URL}/functions/v1/analyze-book`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64 })
+        });
+        const data = await resp.json();
+
+        // Show confirm step
+        stepAnalyzing.style.display = 'none';
+        stepConfirm.style.display = '';
+
+        document.getElementById('add-preview-confirm').innerHTML =
+            `<img src="${previewUrl}" alt="cover">`;
+        document.getElementById('add-field-title').value = data.title || '';
+        document.getElementById('add-field-author').value = data.author || '';
+        document.getElementById('add-field-pages').value = data.pages || 250;
+    } catch (err) {
+        console.error('Analyze error:', err);
+        // Show confirm with empty fields
+        stepAnalyzing.style.display = 'none';
+        stepConfirm.style.display = '';
+        document.getElementById('add-preview-confirm').innerHTML =
+            `<img src="${previewUrl}" alt="cover">`;
+    }
+
+    fileInput.value = '';
+});
+
+// Retake
+document.getElementById('add-retake-btn').addEventListener('click', () => {
+    stepConfirm.style.display = 'none';
+    stepCapture.style.display = '';
+});
+
+// Add to shelf
+document.getElementById('add-confirm-btn').addEventListener('click', async () => {
+    const title = document.getElementById('add-field-title').value.trim();
+    const author = document.getElementById('add-field-author').value.trim();
+    const pages = parseInt(document.getElementById('add-field-pages').value) || 250;
+
+    if (!title) return;
+
+    const confirmBtn = document.getElementById('add-confirm-btn');
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Adding...';
+
+    try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) {
+            confirmBtn.textContent = 'Session expired';
+            return;
+        }
+
+        // Upload cover image to Supabase Storage
+        let coverUrl = null;
+        if (currentImageBlob) {
+            const fileName = `${session.user.id}/${Date.now()}.jpg`;
+            const { error: uploadErr } = await sb.storage
+                .from('covers')
+                .upload(fileName, currentImageBlob, {
+                    contentType: 'image/jpeg',
+                    upsert: false
+                });
+
+            if (!uploadErr) {
+                const { data: urlData } = sb.storage
+                    .from('covers')
+                    .getPublicUrl(fileName);
+                coverUrl = urlData.publicUrl;
+            }
+        }
+
+        // Insert book into database
+        const { data: book, error: insertErr } = await sb
+            .from('books')
+            .insert({
+                user_id: session.user.id,
+                title,
+                author,
+                pages,
+                cover: coverUrl
+            })
+            .select()
+            .single();
+
+        if (insertErr) {
+            console.error('Insert error:', insertErr);
+            confirmBtn.textContent = 'Error — try again';
+            confirmBtn.disabled = false;
+            return;
+        }
+
+        // Dispatch event so app.js can add the book to the 3D scene
+        window.dispatchEvent(new CustomEvent('shelvd:book-added', {
+            detail: { book, coverUrl }
+        }));
+
+        // Update book count
+        const countEl = document.getElementById('header-book-count');
+        const currentCount = parseInt(countEl.textContent) || 0;
+        countEl.textContent = (currentCount + 1) + ' books';
+
+        closeAddModal();
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Add to shelf';
+    } catch (err) {
+        console.error('Add book error:', err);
+        confirmBtn.textContent = 'Error — try again';
+        confirmBtn.disabled = false;
+    }
+});
+
+// Resize image and return base64 (without data:... prefix)
+function resizeAndEncode(file, maxSize) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const img = new Image();
+            img.onload = function () {
+                const canvas = document.createElement('canvas');
+                let w = img.width;
+                let h = img.height;
+                if (w > maxSize || h > maxSize) {
+                    const scale = maxSize / Math.max(w, h);
+                    w = Math.round(w * scale);
+                    h = Math.round(h * scale);
+                }
+                canvas.width = w;
+                canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                resolve(dataUrl.split(',')[1]); // strip data:image/jpeg;base64,
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
 
 // ─── Start ───
 checkAuth();

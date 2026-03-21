@@ -1188,3 +1188,23 @@ if (!document.getElementById('auth-screen') ||
     document.getElementById('auth-screen').style.display === 'none') {
     init();
 }
+
+// Listen for new books added via photo
+window.addEventListener('shelvd:book-added', (e) => {
+    const { book, coverUrl } = e.detail;
+    const bookData = {
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        pages: book.pages || 250,
+        cover: coverUrl
+    };
+
+    createBook(bookData, bookObjects.length);
+    arrangeBooksInStack();
+
+    // Apply the user's photo as cover
+    if (coverUrl) {
+        applyCoverToBook(book.id, coverUrl);
+    }
+});
