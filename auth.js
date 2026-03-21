@@ -296,8 +296,19 @@ document.getElementById('add-confirm-close').addEventListener('click', closeAddM
 captureZone.addEventListener('click', () => fileInput.click());
 
 fileInput.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
+    let file = e.target.files[0];
     if (!file) return;
+
+    // Convert HEIC/HEIF to JPEG (Chrome doesn't support HEIC natively)
+    const name = file.name.toLowerCase();
+    if (name.endsWith('.heic') || name.endsWith('.heif') || file.type === 'image/heic' || file.type === 'image/heif') {
+        try {
+            const blob = await window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
+            file = new File([blob], file.name.replace(/\.heic|\.heif/i, '.jpg'), { type: 'image/jpeg' });
+        } catch (err) {
+            console.error('HEIC conversion failed:', err);
+        }
+    }
 
     currentImageBlob = file;
 
