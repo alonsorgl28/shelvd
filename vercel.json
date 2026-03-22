@@ -1,8 +1,6 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/landing", "destination": "/landing.html" },
-    { "source": "/@:username", "destination": "/index.html" },
-    { "source": "/((?!landing\\.html|app\\.js|auth\\.js|style\\.css|sw\\.js|pwa-install\\.js|manifest\\.json|icon-).*)", "destination": "/index.html" }
+    { "source": "/@:username", "destination": "/index.html" }
   ]
 }
