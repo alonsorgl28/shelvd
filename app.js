@@ -563,8 +563,8 @@ function arrangeBooksInStack() {
 
 // ─── Cover Loading ───
 async function loadCoversProgressively(booksData) {
-    // Load from localStorage cache (v3 = parallel + Google Books first)
-    const CACHE_VERSION = 'v3';
+    // Load from localStorage cache (v7 = Open Library first for CORS)
+    const CACHE_VERSION = 'v7';
     try {
         const ver = localStorage.getItem('book-covers-version');
         if (ver === CACHE_VERSION) {
@@ -621,17 +621,17 @@ function fetchWithTimeout(url, ms = 5000) {
 }
 
 async function fetchCoverWithFallbacks(title, author) {
-    // 1: Google Books API first (faster, better intl coverage)
-    const gbCover = await fetchGoogleBooksCover(title, author);
-    if (gbCover) return gbCover;
-
-    // 2: Open Library (title + author)
+    // 1: Open Library first (supports CORS — works in 3D WebGL)
     const olCover = await fetchOpenLibraryCover(title, author);
     if (olCover) return olCover;
 
-    // 3: Open Library title only (broader match)
+    // 2: Open Library title only (broader match)
     const olTitleOnly = await fetchOpenLibraryCover(title, null);
     if (olTitleOnly) return olTitleOnly;
+
+    // 3: Google Books fallback (no CORS — works in grid only)
+    const gbCover = await fetchGoogleBooksCover(title, author);
+    if (gbCover) return gbCover;
 
     return null;
 }
@@ -679,43 +679,30 @@ function applyCoverToBook(bookId, coverUrl) {
     img.crossOrigin = 'anonymous';
 
     img.onload = function () {
-        const imageAspectRatio = img.width / img.height;
         const bookHeight = book.userData.baseHeight;
-        const bookCoverWidth = bookHeight * imageAspectRatio;
         const spineWidth = book.userData.bookSpineWidth;
-
-        // Update geometry with correct aspect ratio
-        book.geometry.dispose();
-        book.geometry = new THREE.BoxGeometry(bookCoverWidth, bookHeight, spineWidth);
 
         // Extract dominant color
         getDominantColor(img, function (color) {
             const hexColor = parseInt(color.replace('#', '0x'));
             book.userData.dominantColor = hexColor;
 
-            // Update non-cover/non-white faces
             for (let i = 0; i < 6; i++) {
                 if (i !== 4 && i !== 0 && i !== 2 && i !== 3 && book.material[i]) {
                     book.material[i].color.setHex(hexColor);
                 }
-                if ((i === 0 || i === 2 || i === 3) && book.material[i]) {
-                    book.material[i].color.setHex(0xffffff);
-                }
             }
 
-            // Update spine texture with dominant color
             const spineTexture = createSpineTexture(
-                book.userData.bookData.title,
-                book.userData.bookData.author,
-                book.userData.bookData.pages,
-                bookHeight, spineWidth, color
+                book.userData.bookData.title, book.userData.bookData.author,
+                book.userData.bookData.pages, bookHeight, spineWidth, color
             );
             book.material[1] = new THREE.MeshStandardMaterial({
                 map: spineTexture, roughness: 1.0, metalness: 0.0
             });
         });
 
-        // Cover texture
+        // Cover texture — direct from CORS-enabled image
         const texture = new THREE.Texture(img);
         texture.minFilter = THREE.LinearMipmapLinearFilter;
         texture.magFilter = THREE.LinearFilter;
@@ -726,6 +713,11 @@ function applyCoverToBook(bookId, coverUrl) {
         book.material[4] = new THREE.MeshStandardMaterial({
             map: texture, roughness: 1.0, metalness: 0.0
         });
+    };
+
+    // If CORS fails (Google Books), image won't load for 3D but grid still works
+    img.onerror = function () {
+        console.log('[Shelvd] CORS blocked for 3D texture:', book.userData.bookData.title);
     };
 
     img.src = coverUrl;
