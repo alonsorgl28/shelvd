@@ -118,10 +118,34 @@
             pointer-events: none;
         }
 
+        /* Hero content stacking */
+        .hero-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-headline {
+            font-size: clamp(42px, 7vw, 80px);
+            font-weight: 500;
+            letter-spacing: -0.045em;
+            line-height: 1.05;
+            text-align: center;
+            max-width: 800px;
+            margin-bottom: 60px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: heroFadeIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
+        }
+
+        /* Book animation area */
         .hero-books {
             position: relative;
             width: min(700px, 90vw);
-            margin-bottom: 48px;
+            height: 180px;
+            margin-bottom: 20px;
         }
 
         .hero-books svg {
@@ -136,30 +160,34 @@
             will-change: transform, opacity;
         }
 
-        .hero-books .wordmark {
-            fill: rgba(255,255,255,0.94);
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 74px;
-            font-weight: 500;
-            letter-spacing: -0.055em;
-        }
-
-        .hero-books .subline {
-            fill: rgba(255,255,255,0.3);
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 11px;
-            font-weight: 500;
-            letter-spacing: 0.32em;
-        }
-
-        .hero-headline {
-            font-size: clamp(42px, 7vw, 80px);
-            font-weight: 500;
-            letter-spacing: -0.045em;
-            line-height: 1.05;
+        /* Brand reveal — hidden initially, revealed after books fall */
+        .hero-brand {
             text-align: center;
-            max-width: 800px;
-            margin-bottom: 20px;
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+            margin-bottom: 16px;
+        }
+
+        .hero-brand.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hero-brand-name {
+            font-size: clamp(64px, 10vw, 120px);
+            font-weight: 500;
+            letter-spacing: -0.05em;
+            line-height: 1;
+            color: var(--white);
+        }
+
+        .hero-brand-sub {
+            font-size: 11px;
+            letter-spacing: 0.32em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.3);
+            margin-top: 12px;
         }
 
         .hero-sub {
@@ -170,12 +198,35 @@
             line-height: 1.5;
             letter-spacing: -0.01em;
             margin-bottom: 40px;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.6s ease 0.15s, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.15s;
+        }
+
+        .hero-sub.revealed {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .hero-actions {
             display: flex;
             gap: 12px;
             align-items: center;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.6s ease 0.3s, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.3s;
+        }
+
+        .hero-actions.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @keyframes heroFadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .btn-primary {
@@ -557,55 +608,64 @@
 <section class="hero">
     <div class="hero-glow"></div>
 
-    <div class="hero-books">
-        <svg viewBox="0 0 820 360" aria-label="Shelvd animated logo">
-            <defs>
-                <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="16" result="blur"/>
-                    <feColorMatrix in="blur" type="matrix"
-                        values="1 0 0 0 0.82
-                                0 1 0 0 0.67
-                                0 0 1 0 0.46
-                                0 0 0 0.16 0"/>
-                </filter>
-            </defs>
+    <div class="hero-content">
+        <!-- 1. Headline appears first -->
+        <h1 class="hero-headline">Your books,<br>beautifully stacked</h1>
 
-            <ellipse cx="410" cy="172" rx="118" ry="54" fill="#D9AE7E" opacity="0.10" filter="url(#softGlow)"/>
+        <!-- 2. Books fall with physics -->
+        <div class="hero-books">
+            <svg viewBox="0 0 820 200" aria-label="Falling books animation">
+                <defs>
+                    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="16" result="blur"/>
+                        <feColorMatrix in="blur" type="matrix"
+                            values="1 0 0 0 0.82
+                                    0 1 0 0 0.67
+                                    0 0 1 0 0.46
+                                    0 0 0 0.16 0"/>
+                    </filter>
+                </defs>
 
-            <g id="books">
-                <g class="book" data-dx="-146" data-dy="156" data-rot="-18">
-                    <rect x="370" y="42" width="92" height="14" rx="7" fill="#ffffff"/>
-                    <rect x="385" y="45" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
-                </g>
-                <g class="book" data-dx="156" data-dy="174" data-rot="16">
-                    <rect x="355" y="61" width="72" height="14" rx="7" fill="#ffffff"/>
-                    <rect x="372" y="64" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
-                </g>
-                <g class="book" data-dx="-166" data-dy="196" data-rot="-12">
-                    <rect x="366" y="80" width="104" height="14" rx="7" fill="#ffffff"/>
-                    <rect x="381" y="83" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
-                </g>
-                <g class="book" data-dx="146" data-dy="214" data-rot="10">
-                    <rect x="388" y="99" width="72" height="14" rx="7" fill="#ffffff"/>
-                    <rect x="404" y="102" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
-                </g>
-                <g class="book" data-dx="-138" data-dy="236" data-rot="-8">
-                    <rect x="362" y="118" width="88" height="14" rx="7" fill="#ffffff"/>
-                    <rect x="376" y="121" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
-                </g>
-            </g>
+                <ellipse cx="410" cy="100" rx="118" ry="54" fill="#D9AE7E" opacity="0.10" filter="url(#softGlow)"/>
 
-            <text class="wordmark" x="410" y="228" text-anchor="middle">Shelvd</text>
-            <text class="subline" x="410" y="254" text-anchor="middle">PERSONAL LIBRARY</text>
-        </svg>
-    </div>
+                <g id="books">
+                    <g class="book" data-dx="-146" data-dy="120" data-rot="-18">
+                        <rect x="370" y="22" width="92" height="14" rx="7" fill="#ffffff"/>
+                        <rect x="385" y="25" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
+                    </g>
+                    <g class="book" data-dx="156" data-dy="135" data-rot="16">
+                        <rect x="355" y="38" width="72" height="14" rx="7" fill="#ffffff"/>
+                        <rect x="372" y="41" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
+                    </g>
+                    <g class="book" data-dx="-166" data-dy="150" data-rot="-12">
+                        <rect x="366" y="54" width="104" height="14" rx="7" fill="#ffffff"/>
+                        <rect x="381" y="57" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
+                    </g>
+                    <g class="book" data-dx="146" data-dy="165" data-rot="10">
+                        <rect x="388" y="70" width="72" height="14" rx="7" fill="#ffffff"/>
+                        <rect x="404" y="73" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
+                    </g>
+                    <g class="book" data-dx="-138" data-dy="180" data-rot="-8">
+                        <rect x="362" y="86" width="88" height="14" rx="7" fill="#ffffff"/>
+                        <rect x="376" y="89" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
+                    </g>
+                </g>
+            </svg>
+        </div>
 
-    <h1 class="hero-headline">Your books,<br>beautifully stacked</h1>
-    <p class="hero-sub">Snap a cover, let AI do the rest. Build a 3D library that's uniquely yours and share it with the world.</p>
+        <!-- 3. Brand name reveals after books settle -->
+        <div class="hero-brand" id="hero-brand">
+            <div class="hero-brand-name">Shelvd</div>
+            <div class="hero-brand-sub">Personal Library</div>
+        </div>
 
-    <div class="hero-actions">
-        <a href="/index.html" class="btn-primary">Start your shelf</a>
-        <a href="#features" class="btn-secondary">See how it works</a>
+        <!-- 4. Subtitle and CTA fade in after brand -->
+        <p class="hero-sub" id="hero-sub">Snap a cover, let AI do the rest. Build a 3D library that's uniquely yours and share it with the world.</p>
+
+        <div class="hero-actions" id="hero-actions">
+            <a href="/index.html" class="btn-primary">Start your shelf</a>
+            <a href="#features" class="btn-secondary">See how it works</a>
+        </div>
     </div>
 </section>
 
@@ -837,6 +897,14 @@
     }
 
     playOnce();
+
+    // ── Reveal brand after books animation (~2s) ──
+    const revealDelay = prefersReducedMotion ? 0 : 2000;
+    setTimeout(() => {
+        document.getElementById('hero-brand').classList.add('revealed');
+        document.getElementById('hero-sub').classList.add('revealed');
+        document.getElementById('hero-actions').classList.add('revealed');
+    }, revealDelay);
 
     // ── Scroll reveal ──
     const revealElements = document.querySelectorAll('[data-reveal]');
