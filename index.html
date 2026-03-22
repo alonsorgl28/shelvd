@@ -18,6 +18,7 @@
 
 <!-- ── Login: Library Card ── -->
 <div class="auth-screen" id="auth-screen">
+    <div class="auth-stars" id="auth-stars"></div>
     <div class="library-card" id="library-card">
         <div class="library-card-header">
             <div class="library-card-logo">
@@ -70,6 +71,22 @@
         </div>
     </div>
 </div>
+<script>
+(function(){
+    var c = document.getElementById('auth-stars');
+    if (!c) return;
+    for (var i = 0; i < 60; i++) {
+        var s = document.createElement('span');
+        s.style.left = Math.random()*100+'%';
+        s.style.top = Math.random()*100+'%';
+        s.style.width = (1+Math.random()*2)+'px';
+        s.style.height = s.style.width;
+        s.style.animationDelay = (Math.random()*3)+'s';
+        s.style.animationDuration = (2+Math.random()*3)+'s';
+        c.appendChild(s);
+    }
+})();
+</script>
 
 <!-- Logo -->
 <a href="/" class="shelvd-logo">

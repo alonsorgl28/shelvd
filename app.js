@@ -77,8 +77,32 @@ async function init(username, isPublic) {
 
     // Scene — deep navy ink
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1e2540);
-    scene.fog = new THREE.Fog(0x1e2540, 6, 14); // subtle depth fade
+    scene.background = new THREE.Color(0x0a0f1a);
+    scene.fog = new THREE.Fog(0x0a0f1a, 6, 14); // subtle depth fade
+
+    // Stars
+    const starCount = 200;
+    const starGeometry = new THREE.BufferGeometry();
+    const starPositions = new Float32Array(starCount * 3);
+    const starSizes = new Float32Array(starCount);
+    for (let i = 0; i < starCount; i++) {
+        starPositions[i * 3] = (Math.random() - 0.5) * 20;
+        starPositions[i * 3 + 1] = Math.random() * 40 - 5;
+        starPositions[i * 3 + 2] = -3 - Math.random() * 8;
+        starSizes[i] = 0.02 + Math.random() * 0.04;
+    }
+    starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    starGeometry.setAttribute('size', new THREE.BufferAttribute(starSizes, 1));
+    starMaterial = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 0.04,
+        transparent: true,
+        opacity: 0.5,
+        sizeAttenuation: true,
+        fog: false
+    });
+    stars = new THREE.Points(starGeometry, starMaterial);
+    scene.add(stars);
 
     // Camera
     const isMobile = window.innerWidth <= 768;
@@ -489,6 +513,7 @@ function createCoverPlaceholder(title, author, width, height, bgColor) {
 
 // ─── Dust Particles ───
 let dustParticles;
+let stars, starMaterial;
 function createDustParticles() {
     const count = 120;
     const positions = new Float32Array(count * 3);
@@ -1456,6 +1481,12 @@ function animate() {
 
     // Update scrollbar
     updateScrollbar();
+
+    // Twinkle stars
+    if (stars && starMaterial) {
+        const t = performance.now() * 0.001;
+        starMaterial.opacity = 0.3 + 0.2 * Math.sin(t * 0.5);
+    }
 
     renderer.render(scene, camera);
 }

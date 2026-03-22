@@ -5,12 +5,33 @@
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100vh;
-    background: #1e2540;
+    background: #0a0f1a;
     z-index: 9999;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: opacity 0.6s ease, transform 0.6s ease;
+    overflow: hidden;
+}
+
+.auth-stars {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.auth-stars span {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.4);
+    animation: authStarTwinkle 3s ease-in-out infinite alternate;
+}
+
+@keyframes authStarTwinkle {
+    0% { opacity: 0.1; }
+    100% { opacity: 0.6; }
 }
 
 .auth-screen.exiting {
@@ -846,7 +867,7 @@
 }
 
 body {
-    background: #1e2540;
+    background: #0a0f1a;
     color: #fff;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
     overflow: hidden;
@@ -861,7 +882,7 @@ body {
     position: fixed;
     top: 0;
     left: 0;
-    background: #1e2540;
+    background: #0a0f1a;
     overflow: hidden;
     z-index: 1;
 }
@@ -1135,7 +1156,7 @@ body {
     width: 100%;
     height: 100vh;
     z-index: 2;
-    background: #1e2540;
+    background: #0a0f1a;
     overflow-y: auto;
     padding: 80px 24px 100px;
 }
