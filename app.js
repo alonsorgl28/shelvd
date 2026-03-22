@@ -46,14 +46,19 @@ async function loadBooksData(username, isPublic) {
 
         // Merge: base books + user books (deduplicate by title+author)
         const seen = new Set(baseBooks.map(b => `${b.title.toLowerCase()}|${b.author.toLowerCase()}`));
-        const uniqueUserBooks = userBooks.filter(b => {
-            const key = `${b.title.toLowerCase()}|${b.author.toLowerCase()}`;
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-        });
+        const uniqueUserBooks = userBooks
+            .filter(b => {
+                const key = `${b.title.toLowerCase()}|${b.author.toLowerCase()}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            })
+            .map(b => ({ ...b, id: `sb-${b.id}` })); // prefix to avoid ID collision with books.json
 
-        return [...baseBooks, ...uniqueUserBooks];
+        // Sort all books alphabetically by title
+        const all = [...baseBooks, ...uniqueUserBooks];
+        all.sort((a, b) => a.title.localeCompare(b.title, 'es', { sensitivity: 'base' }));
+        return all;
     } catch (err) {
         console.error('[Shelvd] Error loading books:', err);
         return baseBooks;
@@ -611,8 +616,8 @@ function arrangeBooksInStack() {
 
 // ─── Cover Loading ───
 async function loadCoversProgressively(booksData) {
-    // Load from localStorage cache (v8 = digital covers for uploaded books)
-    const CACHE_VERSION = 'v8';
+    // Load from localStorage cache (v9 = alphabetical order + sb-prefix IDs)
+    const CACHE_VERSION = 'v9';
     try {
         const ver = localStorage.getItem('book-covers-version');
         if (ver === CACHE_VERSION) {
@@ -1096,7 +1101,7 @@ function renderGridView() {
     gridEl.querySelectorAll('.grid-book').forEach(el => {
         el.addEventListener('click', () => {
             const rawId = el.dataset.bookId;
-            const bookId = /^\d+$/.test(rawId) ? parseInt(rawId) : rawId;
+            const bookId = rawId.startsWith('sb-') ? rawId : (/^\d+$/.test(rawId) ? parseInt(rawId) : rawId);
             // Switch to shelf and pull out
             document.querySelector('.view-toggle input[value="shelf"]').checked = true;
             switchView('shelf');
