@@ -165,6 +165,10 @@ async function init(username, isPublic) {
     // Load covers progressively
     loadCoversProgressively(booksData);
 
+    // Expose for import/export module
+    window.shelvdBookObjects = bookObjects;
+    window.shelvdCoverCache = coverCache;
+
     // Update book count
     document.getElementById('header-book-count').textContent = booksData.length + ' books';
 

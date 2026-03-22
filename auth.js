@@ -235,6 +235,8 @@ function enterLibrary(username, isPublic) {
     // Hide add button for public view
     if (isPublic) {
         document.getElementById('add-book-btn').style.display = 'none';
+        const ioBtn = document.getElementById('io-btn');
+        if (ioBtn) ioBtn.style.display = 'none';
     }
 
     if (isPublic) {

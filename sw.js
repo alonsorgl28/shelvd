@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shelvd-v3';
+const CACHE_NAME = 'shelvd-v4';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -6,6 +6,7 @@ const STATIC_ASSETS = [
     '/auth.js',
     '/app.js',
     '/pwa-install.js',
+    '/import-export.js',
     '/books.json'
 ];
 
