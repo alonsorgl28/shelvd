@@ -50,10 +50,34 @@
     color: #fff;
     letter-spacing: 1px;
     margin-bottom: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .library-card-logo .lc-s {
     font-weight: 900;
+}
+
+.lc-books {
+    overflow: visible;
+}
+
+.lc-book {
+    transform-origin: center;
+    animation: lcBookFall 3s ease-in-out infinite;
+}
+
+.lc-book:nth-child(1) { animation-delay: 0s; }
+.lc-book:nth-child(2) { animation-delay: 0.15s; }
+.lc-book:nth-child(3) { animation-delay: 0.3s; }
+.lc-book:nth-child(4) { animation-delay: 0.45s; }
+
+@keyframes lcBookFall {
+    0%, 100% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    20% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    50% { transform: translateY(6px) rotate(var(--rot)) translateX(var(--dx)); opacity: 0.6; }
+    70% { transform: translateY(0) rotate(0deg) translateX(0); opacity: 1; }
 }
 
 .library-card-subtitle {
@@ -825,7 +849,24 @@
     color: rgba(255,255,255,0.25);
     letter-spacing: 0.5px;
     transition: color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
 }
+
+.shelvd-logo-books {
+    overflow: visible;
+}
+
+.sl-book {
+    transform-origin: center;
+    animation: lcBookFall 3s ease-in-out infinite;
+}
+
+.sl-book:nth-child(1) { animation-delay: 0s; }
+.sl-book:nth-child(2) { animation-delay: 0.15s; }
+.sl-book:nth-child(3) { animation-delay: 0.3s; }
+.sl-book:nth-child(4) { animation-delay: 0.45s; }
 
 .shelvd-logo:hover {
     color: rgba(255,255,255,0.5);
