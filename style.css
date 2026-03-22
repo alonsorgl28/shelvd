@@ -44,19 +44,15 @@
 }
 
 .library-card-logo {
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    font-family: 'Helvetica Neue', Helvetica, -apple-system, sans-serif;
     font-size: 28px;
-    font-weight: 300;
+    font-weight: 500;
     color: #fff;
-    letter-spacing: 1px;
+    letter-spacing: -0.04em;
     margin-bottom: 6px;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-}
-
-.library-card-logo .lc-s {
-    font-weight: 900;
 }
 
 .lc-books {
@@ -831,7 +827,9 @@
     font-size: 15px;
     font-weight: 400;
     color: rgba(255,255,255,0.25);
-    letter-spacing: 0.5px;
+    letter-spacing: -0.04em;
+    font-weight: 500;
+    font-family: 'Helvetica Neue', Helvetica, -apple-system, sans-serif;
     transition: color 0.2s;
     display: inline-flex;
     align-items: center;
@@ -845,11 +843,6 @@
 
 .shelvd-logo:hover {
     color: rgba(255,255,255,0.5);
-}
-
-.shelvd-logo-s {
-    font-weight: 900;
-    color: rgba(255,255,255,0.35);
 }
 
 body {
