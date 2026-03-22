@@ -148,10 +148,10 @@ async function init(username, isPublic) {
     controls.update();
 
     // Lighting — warm desk lamp feel
-    const ambient = new THREE.AmbientLight(0xc8b8a0, 0.4); // warm ambient, slightly dimmer
+    const ambient = new THREE.AmbientLight(0xc8b8a0, 0.7); // warm ambient, brighter
     scene.add(ambient);
 
-    const dirLight = new THREE.DirectionalLight(0xffe4c4, 0.9); // warm peach key light
+    const dirLight = new THREE.DirectionalLight(0xffe4c4, 1.1); // warm peach key light, stronger
     dirLight.position.set(8, 12, 5);
     dirLight.castShadow = !isMobile;
     dirLight.shadow.mapSize.width = 4096;
@@ -167,9 +167,14 @@ async function init(username, isPublic) {
     dirLight.shadow.radius = 2;
     scene.add(dirLight);
 
-    const pointLight = new THREE.PointLight(0xffd6a5, 0.25); // warm fill from opposite side
+    const pointLight = new THREE.PointLight(0xffd6a5, 0.4); // warm fill from opposite side
     pointLight.position.set(-10, 10, -10);
     scene.add(pointLight);
+
+    // Top-down reading lamp highlight
+    const topLight = new THREE.PointLight(0xffffff, 0.3);
+    topLight.position.set(0, 15, 2);
+    scene.add(topLight);
 
     // Dust particles (skip on mobile for performance)
     if (!isMobile) createDustParticles();
