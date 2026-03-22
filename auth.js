@@ -354,6 +354,10 @@ fileInput.addEventListener('change', async (e) => {
     let file = e.target.files[0];
     if (!file) return;
 
+    // Show upload spinner immediately
+    const uploadSpinner = document.getElementById('add-upload-spinner');
+    uploadSpinner.style.display = 'flex';
+
     // Convert HEIC/HEIF to JPEG (Chrome doesn't support HEIC natively)
     const name = file.name.toLowerCase();
     if (name.endsWith('.heic') || name.endsWith('.heif') || file.type === 'image/heic' || file.type === 'image/heif') {
@@ -371,7 +375,8 @@ fileInput.addEventListener('change', async (e) => {
     const base64 = await resizeAndEncode(file, 1024);
     currentImageBase64 = base64;
 
-    // Show analyzing step
+    // Hide upload spinner, show analyzing step
+    uploadSpinner.style.display = 'none';
     stepCapture.style.display = 'none';
     stepAnalyzing.style.display = '';
 

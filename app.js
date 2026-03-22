@@ -12,15 +12,63 @@ let coverCache = {}; // title → coverUrl
 
 const container = document.getElementById('library-3d-container');
 
+// ─── Load books from Supabase (or fallback to books.json for demo) ───
+async function loadBooksData(username, isPublic) {
+    const sb = window.shelvdAuth?.supabase;
+    if (!sb) {
+        // No auth available — use static seed data
+        return fetch('books.json').then(r => r.json());
+    }
+
+    try {
+        let query;
+        if (isPublic && username) {
+            // Public profile: get user_id from username, then their books
+            const { data: profile } = await sb
+                .from('profiles')
+                .select('id')
+                .eq('username', username)
+                .maybeSingle();
+
+            if (!profile) return [];
+
+            query = sb.from('books').select('*').eq('user_id', profile.id);
+        } else {
+            // Logged-in user: get their own books
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) return fetch('books.json').then(r => r.json());
+
+            query = sb.from('books').select('*').eq('user_id', session.user.id);
+        }
+
+        const { data: books, error } = await query.order('created_at', { ascending: true, nullsFirst: false });
+
+        if (error) {
+            console.error('[Shelvd] Error loading books:', error);
+            return fetch('books.json').then(r => r.json());
+        }
+
+        // If user has no books yet, show seed data as demo
+        if (!books || books.length === 0) {
+            return fetch('books.json').then(r => r.json());
+        }
+
+        return books;
+    } catch (err) {
+        console.error('[Shelvd] Error loading books:', err);
+        return fetch('books.json').then(r => r.json());
+    }
+}
+
 // ─── Init ───
 let initialized = false;
 
-async function init() {
+async function init(username, isPublic) {
     if (initialized) return;
     initialized = true;
 
     try {
-    const booksData = await fetch('books.json').then(r => r.json());
+    const booksData = await loadBooksData(username, isPublic);
 
     // Scene — deep navy ink
     scene = new THREE.Scene();
@@ -563,8 +611,8 @@ function arrangeBooksInStack() {
 
 // ─── Cover Loading ───
 async function loadCoversProgressively(booksData) {
-    // Load from localStorage cache (v7 = Open Library first for CORS)
-    const CACHE_VERSION = 'v7';
+    // Load from localStorage cache (v8 = digital covers for uploaded books)
+    const CACHE_VERSION = 'v8';
     try {
         const ver = localStorage.getItem('book-covers-version');
         if (ver === CACHE_VERSION) {
@@ -576,16 +624,25 @@ async function loadCoversProgressively(booksData) {
         }
     } catch (e) { /* ignore */ }
 
-    // First pass: apply cached covers immediately
+    // First pass: apply cached covers immediately, queue uncached for fetch
     const uncached = [];
+    const hasUserPhoto = []; // books with Supabase photo but no digital cover cached
     for (const bookData of booksData) {
         const cacheKey = `${bookData.title}|${bookData.author}`;
         if (coverCache[cacheKey]) {
+            // Have a cached digital cover — use it (best quality)
             applyCoverToBook(bookData.id, coverCache[cacheKey]);
+        } else if (bookData.cover) {
+            // Have user photo but no digital cover yet — show photo temporarily
+            applyCoverToBook(bookData.id, bookData.cover);
+            // Also try to find a clean digital cover to replace it
+            hasUserPhoto.push(bookData);
         } else {
             uncached.push(bookData);
         }
     }
+    // Merge: fetch digital covers for both uncached and user-photo books
+    uncached.push(...hasUserPhoto);
 
     // Second pass: fetch uncached in parallel batches (smaller on mobile)
     const isMobileCover = window.innerWidth <= 768;
@@ -599,6 +656,7 @@ async function loadCoversProgressively(booksData) {
         results.forEach((coverUrl, idx) => {
             const bookData = batch[idx];
             const cacheKey = `${bookData.title}|${bookData.author}`;
+            console.log(`[Shelvd] Cover fetch for "${bookData.title}":`, coverUrl ? 'found' : 'not found', coverUrl);
             if (coverUrl) {
                 coverCache[cacheKey] = coverUrl;
                 applyCoverToBook(bookData.id, coverUrl);
@@ -673,7 +731,10 @@ async function fetchGoogleBooksCover(title, author) {
 
 function applyCoverToBook(bookId, coverUrl) {
     const book = bookObjects.find(b => b.userData.bookId === bookId);
-    if (!book) return;
+    if (!book) {
+        console.log(`[Shelvd] applyCoverToBook: book ${bookId} not found in scene`);
+        return;
+    }
 
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -681,6 +742,7 @@ function applyCoverToBook(bookId, coverUrl) {
     img.onload = function () {
         const bookHeight = book.userData.baseHeight;
         const spineWidth = book.userData.bookSpineWidth;
+        const isMobileMat = window.innerWidth <= 768;
 
         // Extract dominant color
         getDominantColor(img, function (color) {
@@ -697,9 +759,9 @@ function applyCoverToBook(bookId, coverUrl) {
                 book.userData.bookData.title, book.userData.bookData.author,
                 book.userData.bookData.pages, bookHeight, spineWidth, color
             );
-            book.material[1] = new THREE.MeshStandardMaterial({
-                map: spineTexture, roughness: 1.0, metalness: 0.0
-            });
+            book.material[1] = isMobileMat
+                ? new THREE.MeshBasicMaterial({ map: spineTexture })
+                : new THREE.MeshStandardMaterial({ map: spineTexture, roughness: 1.0, metalness: 0.0 });
         });
 
         // Cover texture — direct from CORS-enabled image
@@ -710,9 +772,9 @@ function applyCoverToBook(bookId, coverUrl) {
         texture.generateMipmaps = true;
         texture.needsUpdate = true;
 
-        book.material[4] = new THREE.MeshStandardMaterial({
-            map: texture, roughness: 1.0, metalness: 0.0
-        });
+        book.material[4] = isMobileMat
+            ? new THREE.MeshBasicMaterial({ map: texture })
+            : new THREE.MeshStandardMaterial({ map: texture, roughness: 1.0, metalness: 0.0 });
     };
 
     // If CORS fails (Google Books), image won't load for 3D but grid still works
@@ -1016,7 +1078,7 @@ function renderGridView() {
 
     gridEl.innerHTML = `<div class="grid-container">${books.map((b, i) => {
         const cacheKey = `${b.title}|${b.author}`;
-        const coverUrl = coverCache[cacheKey];
+        const coverUrl = b.cover || coverCache[cacheKey];
         const coverHtml = coverUrl
             ? `<img src="${coverUrl}" alt="${b.title}" loading="lazy">`
             : `<div class="placeholder">${b.title}</div>`;
@@ -1033,7 +1095,8 @@ function renderGridView() {
     // Click handler for grid books
     gridEl.querySelectorAll('.grid-book').forEach(el => {
         el.addEventListener('click', () => {
-            const bookId = parseInt(el.dataset.bookId);
+            const rawId = el.dataset.bookId;
+            const bookId = /^\d+$/.test(rawId) ? parseInt(rawId) : rawId;
             // Switch to shelf and pull out
             document.querySelector('.view-toggle input[value="shelf"]').checked = true;
             switchView('shelf');
@@ -1205,7 +1268,10 @@ function onResize() {
 
 // ─── Start ───
 // Wait for auth before starting
-window.addEventListener('shelvd:authenticated', () => init());
+window.addEventListener('shelvd:authenticated', (e) => {
+    const { username, isPublic } = e.detail || {};
+    init(username, isPublic);
+});
 
 // Also start if no auth screen (direct access / dev)
 if (!document.getElementById('auth-screen') ||
@@ -1214,8 +1280,9 @@ if (!document.getElementById('auth-screen') ||
 }
 
 // Listen for new books added via photo
-window.addEventListener('shelvd:book-added', (e) => {
+window.addEventListener('shelvd:book-added', async (e) => {
     const { book, coverUrl } = e.detail;
+
     const bookData = {
         id: book.id,
         title: book.title,
@@ -1227,8 +1294,20 @@ window.addEventListener('shelvd:book-added', (e) => {
     createBook(bookData, bookObjects.length);
     arrangeBooksInStack();
 
-    // Apply the user's photo as cover
-    if (coverUrl) {
-        applyCoverToBook(book.id, coverUrl);
+    // Try to find a clean digital cover (Open Library → Google Books)
+    // Fall back to user's photo if no digital cover found
+    console.log(`[Shelvd] Looking for digital cover for "${book.title}"...`);
+    let digitalCover = await fetchCoverWithFallbacks(book.title, book.author);
+    const finalCover = digitalCover || coverUrl;
+    console.log(`[Shelvd] Final cover for "${book.title}":`, finalCover ? 'found' : 'none', finalCover);
+
+    if (finalCover) {
+        const cacheKey = `${book.title}|${book.author}`;
+        coverCache[cacheKey] = finalCover;
+        try {
+            localStorage.setItem('book-covers-cache', JSON.stringify(coverCache));
+        } catch (err) { /* ignore */ }
+
+        applyCoverToBook(book.id, finalCover);
     }
 });

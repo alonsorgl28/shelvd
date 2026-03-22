@@ -120,6 +120,11 @@
                 <div class="add-capture-sub">Your photo will be the cover in your shelf</div>
             </div>
             <input type="file" id="add-book-input" accept="image/*" capture="environment" style="display:none;">
+            <!-- Upload spinner overlay -->
+            <div class="add-upload-spinner" id="add-upload-spinner" style="display:none;">
+                <div class="loading-spinner"></div>
+                <div class="add-upload-spinner-text">Processing photo...</div>
+            </div>
         </div>
 
         <!-- Step 2: Analyzing -->
@@ -229,10 +234,50 @@
 </script>
 <script type="module" src="auth.js"></script>
 <script type="module" src="app.js"></script>
+<!-- PWA Install Banner -->
+<div class="pwa-install-banner" id="pwa-install-banner" style="display:none;">
+    <div class="pwa-install-content">
+        <div class="pwa-install-icon">S</div>
+        <div class="pwa-install-text">
+            <div class="pwa-install-title">Add Shelvd to Home Screen</div>
+            <div class="pwa-install-sub">Quick access to your library</div>
+        </div>
+    </div>
+    <div class="pwa-install-actions">
+        <button class="pwa-install-btn" id="pwa-install-btn">Install</button>
+        <button class="pwa-dismiss-btn" id="pwa-dismiss-btn">Not now</button>
+    </div>
+</div>
+
+<!-- iOS Install Instructions -->
+<div class="ios-install-sheet" id="ios-install-sheet" style="display:none;">
+    <div class="ios-install-content">
+        <div class="ios-install-header">
+            <div class="ios-install-title">Add to Home Screen</div>
+            <button class="ios-install-close" id="ios-install-close">&times;</button>
+        </div>
+        <div class="ios-install-steps">
+            <div class="ios-step">
+                <span class="ios-step-num">1</span>
+                <span>Tap the <strong>Share</strong> button <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> in Safari</span>
+            </div>
+            <div class="ios-step">
+                <span class="ios-step-num">2</span>
+                <span>Scroll down and tap <strong>Add to Home Screen</strong></span>
+            </div>
+            <div class="ios-step">
+                <span class="ios-step-num">3</span>
+                <span>Tap <strong>Add</strong> to confirm</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
 </script>
+<script type="module" src="pwa-install.js"></script>
 </body>
 </html>
