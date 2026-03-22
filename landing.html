@@ -7,16 +7,16 @@
     <meta name="description" content="Snap a cover, build your shelf, share your library. Shelvd turns your books into a beautiful 3D collection.">
     <meta property="og:title" content="Shelvd — Your Personal Library">
     <meta property="og:description" content="Snap a cover, build your shelf, share your library.">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#ffffff">
     <link rel="icon" href="/icon-192.png">
     <style>
         :root {
-            --black: #000000;
-            --surface: #1e1e1e;
-            --white: #ffffff;
-            --muted: rgba(255,255,255,0.45);
-            --border: rgba(255,255,255,0.08);
-            --border-hover: rgba(255,255,255,0.16);
+            --black: #ffffff;
+            --surface: #f2f2f2;
+            --white: #111111;
+            --muted: rgba(0,0,0,0.45);
+            --border: rgba(0,0,0,0.08);
+            --border-hover: rgba(0,0,0,0.16);
             --accent: #2b4eff;
             --radius: 24px;
             --font: 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -60,8 +60,8 @@
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -72,8 +72,8 @@
         }
 
         .nav-btn:hover {
-            background: rgba(255,255,255,0.14);
-            border-color: rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.08);
+            border-color: rgba(0,0,0,0.18);
         }
 
         /* ── Hero ── */
@@ -90,7 +90,7 @@
         .hero-eyebrow {
             font-size: 13px;
             letter-spacing: 0.02em;
-            color: rgba(255,255,255,0.35);
+            color: rgba(0,0,0,0.35);
             margin-bottom: 32px;
         }
 
@@ -105,7 +105,7 @@
 
         .hero-desc {
             font-size: clamp(15px, 1.8vw, 17px);
-            color: rgba(255,255,255,0.4);
+            color: rgba(0,0,0,0.45);
             max-width: 520px;
             line-height: 1.6;
             letter-spacing: -0.01em;
@@ -155,7 +155,7 @@
             gap: 8px;
             background: transparent;
             color: var(--white);
-            border: 1px solid rgba(255,255,255,0.18);
+            border: 1px solid rgba(0,0,0,0.18);
             border-radius: 40px;
             padding: 14px 28px;
             font-size: 14px;
@@ -167,7 +167,7 @@
             transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s;
         }
 
-        .btn-secondary:hover { transform: scale(1.04); border-color: rgba(255,255,255,0.35); }
+        .btn-secondary:hover { transform: scale(1.04); border-color: rgba(0,0,0,0.35); }
         .btn-secondary:active { transform: scale(0.96); }
 
         .btn-secondary svg {
@@ -199,7 +199,7 @@
             transform: translate(-50%, -50%);
             width: 500px;
             height: 350px;
-            background: radial-gradient(ellipse, rgba(208,170,126,0.07), transparent 70%);
+            background: radial-gradient(ellipse, rgba(208,170,126,0.15), transparent 70%);
             pointer-events: none;
         }
 
@@ -248,7 +248,7 @@
             font-size: 12px;
             letter-spacing: 0.32em;
             text-transform: uppercase;
-            color: rgba(255,255,255,0.2);
+            color: rgba(0,0,0,0.2);
             margin-top: 20px;
         }
 
@@ -321,12 +321,12 @@
         .feature-icon {
             width: 48px;
             height: 48px;
-            background: rgba(255,255,255,0.06);
+            background: rgba(0,0,0,0.05);
             border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: rgba(255,255,255,0.7);
+            color: rgba(0,0,0,0.6);
         }
 
         .feature-card-title {
@@ -345,7 +345,7 @@
         .feature-visual {
             width: 100%;
             aspect-ratio: 1.4;
-            background: rgba(255,255,255,0.03);
+            background: rgba(0,0,0,0.04);
             border-radius: 14px;
             margin-top: auto;
             overflow: hidden;
@@ -391,7 +391,7 @@
             position: absolute;
             width: 16px;
             height: 16px;
-            border: 2px solid rgba(255,255,255,0.25);
+            border: 2px solid rgba(0,0,0,0.2);
         }
 
         .snap-corners::before { top: 0; left: 0; border-right: none; border-bottom: none; border-radius: 4px 0 0 0; }
@@ -511,8 +511,8 @@
         }
 
         .shelf-spine.highlight {
-            box-shadow: 0 1px 0 rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 12px rgba(255,255,255,0.08);
-            filter: brightness(1.2);
+            box-shadow: 0 1px 0 rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 12px rgba(0,0,0,0.1);
+            filter: brightness(1.1);
             transform: translateY(0) scale(1.03);
         }
 
@@ -554,8 +554,8 @@
             width: 100%;
             flex: 1;
             border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.08);
-            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(0,0,0,0.1);
+            background: rgba(0,0,0,0.04);
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -574,8 +574,8 @@
             align-items: center;
             gap: 8px;
             padding: 8px 10px;
-            background: rgba(255,255,255,0.04);
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+            background: rgba(0,0,0,0.03);
+            border-bottom: 1px solid rgba(0,0,0,0.06);
         }
 
         .share-browser-dots {
@@ -587,17 +587,17 @@
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.12);
+            background: rgba(0,0,0,0.15);
         }
 
         .share-browser-url {
             flex: 1;
-            background: rgba(255,255,255,0.04);
+            background: rgba(0,0,0,0.04);
             border-radius: 4px;
             padding: 3px 8px;
             font-family: 'SF Mono', 'Fira Code', monospace;
             font-size: 9px;
-            color: rgba(255,255,255,0.35);
+            color: rgba(0,0,0,0.4);
             overflow: hidden;
         }
 
@@ -609,7 +609,7 @@
             display: inline-block;
             width: 1px;
             height: 10px;
-            background: rgba(255,255,255,0.5);
+            background: rgba(0,0,0,0.5);
             vertical-align: middle;
             margin-left: 1px;
             animation: cursorBlink 0.8s step-end infinite;
@@ -660,13 +660,13 @@
         .share-profile-name {
             font-size: 10px;
             font-weight: 600;
-            color: rgba(255,255,255,0.6);
+            color: rgba(0,0,0,0.6);
             letter-spacing: -0.02em;
         }
 
         .share-profile-count {
             font-size: 8px;
-            color: rgba(255,255,255,0.25);
+            color: rgba(0,0,0,0.3);
             margin-top: 2px;
         }
 
@@ -723,7 +723,7 @@
             left: 0;
             right: 0;
             height: 100%;
-            background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.4));
+            background: linear-gradient(180deg, transparent 60%, rgba(255,255,255,0.6));
             pointer-events: none;
             z-index: 1;
         }
@@ -843,7 +843,7 @@
 
         .showcase-label {
             font-size: 11px;
-            color: rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.25);
             letter-spacing: 0.15em;
             text-transform: uppercase;
             position: absolute;
@@ -934,14 +934,14 @@
             font-size: 15px;
             font-weight: 700;
             letter-spacing: -0.03em;
-            color: rgba(255,255,255,0.3);
+            color: rgba(0,0,0,0.3);
         }
 
         .footer-sub {
             font-size: 11px;
             letter-spacing: 0.2em;
             text-transform: uppercase;
-            color: rgba(255,255,255,0.15);
+            color: rgba(0,0,0,0.15);
             margin-top: 4px;
         }
 
@@ -952,13 +952,13 @@
 
         .footer-links a {
             font-size: 12px;
-            color: rgba(255,255,255,0.3);
+            color: rgba(0,0,0,0.3);
             text-decoration: none;
             transition: color 0.2s;
         }
 
         .footer-links a:hover {
-            color: rgba(255,255,255,0.6);
+            color: rgba(0,0,0,0.6);
         }
 
         /* ── Mobile ── */
@@ -1048,18 +1048,18 @@
             <ellipse cx="450" cy="180" rx="180" ry="70" fill="#D9AE7E" opacity="0.08" filter="url(#softGlow)"/>
 
             <g id="books-group">
-                <g class="book"><rect x="385" y="12" width="130" height="15" rx="7" fill="#fff"/><rect x="406" y="15" width="3" height="9" rx="1.5" fill="#000" fill-opacity=".14"/></g>
-                <g class="book"><rect x="400" y="30" width="100" height="15" rx="7" fill="#f8f8f8"/><rect x="418" y="33" width="3" height="9" rx="1.5" fill="#000" fill-opacity=".12"/></g>
-                <g class="book"><rect x="374" y="48" width="152" height="15" rx="7" fill="#fff"/><rect x="398" y="51" width="3" height="9" rx="1.5" fill="#000" fill-opacity=".14"/></g>
-                <g class="book"><rect x="410" y="66" width="80" height="14" rx="7" fill="#f0f0f0"/><rect x="426" y="69" width="3" height="8" rx="1.5" fill="#000" fill-opacity=".11"/></g>
-                <g class="book"><rect x="388" y="83" width="124" height="15" rx="7" fill="#fff"/><rect x="408" y="86" width="3" height="9" rx="1.5" fill="#000" fill-opacity=".14"/></g>
-                <g class="book"><rect x="416" y="101" width="68" height="14" rx="7" fill="#f5f5f5"/><rect x="430" y="104" width="3" height="8" rx="1.5" fill="#000" fill-opacity=".1"/></g>
-                <g class="book"><rect x="378" y="118" width="144" height="15" rx="7" fill="#fff"/><rect x="400" y="121" width="3" height="9" rx="1.5" fill="#000" fill-opacity=".14"/></g>
-                <g class="book"><rect x="396" y="136" width="108" height="15" rx="7" fill="#f8f8f8"/><rect x="414" y="139" width="3" height="9" rx="1.5" fill="#000" fill-opacity=".12"/></g>
-                <g class="book"><rect x="406" y="154" width="88" height="14" rx="7" fill="#f0f0f0"/><rect x="422" y="157" width="3" height="8" rx="1.5" fill="#000" fill-opacity=".1"/></g>
-                <g class="book"><rect x="382" y="171" width="136" height="15" rx="7" fill="#fff"/><rect x="404" y="174" width="3" height="9" rx="1.5" fill="#000" fill-opacity=".14"/></g>
-                <g class="book"><rect x="414" y="189" width="72" height="14" rx="7" fill="#f5f5f5"/><rect x="430" y="192" width="3" height="8" rx="1.5" fill="#000" fill-opacity=".1"/></g>
-                <g class="book"><rect x="392" y="206" width="116" height="15" rx="7" fill="#fff"/><rect x="412" y="209" width="3" height="9" rx="1.5" fill="#000" fill-opacity=".14"/></g>
+                <g class="book"><rect x="385" y="12" width="130" height="15" rx="7" fill="#222"/><rect x="406" y="15" width="3" height="9" rx="1.5" fill="#fff" fill-opacity=".12"/></g>
+                <g class="book"><rect x="400" y="30" width="100" height="15" rx="7" fill="#333"/><rect x="418" y="33" width="3" height="9" rx="1.5" fill="#fff" fill-opacity=".1"/></g>
+                <g class="book"><rect x="374" y="48" width="152" height="15" rx="7" fill="#222"/><rect x="398" y="51" width="3" height="9" rx="1.5" fill="#fff" fill-opacity=".12"/></g>
+                <g class="book"><rect x="410" y="66" width="80" height="14" rx="7" fill="#2a2a2a"/><rect x="426" y="69" width="3" height="8" rx="1.5" fill="#fff" fill-opacity=".1"/></g>
+                <g class="book"><rect x="388" y="83" width="124" height="15" rx="7" fill="#222"/><rect x="408" y="86" width="3" height="9" rx="1.5" fill="#fff" fill-opacity=".12"/></g>
+                <g class="book"><rect x="416" y="101" width="68" height="14" rx="7" fill="#353535"/><rect x="430" y="104" width="3" height="8" rx="1.5" fill="#fff" fill-opacity=".1"/></g>
+                <g class="book"><rect x="378" y="118" width="144" height="15" rx="7" fill="#222"/><rect x="400" y="121" width="3" height="9" rx="1.5" fill="#fff" fill-opacity=".12"/></g>
+                <g class="book"><rect x="396" y="136" width="108" height="15" rx="7" fill="#333"/><rect x="414" y="139" width="3" height="9" rx="1.5" fill="#fff" fill-opacity=".1"/></g>
+                <g class="book"><rect x="406" y="154" width="88" height="14" rx="7" fill="#2a2a2a"/><rect x="422" y="157" width="3" height="8" rx="1.5" fill="#fff" fill-opacity=".1"/></g>
+                <g class="book"><rect x="382" y="171" width="136" height="15" rx="7" fill="#222"/><rect x="404" y="174" width="3" height="9" rx="1.5" fill="#fff" fill-opacity=".12"/></g>
+                <g class="book"><rect x="414" y="189" width="72" height="14" rx="7" fill="#353535"/><rect x="430" y="192" width="3" height="8" rx="1.5" fill="#fff" fill-opacity=".1"/></g>
+                <g class="book"><rect x="392" y="206" width="116" height="15" rx="7" fill="#222"/><rect x="412" y="209" width="3" height="9" rx="1.5" fill="#fff" fill-opacity=".12"/></g>
             </g>
         </svg>
     </div>
