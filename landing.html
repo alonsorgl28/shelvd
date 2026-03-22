@@ -182,13 +182,14 @@
 
         /* ── Brand Reveal Section ── */
         .brand-section {
-            padding: 80px 40px 120px;
+            padding: 100px 40px 140px;
             display: flex;
             flex-direction: column;
             align-items: center;
             position: relative;
             overflow: hidden;
-            min-height: 60vh;
+            min-height: 80vh;
+            justify-content: center;
         }
 
         .brand-glow {
@@ -204,14 +205,17 @@
 
         .brand-books {
             position: relative;
-            width: min(700px, 90vw);
+            width: 100%;
+            max-width: 1100px;
             z-index: 1;
+            margin-bottom: 60px;
         }
 
         .brand-books svg {
             display: block;
             width: 100%;
             height: auto;
+            overflow: visible;
         }
 
         .brand-books .book {
@@ -223,29 +227,29 @@
         .brand-name {
             text-align: center;
             opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 1s ease, transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+            transform: translateY(30px) scale(0.95);
+            transition: opacity 1.2s ease, transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
             z-index: 1;
         }
 
         .brand-name.revealed {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
         }
 
         .brand-name-text {
-            font-size: clamp(72px, 12vw, 140px);
+            font-size: clamp(80px, 14vw, 180px);
             font-weight: 500;
             letter-spacing: -0.05em;
             line-height: 1;
         }
 
         .brand-name-sub {
-            font-size: 11px;
+            font-size: 12px;
             letter-spacing: 0.32em;
             text-transform: uppercase;
-            color: rgba(255,255,255,0.25);
-            margin-top: 16px;
+            color: rgba(255,255,255,0.2);
+            margin-top: 20px;
         }
 
         /* ── Divider ── */
@@ -591,40 +595,69 @@
     <div class="brand-glow"></div>
 
     <div class="brand-books" id="brand-books">
-        <svg viewBox="0 0 820 200" aria-label="Falling books animation">
+        <svg viewBox="0 0 1100 320" aria-label="Falling books animation">
             <defs>
                 <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="16" result="blur"/>
+                    <feGaussianBlur stdDeviation="20" result="blur"/>
                     <feColorMatrix in="blur" type="matrix"
                         values="1 0 0 0 0.82
                                 0 1 0 0 0.67
                                 0 0 1 0 0.46
-                                0 0 0 0.16 0"/>
+                                0 0 0 0.12 0"/>
                 </filter>
             </defs>
 
-            <ellipse cx="410" cy="100" rx="118" ry="54" fill="#D9AE7E" opacity="0.10" filter="url(#softGlow)"/>
+            <ellipse cx="550" cy="160" rx="200" ry="80" fill="#D9AE7E" opacity="0.08" filter="url(#softGlow)"/>
 
             <g id="books-group">
-                <g class="book" data-dx="-146" data-dy="120" data-rot="-18">
-                    <rect x="370" y="22" width="92" height="14" rx="7" fill="#ffffff"/>
-                    <rect x="385" y="25" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
+                <!-- Center books (fall down) -->
+                <g class="book" data-dx="-80" data-dy="200" data-rot="-14">
+                    <rect x="510" y="30" width="100" height="16" rx="8" fill="#ffffff"/>
+                    <rect x="526" y="34" width="3" height="9" rx="1.5" fill="#000000" fill-opacity="0.15"/>
                 </g>
-                <g class="book" data-dx="156" data-dy="135" data-rot="16">
-                    <rect x="355" y="38" width="72" height="14" rx="7" fill="#ffffff"/>
-                    <rect x="372" y="41" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
+                <g class="book" data-dx="90" data-dy="220" data-rot="12">
+                    <rect x="500" y="52" width="78" height="16" rx="8" fill="#ffffff"/>
+                    <rect x="518" y="56" width="3" height="9" rx="1.5" fill="#000000" fill-opacity="0.15"/>
                 </g>
-                <g class="book" data-dx="-166" data-dy="150" data-rot="-12">
-                    <rect x="366" y="54" width="104" height="14" rx="7" fill="#ffffff"/>
-                    <rect x="381" y="57" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
+                <g class="book" data-dx="-100" data-dy="240" data-rot="-10">
+                    <rect x="490" y="74" width="120" height="16" rx="8" fill="#ffffff"/>
+                    <rect x="510" y="78" width="3" height="9" rx="1.5" fill="#000000" fill-opacity="0.15"/>
                 </g>
-                <g class="book" data-dx="146" data-dy="165" data-rot="10">
-                    <rect x="388" y="70" width="72" height="14" rx="7" fill="#ffffff"/>
-                    <rect x="404" y="73" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
+                <g class="book" data-dx="70" data-dy="255" data-rot="8">
+                    <rect x="515" y="96" width="70" height="16" rx="8" fill="#ffffff"/>
+                    <rect x="532" y="100" width="3" height="9" rx="1.5" fill="#000000" fill-opacity="0.15"/>
                 </g>
-                <g class="book" data-dx="-138" data-dy="180" data-rot="-8">
-                    <rect x="362" y="86" width="88" height="14" rx="7" fill="#ffffff"/>
-                    <rect x="376" y="89" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
+                <g class="book" data-dx="-60" data-dy="270" data-rot="-6">
+                    <rect x="505" y="118" width="90" height="16" rx="8" fill="#ffffff"/>
+                    <rect x="522" y="122" width="3" height="9" rx="1.5" fill="#000000" fill-opacity="0.15"/>
+                </g>
+
+                <!-- Left side books (slide in from left) -->
+                <g class="book book-side" data-dx="-320" data-dy="180" data-rot="-22" data-from="left">
+                    <rect x="520" y="40" width="60" height="14" rx="7" fill="rgba(255,255,255,0.7)"/>
+                    <rect x="534" y="43" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.1"/>
+                </g>
+                <g class="book book-side" data-dx="-280" data-dy="230" data-rot="-16" data-from="left">
+                    <rect x="520" y="65" width="80" height="14" rx="7" fill="rgba(255,255,255,0.6)"/>
+                    <rect x="538" y="68" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.1"/>
+                </g>
+                <g class="book book-side" data-dx="-350" data-dy="260" data-rot="-12" data-from="left">
+                    <rect x="520" y="90" width="50" height="14" rx="7" fill="rgba(255,255,255,0.5)"/>
+                    <rect x="532" y="93" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.1"/>
+                </g>
+
+                <!-- Right side books (slide in from right) -->
+                <g class="book book-side" data-dx="310" data-dy="190" data-rot="20" data-from="right">
+                    <rect x="520" y="48" width="70" height="14" rx="7" fill="rgba(255,255,255,0.7)"/>
+                    <rect x="538" y="51" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.1"/>
+                </g>
+                <g class="book book-side" data-dx="270" data-dy="240" data-rot="14" data-from="right">
+                    <rect x="520" y="75" width="90" height="14" rx="7" fill="rgba(255,255,255,0.6)"/>
+                    <rect x="542" y="78" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.1"/>
+                </g>
+                <g class="book book-side" data-dx="340" data-dy="268" data-rot="10" data-from="right">
+                    <rect x="520" y="95" width="55" height="14" rx="7" fill="rgba(255,255,255,0.5)"/>
+                    <rect x="534" y="98" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.1"/>
                 </g>
             </g>
         </svg>
@@ -763,18 +796,24 @@
 </footer>
 
 <script>
-    // ── Book falling physics ──
+    // ── Book falling + sliding physics ──
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const books = Array.from(document.querySelectorAll(".book"));
+    const allBooks = Array.from(document.querySelectorAll(".book"));
     const brandName = document.getElementById('brand-name');
 
-    const baseConfigs = books.map((book, index) => ({
-        node: book,
-        dx: Number(book.dataset.dx),
-        dy: Number(book.dataset.dy),
-        rot: Number(book.dataset.rot),
-        delay: index * 170
-    }));
+    const baseConfigs = allBooks.map((book, index) => {
+        const isSide = book.classList.contains('book-side');
+        const from = book.dataset.from || null; // 'left' or 'right'
+        return {
+            node: book,
+            dx: Number(book.dataset.dx),
+            dy: Number(book.dataset.dy),
+            rot: Number(book.dataset.rot),
+            delay: isSide ? 400 + index * 120 : index * 150,
+            isSide,
+            from
+        };
+    });
 
     let rafId = null;
 
@@ -786,7 +825,7 @@
     function resetAll() {
         if (rafId) cancelAnimationFrame(rafId);
         rafId = null;
-        baseConfigs.forEach(({ node }) => renderState(node, 0, 0, 0, 1));
+        baseConfigs.forEach(({ node }) => renderState(node, 0, 0, 0, 0));
         brandName.classList.remove('revealed');
     }
 
@@ -797,6 +836,7 @@
     function playAnimation() {
         resetAll();
         if (prefersReducedMotion) {
+            baseConfigs.forEach(({ node, dx, dy, rot }) => renderState(node, dx, dy, rot, 0));
             brandName.classList.add('revealed');
             return;
         }
@@ -805,21 +845,37 @@
         let lastFrameTime = startTime;
         let brandRevealed = false;
 
-        const gravity = 1780;
-        const drag = 0.0018;
-        const angularDrag = 0.0022;
-        const totalRun = 3600;
+        const gravity = 1600;
+        const drag = 0.002;
+        const angularDrag = 0.0025;
+        const totalRun = 4000;
 
         const bodies = baseConfigs.map((config, index) => {
+            if (config.isSide) {
+                // Side books: slide horizontally from off-screen
+                const startX = config.from === 'left' ? -600 : 600;
+                return {
+                    ...config,
+                    active: false,
+                    finished: false,
+                    x: startX,
+                    y: config.dy * 0.3,
+                    r: config.from === 'left' ? -30 : 30,
+                    vx: config.from === 'left' ? 280 : -280,
+                    vy: 60,
+                    vr: config.from === 'left' ? 12 : -12
+                };
+            }
+            // Center books: fall down with slight horizontal spread
             const direction = index % 2 === 0 ? -1 : 1;
             return {
                 ...config,
                 active: false,
                 finished: false,
                 x: 0, y: 0, r: 0,
-                vx: direction * (54 + index * 10),
+                vx: direction * (50 + index * 8),
                 vy: 0,
-                vr: direction * (18 + index * 2.4)
+                vr: direction * (16 + index * 2)
             };
         });
 
@@ -829,8 +885,8 @@
             const dt = Math.min(0.032, (now - lastFrameTime) / 1000 || 1 / 60);
             lastFrameTime = now;
 
-            // Reveal brand after 1.8s
-            if (!brandRevealed && elapsed > 1800) {
+            // Reveal brand after 2s
+            if (!brandRevealed && elapsed > 2000) {
                 brandRevealed = true;
                 brandName.classList.add('revealed');
             }
@@ -839,35 +895,60 @@
                 if (body.finished) return;
                 const local = elapsed - body.delay;
                 if (local <= 0) {
-                    renderState(body.node, 0, 0, 0, 1);
+                    if (!body.isSide) renderState(body.node, 0, 0, 0, 1);
+                    else renderState(body.node, body.x, body.y, body.r, 0);
                     someoneActive = true;
                     return;
                 }
                 body.active = true;
                 someoneActive = true;
 
-                body.vy += gravity * dt;
-                body.vx *= 1 - drag * 16;
-                body.vr *= 1 - angularDrag * 16;
-                body.x += body.vx * dt;
-                body.y += body.vy * dt;
-                body.r += body.vr * dt;
+                if (body.isSide) {
+                    // Side books: decelerate toward target
+                    const progress = Math.min(1, local / 1200);
+                    const ease = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+                    const startX = body.from === 'left' ? -600 : 600;
+                    const startR = body.from === 'left' ? -30 : 30;
 
-                const progressY = Math.min(1, body.y / body.dy);
-                const fadeStart = 0.42;
-                const opacity = progressY < fadeStart
-                    ? 1
-                    : Math.max(0, 1 - ((progressY - fadeStart) / (1 - fadeStart)));
+                    const currentX = startX + (body.dx - startX) * ease;
+                    const currentY = (body.dy * 0.3) + (body.dy - body.dy * 0.3) * ease;
+                    const currentR = startR + (body.rot - startR) * ease;
 
-                const finalX = clampSigned(body.x, body.dx);
-                const finalY = Math.min(body.dy, body.y);
-                const finalR = clampSigned(body.r, body.rot);
+                    const fadeIn = Math.min(1, local / 300);
+                    const fadeOut = progress > 0.6 ? Math.max(0, 1 - (progress - 0.6) / 0.4) : 1;
+                    const opacity = fadeIn * fadeOut;
 
-                renderState(body.node, finalX, finalY, finalR, opacity);
+                    renderState(body.node, currentX, currentY, currentR, opacity);
 
-                if (finalY >= body.dy || elapsed > totalRun) {
-                    body.finished = true;
-                    renderState(body.node, body.dx, body.dy, body.rot, 0);
+                    if (progress >= 1) {
+                        body.finished = true;
+                        renderState(body.node, body.dx, body.dy, body.rot, 0);
+                    }
+                } else {
+                    // Center books: gravity fall
+                    body.vy += gravity * dt;
+                    body.vx *= 1 - drag * 16;
+                    body.vr *= 1 - angularDrag * 16;
+                    body.x += body.vx * dt;
+                    body.y += body.vy * dt;
+                    body.r += body.vr * dt;
+
+                    const progressY = Math.min(1, body.y / body.dy);
+                    const fadeStart = 0.42;
+                    const opacity = progressY < fadeStart
+                        ? 1
+                        : Math.max(0, 1 - ((progressY - fadeStart) / (1 - fadeStart)));
+
+                    const finalX = clampSigned(body.x, body.dx);
+                    const finalY = Math.min(body.dy, body.y);
+                    const finalR = clampSigned(body.r, body.rot);
+
+                    renderState(body.node, finalX, finalY, finalR, opacity);
+
+                    if (finalY >= body.dy || elapsed > totalRun) {
+                        body.finished = true;
+                        renderState(body.node, body.dx, body.dy, body.rot, 0);
+                    }
                 }
             });
 
