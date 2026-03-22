@@ -441,64 +441,41 @@
             opacity: 1;
             transform: scale(1) translateY(-8px);
             transition-delay: 0.8s;
+            animation: bookFloat 3s ease-in-out 1.5s infinite, bookTilt 6s ease-in-out 1.5s infinite;
         }
 
-        .snap-info {
+        @keyframes bookFloat {
+            0%, 100% { transform: scale(1) translateY(-8px); }
+            50% { transform: scale(1) translateY(-16px); }
+        }
+
+        @keyframes bookTilt {
+            0%, 100% { filter: drop-shadow(0 8px 24px rgba(0,0,0,0.4)); }
+            25% { filter: drop-shadow(-4px 10px 28px rgba(0,0,0,0.5)); }
+            75% { filter: drop-shadow(4px 10px 28px rgba(0,0,0,0.5)); }
+        }
+
+        .snap-scanline {
             position: absolute;
-            bottom: 14px;
-            left: 0; right: 0;
-            text-align: center;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 110px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(76,175,80,0.6), transparent);
             z-index: 4;
-        }
-
-        .snap-info-row {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px;
-            padding: 8px 16px;
             opacity: 0;
-            transform: translateY(16px);
-            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            pointer-events: none;
         }
 
-        .snap-demo.active .snap-info-row {
-            opacity: 1;
-            transform: translateY(0);
-            transition-delay: 1.4s;
+        .snap-demo.active .snap-scanline {
+            animation: scanDown 2s ease-in-out 0.9s infinite;
         }
 
-        .snap-info-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #4CAF50;
-            animation: dotPulse 1.5s ease infinite;
-        }
-
-        @keyframes dotPulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.7); }
-        }
-
-        .snap-info-title {
-            font-size: 11px;
-            font-weight: 600;
-            color: rgba(255,255,255,0.75);
-            letter-spacing: -0.02em;
-        }
-
-        .snap-info-sep {
-            width: 1px;
-            height: 10px;
-            background: rgba(255,255,255,0.12);
-        }
-
-        .snap-info-author {
-            font-size: 10px;
-            color: rgba(255,255,255,0.35);
+        @keyframes scanDown {
+            0% { top: 25%; opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { top: 75%; opacity: 0; }
         }
 
         /* ── Card 2: Build your shelf (horizontal spines) ── */
@@ -523,14 +500,20 @@
             position: relative;
             overflow: hidden;
             opacity: 0;
-            transform: translateX(-30px) rotateY(8deg);
-            transition: opacity 0.35s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            transform: translateY(20px) scale(0.95);
+            transition: opacity 0.35s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease, filter 0.4s ease;
             box-shadow: 0 1px 0 rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
         }
 
         .shelf-demo.active .shelf-spine {
             opacity: 1;
-            transform: translateX(0) rotateY(0deg);
+            transform: translateY(0) scale(1);
+        }
+
+        .shelf-spine.highlight {
+            box-shadow: 0 1px 0 rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 12px rgba(255,255,255,0.08);
+            filter: brightness(1.2);
+            transform: translateY(0) scale(1.03);
         }
 
         .shelf-spine-title {
@@ -710,6 +693,12 @@
             opacity: 1;
             transform: translateX(-50%) translateY(0);
             transition-delay: 2.6s;
+            animation: toastPulse 2s ease 3.2s infinite;
+        }
+
+        @keyframes toastPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(76,175,80,0); }
+            50% { box-shadow: 0 0 16px 4px rgba(76,175,80,0.15); }
         }
 
         .share-toast svg {
@@ -720,6 +709,23 @@
             stroke-width: 2.5;
             stroke-linecap: round;
             stroke-linejoin: round;
+        }
+
+        .share-browser-content {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .share-browser-content::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.4));
+            pointer-events: none;
+            z-index: 1;
         }
 
         .showcase-mock-books {
@@ -1021,6 +1027,7 @@
                         </div>
                     </div>
                     <div class="snap-flash"></div>
+                    <div class="snap-scanline"></div>
                     <!-- SVG book cover for Cat's Cradle -->
                     <svg class="snap-book-svg" width="100" height="140" viewBox="0 0 100 140">
                         <defs>
@@ -1341,9 +1348,20 @@
 
     if (snapDemo) snapObserver.observe(snapDemo);
 
-    // ── Card 2: Shelf build animation (staggered spines) ──
+    // ── Card 2: Shelf build animation (staggered spines + browsing) ──
     const shelfDemo = document.getElementById('shelf-demo');
     let shelfPlayed = false;
+    let browseInterval = null;
+
+    function startBrowsing() {
+        const spines = shelfDemo.querySelectorAll('.shelf-spine');
+        let current = 0;
+        browseInterval = setInterval(() => {
+            spines.forEach(s => s.classList.remove('highlight'));
+            spines[current].classList.add('highlight');
+            current = (current + 1) % spines.length;
+        }, 800);
+    }
 
     const shelfObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -1354,6 +1372,8 @@
                     spine.style.transitionDelay = `${i * 0.12}s`;
                 });
                 setTimeout(() => shelfDemo.classList.add('active'), 100);
+                // Start browsing effect after all spines have entered
+                setTimeout(() => startBrowsing(), 1400);
             }
         });
     }, { threshold: 0.3 });
