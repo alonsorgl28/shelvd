@@ -12,51 +12,51 @@ let coverCache = {}; // title → coverUrl
 
 const container = document.getElementById('library-3d-container');
 
-// ─── Load books from Supabase (or fallback to books.json for demo) ───
+// ─── Load books: books.json base + Supabase user books merged ───
 async function loadBooksData(username, isPublic) {
+    // Always load books.json as the base library
+    const baseBooks = await fetch('books.json').then(r => r.json()).catch(() => []);
+
     const sb = window.shelvdAuth?.supabase;
-    if (!sb) {
-        // No auth available — use static seed data
-        return fetch('books.json').then(r => r.json());
-    }
+    if (!sb) return baseBooks;
 
     try {
         let query;
         if (isPublic && username) {
-            // Public profile: get user_id from username, then their books
             const { data: profile } = await sb
                 .from('profiles')
                 .select('id')
                 .eq('username', username)
                 .maybeSingle();
 
-            if (!profile) return [];
-
+            if (!profile) return baseBooks;
             query = sb.from('books').select('*').eq('user_id', profile.id);
         } else {
-            // Logged-in user: get their own books
             const { data: { session } } = await sb.auth.getSession();
-            if (!session) return fetch('books.json').then(r => r.json());
-
+            if (!session) return baseBooks;
             query = sb.from('books').select('*').eq('user_id', session.user.id);
         }
 
-        const { data: books, error } = await query.order('created_at', { ascending: true, nullsFirst: false });
+        const { data: userBooks, error } = await query.order('created_at', { ascending: true, nullsFirst: false });
 
-        if (error) {
-            console.error('[Shelvd] Error loading books:', error);
-            return fetch('books.json').then(r => r.json());
+        if (error || !userBooks) {
+            console.error('[Shelvd] Error loading user books:', error);
+            return baseBooks;
         }
 
-        // If user has no books yet, show seed data as demo
-        if (!books || books.length === 0) {
-            return fetch('books.json').then(r => r.json());
-        }
+        // Merge: base books + user books (deduplicate by title+author)
+        const seen = new Set(baseBooks.map(b => `${b.title.toLowerCase()}|${b.author.toLowerCase()}`));
+        const uniqueUserBooks = userBooks.filter(b => {
+            const key = `${b.title.toLowerCase()}|${b.author.toLowerCase()}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
 
-        return books;
+        return [...baseBooks, ...uniqueUserBooks];
     } catch (err) {
         console.error('[Shelvd] Error loading books:', err);
-        return fetch('books.json').then(r => r.json());
+        return baseBooks;
     }
 }
 
@@ -1078,7 +1078,7 @@ function renderGridView() {
 
     gridEl.innerHTML = `<div class="grid-container">${books.map((b, i) => {
         const cacheKey = `${b.title}|${b.author}`;
-        const coverUrl = b.cover || coverCache[cacheKey];
+        const coverUrl = coverCache[cacheKey] || b.cover;
         const coverHtml = coverUrl
             ? `<img src="${coverUrl}" alt="${b.title}" loading="lazy">`
             : `<div class="placeholder">${b.title}</div>`;
