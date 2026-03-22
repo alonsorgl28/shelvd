@@ -344,6 +344,123 @@
     100% { transform: scale(1); }
 }
 
+/* ── Search ── */
+.search-container {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 55;
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.search-toggle-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.search-input-wrap {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    height: 40px;
+    width: 0;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.25s ease;
+}
+
+.search-container.open .search-toggle-btn {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.search-container.open .search-input-wrap {
+    width: min(320px, calc(100vw - 40px));
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.search-input-icon {
+    flex-shrink: 0;
+    margin-left: 12px;
+    color: rgba(255,255,255,0.35);
+}
+
+.search-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: rgba(255,255,255,0.9);
+    font-size: 14px;
+    font-family: inherit;
+    padding: 0 8px;
+    height: 100%;
+    min-width: 0;
+}
+
+.search-input::placeholder {
+    color: rgba(255,255,255,0.3);
+}
+
+.search-clear-btn {
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: rgba(255,255,255,0.5);
+    margin-right: 10px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.search-clear-btn:hover {
+    background: rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.8);
+}
+
+/* Search result count badge */
+.search-count {
+    flex-shrink: 0;
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    margin-right: 8px;
+    white-space: nowrap;
+}
+
+/* Grid items hidden by search */
+.grid-item.search-hidden {
+    display: none !important;
+}
+
+/* Shelf book highlight pulse */
+@keyframes bookSearchPulse {
+    0%, 100% { emissive: #000; }
+    50% { emissive: #fff; }
+}
+
 /* ── Add Book Button ── */
 .add-book-btn {
     width: 40px;
@@ -667,6 +784,12 @@
 }
 
 @media (max-width: 768px) {
+    .search-container {
+        top: auto;
+        bottom: 70px;
+        left: 16px;
+    }
+
     .action-bar {
         top: auto;
         bottom: 70px;

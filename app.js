@@ -182,6 +182,7 @@ async function init(username, isPublic) {
     setupEventListeners();
     setupScrollbar();
     setupViewToggle();
+    setupSearch();
 
     // Animation loop
     animate();
@@ -1113,6 +1114,136 @@ function renderGridView() {
             }
         });
     });
+}
+
+// ─── Search ───
+function setupSearch() {
+    const container = document.getElementById('search-container');
+    const toggleBtn = document.getElementById('search-toggle-btn');
+    const inputWrap = document.getElementById('search-input-wrap');
+    const input = document.getElementById('search-input');
+    const clearBtn = document.getElementById('search-clear-btn');
+
+    if (!container || !input) return;
+
+    function openSearch() {
+        container.classList.add('open');
+        setTimeout(() => input.focus(), 300);
+    }
+
+    function closeSearch() {
+        container.classList.remove('open');
+        input.value = '';
+        clearBtn.style.display = 'none';
+        clearSearchResults();
+    }
+
+    toggleBtn.addEventListener('click', openSearch);
+
+    clearBtn.addEventListener('click', () => {
+        input.value = '';
+        clearBtn.style.display = 'none';
+        clearSearchResults();
+        input.focus();
+    });
+
+    // Close on Escape
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeSearch();
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+        if (container.classList.contains('open') && !container.contains(e.target)) {
+            closeSearch();
+        }
+    });
+
+    // Debounced search
+    let debounceTimer = null;
+    input.addEventListener('input', () => {
+        clearBtn.style.display = input.value ? 'flex' : 'none';
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => performSearch(input.value.trim()), 200);
+    });
+
+    // Enter key in shelf mode → pull out first match
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && currentView === 'shelf') {
+            const q = input.value.trim().toLowerCase();
+            if (!q) return;
+            const match = bookObjects.find(b => {
+                const bd = b.userData.bookData;
+                return bd.title.toLowerCase().includes(q) || bd.author.toLowerCase().includes(q);
+            });
+            if (match) {
+                camera.position.y = match.userData.stackPosition.y;
+                controls.target.y = match.userData.stackPosition.y;
+                controls.update();
+                setTimeout(() => pullOutBookFromStack(match), 200);
+                closeSearch();
+            }
+        }
+    });
+}
+
+function performSearch(query) {
+    if (!query) {
+        clearSearchResults();
+        return;
+    }
+
+    const q = query.toLowerCase();
+
+    if (currentView === 'grid') {
+        // Filter grid items
+        document.querySelectorAll('.grid-book').forEach(el => {
+            const title = el.querySelector('.grid-book-title')?.textContent.toLowerCase() || '';
+            const author = el.querySelector('.grid-book-author')?.textContent.toLowerCase() || '';
+            if (title.includes(q) || author.includes(q)) {
+                el.classList.remove('search-hidden');
+            } else {
+                el.classList.add('search-hidden');
+            }
+        });
+
+        // Update count
+        updateSearchCount();
+    } else {
+        // Shelf mode: scroll to first match
+        const match = bookObjects.find(b => {
+            const bd = b.userData.bookData;
+            return bd.title.toLowerCase().includes(q) || bd.author.toLowerCase().includes(q);
+        });
+        if (match && match.userData.stackPosition) {
+            camera.position.y = match.userData.stackPosition.y;
+            controls.target.y = match.userData.stackPosition.y;
+            controls.update();
+        }
+    }
+}
+
+function clearSearchResults() {
+    // Remove grid filters
+    document.querySelectorAll('.grid-book.search-hidden').forEach(el => {
+        el.classList.remove('search-hidden');
+    });
+    // Remove count
+    const existing = document.querySelector('.search-count');
+    if (existing) existing.remove();
+}
+
+function updateSearchCount() {
+    const total = document.querySelectorAll('.grid-book').length;
+    const visible = total - document.querySelectorAll('.grid-book.search-hidden').length;
+
+    let countEl = document.querySelector('.search-count');
+    if (!countEl) {
+        countEl = document.createElement('span');
+        countEl.className = 'search-count';
+        document.getElementById('search-input-wrap').insertBefore(countEl, document.getElementById('search-clear-btn'));
+    }
+    countEl.textContent = `${visible}/${total}`;
 }
 
 // ─── Animation Loop ───
