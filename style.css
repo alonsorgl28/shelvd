@@ -5,7 +5,7 @@
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100vh;
-    background: #0a0f1a;
+    background: #1e2540;
     z-index: 9999;
     display: flex;
     align-items: center;
@@ -846,7 +846,7 @@
 }
 
 body {
-    background: #000;
+    background: #1e2540;
     color: #fff;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
     overflow: hidden;
@@ -861,7 +861,7 @@ body {
     position: fixed;
     top: 0;
     left: 0;
-    background: #0a0f1a;
+    background: #1e2540;
     overflow: hidden;
     z-index: 1;
 }
@@ -1135,7 +1135,7 @@ body {
     width: 100%;
     height: 100vh;
     z-index: 2;
-    background: #0a0f1a;
+    background: #1e2540;
     overflow-y: auto;
     padding: 80px 24px 100px;
 }

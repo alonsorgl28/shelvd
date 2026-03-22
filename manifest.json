@@ -4,8 +4,8 @@
     "description": "Your personal book library in 3D",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#0a0f1a",
-    "theme_color": "#0a0f1a",
+    "background_color": "#1e2540",
+    "theme_color": "#1e2540",
     "orientation": "portrait",
     "icons": [
         {
