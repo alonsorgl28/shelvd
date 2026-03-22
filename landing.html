@@ -359,6 +359,231 @@
             opacity: 0.15;
         }
 
+        /* ── Card 1: Snap a cover ── */
+        .snap-demo {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .snap-viewfinder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        .snap-viewfinder svg {
+            opacity: 0.2;
+            transition: opacity 0.4s ease;
+        }
+
+        .snap-demo.active .snap-viewfinder svg {
+            opacity: 0;
+        }
+
+        .snap-flash {
+            position: absolute;
+            inset: 0;
+            background: white;
+            opacity: 0;
+            z-index: 5;
+            pointer-events: none;
+            border-radius: 14px;
+        }
+
+        .snap-demo.active .snap-flash {
+            animation: flashBurst 0.6s ease-out 0.3s;
+        }
+
+        @keyframes flashBurst {
+            0% { opacity: 0; }
+            15% { opacity: 0.7; }
+            100% { opacity: 0; }
+        }
+
+        .snap-cover {
+            width: 90px;
+            height: 130px;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            z-index: 3;
+        }
+
+        .snap-demo.active .snap-cover {
+            opacity: 1;
+            transform: scale(1);
+            transition-delay: 0.7s;
+        }
+
+        .snap-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .snap-info {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            z-index: 4;
+            white-space: nowrap;
+        }
+
+        .snap-demo.active .snap-info {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            transition-delay: 1.2s;
+        }
+
+        .snap-info-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.8);
+            letter-spacing: -0.02em;
+        }
+
+        .snap-info-author {
+            font-size: 10px;
+            color: rgba(255,255,255,0.35);
+            margin-top: 2px;
+        }
+
+        /* ── Card 2: Build your shelf ── */
+        .shelf-demo {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            perspective: 400px;
+            padding-bottom: 20px;
+        }
+
+        .shelf-book {
+            border-radius: 3px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+            border: 1px solid rgba(255,255,255,0.08);
+            transform-origin: bottom center;
+            opacity: 0;
+            transform: translateY(40px) rotateX(15deg);
+            transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .shelf-demo.active .shelf-book {
+            opacity: 1;
+            transform: translateY(0) rotateX(0deg);
+        }
+
+        .shelf-demo.active .shelf-book:nth-child(1) { transition-delay: 0.1s; }
+        .shelf-demo.active .shelf-book:nth-child(2) { transition-delay: 0.22s; }
+        .shelf-demo.active .shelf-book:nth-child(3) { transition-delay: 0.34s; }
+        .shelf-demo.active .shelf-book:nth-child(4) { transition-delay: 0.46s; }
+        .shelf-demo.active .shelf-book:nth-child(5) { transition-delay: 0.58s; }
+        .shelf-demo.active .shelf-book:nth-child(6) { transition-delay: 0.7s; }
+        .shelf-demo.active .shelf-book:nth-child(7) { transition-delay: 0.82s; }
+        .shelf-demo.active .shelf-book:nth-child(8) { transition-delay: 0.94s; }
+
+        .shelf-floor {
+            position: absolute;
+            bottom: 18px;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: rgba(255,255,255,0.06);
+        }
+
+        /* ── Card 3: Share your library ── */
+        .share-demo {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+        }
+
+        .share-url {
+            font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: -0.02em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .share-url-text {
+            display: inline;
+        }
+
+        .share-cursor {
+            display: inline-block;
+            width: 1px;
+            height: 14px;
+            background: rgba(255,255,255,0.6);
+            vertical-align: middle;
+            margin-left: 1px;
+            animation: cursorBlink 0.8s step-end infinite;
+        }
+
+        @keyframes cursorBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .share-btn-demo {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 0.02em;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease;
+        }
+
+        .share-demo.active .share-btn-demo {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .share-btn-demo.copied {
+            background: rgba(76, 175, 80, 0.15);
+            border-color: rgba(76, 175, 80, 0.3);
+            color: rgba(76, 175, 80, 0.8);
+        }
+
+        .share-btn-demo svg {
+            width: 12px;
+            height: 12px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
         .showcase-mock-books {
             display: flex;
             gap: 8px;
@@ -650,8 +875,18 @@
             <h3 class="feature-card-title">Snap a cover</h3>
             <p class="feature-card-desc">Take a photo of any book cover. Our AI reads the title, author, and details instantly. No typing, no searching.</p>
             <div class="feature-visual">
-                <div class="feature-visual-inner">
-                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.8" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <div class="snap-demo" id="snap-demo">
+                    <div class="snap-viewfinder">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.8" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    </div>
+                    <div class="snap-flash"></div>
+                    <div class="snap-cover">
+                        <img src="https://covers.openlibrary.org/b/isbn/0385333486-M.jpg" alt="Cat's Cradle" loading="lazy">
+                    </div>
+                    <div class="snap-info">
+                        <div class="snap-info-title">Cat's Cradle</div>
+                        <div class="snap-info-author">Kurt Vonnegut</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -668,16 +903,18 @@
             </div>
             <h3 class="feature-card-title">Build your shelf</h3>
             <p class="feature-card-desc">Watch your books stack into a 3D shelf. Browse by scrolling through your collection — every spine, every cover.</p>
-            <div class="feature-visual">
-                <div class="showcase-mock-books">
-                    <div class="showcase-mock-book" style="width:18px;height:80px;"></div>
-                    <div class="showcase-mock-book" style="width:22px;height:95px;"></div>
-                    <div class="showcase-mock-book" style="width:16px;height:70px;"></div>
-                    <div class="showcase-mock-book" style="width:20px;height:88px;"></div>
-                    <div class="showcase-mock-book" style="width:14px;height:75px;"></div>
-                    <div class="showcase-mock-book" style="width:24px;height:92px;"></div>
-                    <div class="showcase-mock-book" style="width:17px;height:68px;"></div>
+            <div class="feature-visual" style="position:relative;">
+                <div class="shelf-demo" id="shelf-demo">
+                    <div class="shelf-book" style="width:16px;height:72px;background:linear-gradient(180deg,rgba(200,180,160,0.2),rgba(200,180,160,0.06));"></div>
+                    <div class="shelf-book" style="width:20px;height:90px;margin-left:4px;background:linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0.04));"></div>
+                    <div class="shelf-book" style="width:14px;height:65px;margin-left:4px;background:linear-gradient(180deg,rgba(180,200,220,0.18),rgba(180,200,220,0.05));"></div>
+                    <div class="shelf-book" style="width:22px;height:98px;margin-left:4px;background:linear-gradient(180deg,rgba(255,255,255,0.12),rgba(255,255,255,0.04));"></div>
+                    <div class="shelf-book" style="width:13px;height:70px;margin-left:4px;background:linear-gradient(180deg,rgba(220,200,180,0.2),rgba(220,200,180,0.06));"></div>
+                    <div class="shelf-book" style="width:24px;height:85px;margin-left:4px;background:linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.03));"></div>
+                    <div class="shelf-book" style="width:15px;height:76px;margin-left:4px;background:linear-gradient(180deg,rgba(190,180,200,0.18),rgba(190,180,200,0.05));"></div>
+                    <div class="shelf-book" style="width:18px;height:82px;margin-left:4px;background:linear-gradient(180deg,rgba(255,255,255,0.13),rgba(255,255,255,0.04));"></div>
                 </div>
+                <div class="shelf-floor"></div>
             </div>
         </div>
 
@@ -692,8 +929,14 @@
             <h3 class="feature-card-title">Share your library</h3>
             <p class="feature-card-desc">Get a unique link to your shelf. Anyone can browse your collection — no account needed. Your reading identity, public.</p>
             <div class="feature-visual">
-                <div class="feature-visual-inner" style="font-size:14px;opacity:0.3;font-family:monospace;">
-                    shelvd.app/@yourname
+                <div class="share-demo" id="share-demo">
+                    <div class="share-url">
+                        <span class="share-url-text" id="share-url-text"></span><span class="share-cursor"></span>
+                    </div>
+                    <div class="share-btn-demo" id="share-btn-demo">
+                        <svg viewBox="0 0 24 24" class="share-copy-icon"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        <span class="share-btn-label">Copy link</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -914,6 +1157,79 @@
     }, { threshold: 0.15 });
 
     revealElements.forEach(el => revealObserver.observe(el));
+
+    // ── Card 1: Snap a cover animation ──
+    const snapDemo = document.getElementById('snap-demo');
+    let snapPlayed = false;
+
+    const snapObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !snapPlayed) {
+                snapPlayed = true;
+                setTimeout(() => snapDemo.classList.add('active'), 200);
+            }
+        });
+    }, { threshold: 0.5 });
+
+    if (snapDemo) snapObserver.observe(snapDemo);
+
+    // ── Card 2: Shelf build animation ──
+    const shelfDemo = document.getElementById('shelf-demo');
+    let shelfPlayed = false;
+
+    const shelfObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !shelfPlayed) {
+                shelfPlayed = true;
+                setTimeout(() => shelfDemo.classList.add('active'), 100);
+            }
+        });
+    }, { threshold: 0.4 });
+
+    if (shelfDemo) shelfObserver.observe(shelfDemo);
+
+    // ── Card 3: Share URL typewriter + copy ──
+    const shareDemo = document.getElementById('share-demo');
+    const shareUrlText = document.getElementById('share-url-text');
+    const shareBtn = document.getElementById('share-btn-demo');
+    const fullUrl = 'shelvd.app/@yourname';
+    let sharePlayed = false;
+
+    function typeUrl(text, el, delay, callback) {
+        let i = 0;
+        function type() {
+            if (i <= text.length) {
+                el.textContent = text.slice(0, i);
+                i++;
+                setTimeout(type, 45 + Math.random() * 35);
+            } else if (callback) {
+                callback();
+            }
+        }
+        setTimeout(type, delay);
+    }
+
+    const shareObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !sharePlayed) {
+                sharePlayed = true;
+                typeUrl(fullUrl, shareUrlText, 300, () => {
+                    // Show copy button after typing
+                    setTimeout(() => {
+                        shareDemo.classList.add('active');
+                        // Auto "copy" after a beat
+                        setTimeout(() => {
+                            shareBtn.classList.add('copied');
+                            shareBtn.querySelector('.share-btn-label').textContent = 'Copied!';
+                            shareBtn.querySelector('.share-copy-icon').innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+                        }, 1200);
+                    }, 400);
+                });
+            }
+        });
+    }, { threshold: 0.5 });
+
+    if (shareDemo) shareObserver.observe(shareDemo);
 </script>
 
 </body>
