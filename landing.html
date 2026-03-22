@@ -1587,7 +1587,9 @@
                     y: Math.random() * canvas.height,
                     r: 0.5 + Math.random() * 1.5,
                     phase: Math.random() * Math.PI * 2,
-                    speed: 0.8 + Math.random() * 1.5
+                    speed: 0.8 + Math.random() * 1.5,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.3
                 });
             }
         }
@@ -1595,6 +1597,12 @@
         function draw(t) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             stars.forEach(s => {
+                s.x += s.vx;
+                s.y += s.vy;
+                if (s.x < 0) s.x = canvas.width;
+                if (s.x > canvas.width) s.x = 0;
+                if (s.y < 0) s.y = canvas.height;
+                if (s.y > canvas.height) s.y = 0;
                 const opacity = 0.3 + 0.5 * Math.sin(s.phase + t * 0.001 * s.speed);
                 ctx.beginPath();
                 ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
