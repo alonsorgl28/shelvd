@@ -5,6 +5,7 @@ const ioProgress = document.getElementById('io-progress');
 const ioProgressText = document.getElementById('io-progress-text');
 const ioProgressFill = document.getElementById('io-progress-fill');
 const ioImportInput = document.getElementById('io-import-input');
+const addModal = document.getElementById('add-book-modal');
 
 function openIOModal() { ioModal.style.display = 'flex'; }
 function closeIOModal() {
@@ -19,10 +20,42 @@ function showProgress(text, pct) {
     ioProgressFill.style.width = pct + '%';
 }
 
-// ─── UI Wiring ───
+// ─── Export modal ───
 document.getElementById('io-btn').addEventListener('click', openIOModal);
 document.getElementById('io-backdrop').addEventListener('click', closeIOModal);
 document.getElementById('io-close').addEventListener('click', closeIOModal);
+
+// ─── Add book: choose method step ───
+const stepChoose = document.getElementById('add-step-choose');
+const stepCapture = document.getElementById('add-step-capture');
+
+document.getElementById('add-choose-photo').addEventListener('click', () => {
+    stepChoose.style.display = 'none';
+    stepCapture.style.display = '';
+});
+
+document.getElementById('add-choose-file').addEventListener('click', () => {
+    ioImportInput.click();
+});
+
+// Back button: return to choose step
+const backBtn = document.getElementById('add-back-btn');
+if (backBtn) {
+    backBtn.addEventListener('click', () => {
+        stepCapture.style.display = 'none';
+        stepChoose.style.display = '';
+    });
+}
+
+// Reset to choose step when modal opens
+const addBookBtn = document.getElementById('add-book-btn');
+if (addBookBtn) {
+    const origClick = addBookBtn.onclick;
+    addBookBtn.addEventListener('click', () => {
+        stepChoose.style.display = '';
+        stepCapture.style.display = 'none';
+    }, true); // capture phase, runs before auth.js handler
+}
 
 // ─── Export to Excel ───
 document.getElementById('io-export-excel').addEventListener('click', async () => {
@@ -37,7 +70,6 @@ document.getElementById('io-export-excel').addEventListener('click', async () =>
     }));
 
     const ws = XLSX.utils.json_to_sheet(rows);
-    // Column widths
     ws['!cols'] = [{ wch: 40 }, { wch: 30 }, { wch: 8 }, { wch: 60 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Library');
@@ -51,14 +83,13 @@ document.getElementById('io-export-excel').addEventListener('click', async () =>
     setTimeout(closeIOModal, 800);
 });
 
-// ─── Export to Word (.docx as HTML) ───
+// ─── Export to Word (.doc as HTML) ───
 document.getElementById('io-export-word').addEventListener('click', async () => {
     showProgress('Preparing Word document...', 10);
 
     const books = getBookList();
     const today = new Date().toISOString().slice(0, 10);
 
-    // Build HTML content for the Word doc
     let html = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office"
               xmlns:w="urn:schemas-microsoft-com:office:word"
@@ -83,13 +114,13 @@ document.getElementById('io-export-word').addEventListener('click', async () => 
         const b = books[i];
         showProgress(`Processing ${i + 1}/${books.length}...`, 10 + (i / books.length * 80));
         const coverHtml = b.coverUrl
-            ? `<img class="cover" src="${b.coverUrl}" alt="${b.title}">`
-            : `<div class="cover" style="background:#ddd;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;">${b.title}</div>`;
+            ? `<img class="cover" src="${b.coverUrl}" alt="${escHtml(b.title)}">`
+            : `<div class="cover" style="background:#ddd;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;">${escHtml(b.title)}</div>`;
         html += `<tr>
             <td style="width:100px">${coverHtml}</td>
             <td>
-                <div class="title">${b.title}</div>
-                <div class="author">${b.author}</div>
+                <div class="title">${escHtml(b.title)}</div>
+                <div class="author">${escHtml(b.author)}</div>
                 <div class="pages">${b.pages ? b.pages + ' pages' : ''}</div>
             </td>
         </tr>`;
@@ -106,16 +137,15 @@ document.getElementById('io-export-word').addEventListener('click', async () => 
     setTimeout(closeIOModal, 800);
 });
 
-// ─── Import from Excel ───
-document.getElementById('io-import-excel').addEventListener('click', () => {
-    ioImportInput.click();
-});
-
+// ─── Import from Excel/CSV (triggered from add-book modal) ───
 ioImportInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     ioImportInput.value = '';
 
+    // Close add-book modal, open IO modal for progress
+    if (addModal) addModal.style.display = 'none';
+    openIOModal();
     showProgress('Reading file...', 5);
 
     const data = await file.arrayBuffer();
@@ -129,20 +159,20 @@ ioImportInput.addEventListener('change', async (e) => {
         return;
     }
 
-    // Detect column names (flexible: Title/title/título, Author/author/autor, etc.)
+    // Detect column names (flexible: Title/title/título, etc.)
     const sample = rows[0];
     const keys = Object.keys(sample);
-    const titleKey = keys.find(k => /^(title|t[ií]tulo|libro|book)$/i.test(k));
-    const authorKey = keys.find(k => /^(author|autor|writer)$/i.test(k));
+    const titleKey = keys.find(k => /^(title|t[ií]tulo|libro|book|name|nombre)$/i.test(k));
+    const authorKey = keys.find(k => /^(author|autor|writer|escritor)$/i.test(k));
     const pagesKey = keys.find(k => /^(pages|p[áa]ginas|pags?)$/i.test(k));
 
     if (!titleKey) {
-        showProgress('Could not find a "Title" column', 100);
-        setTimeout(closeIOModal, 2000);
+        showProgress('Could not find a "Title" column. Use headers: Title, Author, Pages', 100);
+        setTimeout(closeIOModal, 3000);
         return;
     }
 
-    // Get existing books to deduplicate
+    // Deduplicate against existing library
     const existingBooks = getBookList();
     const existingKeys = new Set(existingBooks.map(b => `${b.title.toLowerCase()}|${b.author.toLowerCase()}`));
 
@@ -155,8 +185,8 @@ ioImportInput.addEventListener('change', async (e) => {
     for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
         const title = String(row[titleKey] || '').trim();
-        const author = String(row[authorKey] || row[keys.find(k => k !== titleKey && typeof row[k] === 'string')] || 'Unknown').trim();
-        const pages = parseInt(row[pagesKey]) || 250;
+        const author = authorKey ? String(row[authorKey] || '').trim() : 'Unknown';
+        const pages = pagesKey ? (parseInt(row[pagesKey]) || 250) : 250;
 
         if (!title) { skipped++; continue; }
 
@@ -166,7 +196,6 @@ ioImportInput.addEventListener('change', async (e) => {
 
         showProgress(`Importing ${i + 1}/${rows.length}...`, 10 + (i / rows.length * 85));
 
-        // Insert into Supabase if authenticated
         if (sb && session) {
             const { data: book, error } = await sb
                 .from('books')
@@ -183,16 +212,15 @@ ioImportInput.addEventListener('change', async (e) => {
         }
     }
 
-    showProgress(`Done! Added ${added} books, skipped ${skipped} duplicates.`, 100);
+    showProgress(`Added ${added} books` + (skipped > 0 ? `, skipped ${skipped} duplicates` : ''), 100);
     setTimeout(() => {
         closeIOModal();
         if (added > 0) window.location.reload();
     }, 1500);
 });
 
-// ─── Helper: Get book list with cover URLs ───
+// ─── Helpers ───
 function getBookList() {
-    // Access bookObjects from app.js (it's a module-level var, exposed on window)
     const bookObjs = window.shelvdBookObjects || [];
     const cache = window.shelvdCoverCache || {};
 
@@ -203,7 +231,11 @@ function getBookList() {
             title: bd.title || '',
             author: bd.author || '',
             pages: bd.pages || 0,
-            coverUrl: cache[cacheKey] || bd.cover || ''
+            coverUrl: cache[cacheKey] || ''
         };
     });
+}
+
+function escHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

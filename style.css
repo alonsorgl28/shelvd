@@ -1311,6 +1311,32 @@ body {
     }
 }
 
+/* ── Add Book: Choose Method ── */
+.add-choose-options {
+    display: flex; gap: 12px; padding: 8px 0;
+}
+.add-choose-option {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    gap: 10px; padding: 24px 12px; border-radius: 14px; cursor: pointer;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+    transition: background 0.15s, border-color 0.15s; text-align: center;
+}
+.add-choose-option:hover {
+    background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15);
+}
+.add-choose-icon { color: rgba(255,255,255,0.5); }
+.add-choose-label {
+    font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.85);
+    font-family: "SF Pro Display", "Helvetica Neue", sans-serif;
+}
+.add-choose-desc {
+    font-size: 11px; color: rgba(255,255,255,0.35); line-height: 1.3;
+    font-family: "SF Pro Text", "Helvetica Neue", sans-serif;
+}
+.add-back-btn {
+    font-size: 20px !important; padding: 4px 10px !important;
+}
+
 /* ── Import/Export Modal ── */
 .io-modal {
     position: fixed; inset: 0; z-index: 3000;

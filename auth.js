@@ -334,7 +334,13 @@ let currentImageBlob = null;
 
 function openAddModal() {
     addModal.style.display = 'flex';
-    stepCapture.style.display = '';
+    const stepChoose = document.getElementById('add-step-choose');
+    if (stepChoose) {
+        stepChoose.style.display = '';
+        stepCapture.style.display = 'none';
+    } else {
+        stepCapture.style.display = '';
+    }
     stepAnalyzing.style.display = 'none';
     stepConfirm.style.display = 'none';
     addBtn.classList.add('active');
