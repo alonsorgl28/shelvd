@@ -346,42 +346,49 @@
 
 /* ── Search ── */
 .search-container {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 55;
     display: flex;
     align-items: center;
-    gap: 0;
+    margin-left: auto;
 }
 
 .search-toggle-btn {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    color: rgba(255,255,255,0.4);
     cursor: pointer;
-    transition: background 0.2s, border-color 0.2s, color 0.2s;
+    transition: background 0.2s, color 0.2s;
+}
+
+.search-toggle-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
 }
 
 .search-input-wrap {
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     align-items: center;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.12);
     border-radius: 14px;
-    height: 40px;
+    height: 42px;
     width: 0;
     opacity: 0;
     overflow: hidden;
     pointer-events: none;
+    z-index: 200;
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
                 opacity 0.25s ease;
 }
@@ -392,7 +399,7 @@
 }
 
 .search-container.open .search-input-wrap {
-    width: min(320px, calc(100vw - 40px));
+    width: min(400px, calc(100vw - 40px));
     opacity: 1;
     pointer-events: auto;
 }
@@ -784,12 +791,6 @@
 }
 
 @media (max-width: 768px) {
-    .search-container {
-        top: auto;
-        bottom: 70px;
-        left: 16px;
-    }
-
     .action-bar {
         top: auto;
         bottom: 70px;
@@ -905,8 +906,15 @@ body {
 
 .library-user-header-content {
     display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+}
+
+.library-user-header-left {
+    display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
 }
 
 .library-user-username {
@@ -1405,7 +1413,15 @@ body {
 
     .library-user-header-content {
         text-align: center;
+        justify-content: center;
+    }
+
+    .library-user-header-left {
         align-items: center;
+    }
+
+    .search-input-wrap {
+        top: 50px;
     }
 
     .library-user-username { font-size: 10px; }
