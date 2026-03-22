@@ -928,7 +928,23 @@ function setupEventListeners() {
         camera.position.y = clampedY;
         controls.target.y = clampedY;
         controls.update();
+        checkFocusedBook();
     }, { passive: false });
+
+    // Pan sound: detect single-finger pan (scroll) on mobile/desktop
+    let isPanning = false;
+    renderer.domElement.addEventListener('pointerdown', () => { isPanning = true; });
+    renderer.domElement.addEventListener('pointerup', () => {
+        if (isPanning) { isPanning = false; }
+    });
+    // Two-finger = zoom, disable sound
+    renderer.domElement.addEventListener('touchstart', (e) => {
+        if (e.touches.length >= 2) isPanning = false;
+    }, { passive: true });
+
+    controls.addEventListener('change', () => {
+        if (isPanning) checkFocusedBook();
+    });
 
     // Touch
     let touchStartPos = null;
@@ -1011,6 +1027,7 @@ function setupScrollbar() {
         controls.target.y = targetY;
         camera.position.y = targetY;
         controls.update();
+        checkFocusedBook();
     }
 
     // Mouse
@@ -1115,7 +1132,7 @@ function renderGridView() {
 }
 
 // ─── Animation Loop ───
-// ─── Cover Flow tick sound (Web Audio API) ───
+// ─── Shelf scroll sound (Web Audio API) ───
 let shelvdAudioCtx = null;
 let lastFocusedBookIndex = -1;
 
@@ -1133,27 +1150,32 @@ function playTickSound() {
 
         const now = ctx.currentTime;
 
-        // Short percussive click — like Cover Flow
-        const osc = ctx.createOscillator();
+        // Soft wood knock — like tapping a book spine
+        const bufSize = ctx.sampleRate * 0.04;
+        const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufSize * 0.08));
+        }
+
+        const noise = ctx.createBufferSource();
+        noise.buffer = buf;
+
+        const bandpass = ctx.createBiquadFilter();
+        bandpass.type = 'bandpass';
+        bandpass.frequency.value = 800;
+        bandpass.Q.value = 2;
+
         const gain = ctx.createGain();
-        const filter = ctx.createBiquadFilter();
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
 
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(1800, now);
-        osc.frequency.exponentialRampToValueAtTime(400, now + 0.03);
-
-        filter.type = 'highpass';
-        filter.frequency.value = 600;
-
-        gain.gain.setValueAtTime(0.08, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-
-        osc.connect(filter);
-        filter.connect(gain);
+        noise.connect(bandpass);
+        bandpass.connect(gain);
         gain.connect(ctx.destination);
 
-        osc.start(now);
-        osc.stop(now + 0.05);
+        noise.start(now);
+        noise.stop(now + 0.04);
     } catch (e) { /* ignore audio errors */ }
 }
 
@@ -1173,7 +1195,7 @@ function checkFocusedBook() {
     }
 
     if (closestIdx !== -1 && closestIdx !== lastFocusedBookIndex) {
-        if (lastFocusedBookIndex !== -1) playTickSound(); // skip first
+        if (lastFocusedBookIndex !== -1) playTickSound();
         lastFocusedBookIndex = closestIdx;
     }
 }
@@ -1181,9 +1203,6 @@ function checkFocusedBook() {
 function animate() {
     requestAnimationFrame(animate);
     if (controls) controls.update();
-
-    // Cover Flow tick
-    checkFocusedBook();
 
     // Dust
     animateDust();
