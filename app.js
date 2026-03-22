@@ -1115,9 +1115,75 @@ function renderGridView() {
 }
 
 // ─── Animation Loop ───
+// ─── Cover Flow tick sound (Web Audio API) ───
+let shelvdAudioCtx = null;
+let lastFocusedBookIndex = -1;
+
+function getAudioCtx() {
+    if (!shelvdAudioCtx) {
+        shelvdAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return shelvdAudioCtx;
+}
+
+function playTickSound() {
+    try {
+        const ctx = getAudioCtx();
+        if (ctx.state === 'suspended') ctx.resume();
+
+        const now = ctx.currentTime;
+
+        // Short percussive click — like Cover Flow
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1800, now);
+        osc.frequency.exponentialRampToValueAtTime(400, now + 0.03);
+
+        filter.type = 'highpass';
+        filter.frequency.value = 600;
+
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.05);
+    } catch (e) { /* ignore audio errors */ }
+}
+
+function checkFocusedBook() {
+    if (!camera || bookObjects.length === 0) return;
+
+    const camY = camera.position.y;
+    let closestIdx = -1;
+    let closestDist = Infinity;
+
+    for (let i = 0; i < bookObjects.length; i++) {
+        const d = Math.abs(bookObjects[i].position.y - camY);
+        if (d < closestDist) {
+            closestDist = d;
+            closestIdx = i;
+        }
+    }
+
+    if (closestIdx !== -1 && closestIdx !== lastFocusedBookIndex) {
+        if (lastFocusedBookIndex !== -1) playTickSound(); // skip first
+        lastFocusedBookIndex = closestIdx;
+    }
+}
+
 function animate() {
     requestAnimationFrame(animate);
     if (controls) controls.update();
+
+    // Cover Flow tick
+    checkFocusedBook();
 
     // Dust
     animateDust();
