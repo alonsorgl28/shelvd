@@ -227,14 +227,14 @@ function enterLibrary(username, isPublic) {
     document.querySelector('.library-user-header').style.display = '';
     document.title = `Shelvd — @${username}`;
 
-    // Show share button
-    const shareBtn = document.getElementById('share-btn');
-    shareBtn.style.display = '';
-    shareBtn.setAttribute('data-username', username);
+    // Show action bar with staggered animation
+    const actionBar = document.getElementById('action-bar');
+    actionBar.style.display = '';
+    document.getElementById('share-btn').setAttribute('data-username', username);
 
-    // Show add book button only for logged-in users (not public view)
-    if (!isPublic) {
-        document.getElementById('add-book-btn').style.display = '';
+    // Hide add button for public view
+    if (isPublic) {
+        document.getElementById('add-book-btn').style.display = 'none';
     }
 
     if (isPublic) {
@@ -335,12 +335,14 @@ function openAddModal() {
     stepCapture.style.display = '';
     stepAnalyzing.style.display = 'none';
     stepConfirm.style.display = 'none';
+    addBtn.classList.add('active');
 }
 
 function closeAddModal() {
     addModal.style.display = 'none';
     currentImageBase64 = null;
     currentImageBlob = null;
+    addBtn.classList.remove('active');
 }
 
 addBtn.addEventListener('click', openAddModal);
