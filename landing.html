@@ -122,8 +122,8 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: var(--accent);
-            color: var(--white);
+            background: #141a2e;
+            color: #ffffff;
             border: none;
             border-radius: 40px;
             padding: 14px 28px;
@@ -133,11 +133,31 @@
             letter-spacing: -0.01em;
             cursor: pointer;
             text-decoration: none;
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(20,26,46,0.3), 0 0 60px rgba(100,120,200,0.08);
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
         }
 
-        .btn-primary:hover { transform: scale(1.04); filter: brightness(1.15); }
+        .btn-primary:hover {
+            transform: scale(1.04);
+            box-shadow: 0 0 24px rgba(20,26,46,0.4), 0 0 80px rgba(100,120,200,0.15);
+        }
         .btn-primary:active { transform: scale(0.96); }
+
+        .btn-primary canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .btn-primary span,
+        .btn-primary svg {
+            position: relative;
+            z-index: 1;
+        }
 
         .btn-primary svg {
             width: 14px;
@@ -1017,8 +1037,9 @@
     <h1 class="hero-headline">Your books,<br>beautifully stacked.</h1>
     <p class="hero-desc">Snap a cover, catalog your collection. Build a 3D library that's uniquely yours and share it with the world.</p>
     <div class="hero-buttons">
-        <a href="/index.html" class="btn-primary">
-            Start your shelf
+        <a href="/index.html" class="btn-primary" id="hero-btn-primary">
+            <canvas></canvas>
+            <span>Start your shelf</span>
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
         </a>
         <a href="#features" class="btn-secondary">
@@ -1270,8 +1291,9 @@
 <section class="cta-section">
     <h2 class="cta-title">Claim your shelf</h2>
     <p class="cta-sub">Free forever. No ads. Just your books.</p>
-    <a href="/index.html" class="btn-primary">
-        Get started
+    <a href="/index.html" class="btn-primary" id="cta-btn-primary">
+        <canvas></canvas>
+        <span>Get started</span>
         <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
 </section>
@@ -1541,6 +1563,51 @@
     }, { threshold: 0.4 });
 
     if (shareDemo) shareObserver.observe(shareDemo);
+
+    // ── Primary buttons: starfield canvas ──
+    document.querySelectorAll('.btn-primary canvas').forEach(canvas => {
+        const ctx = canvas.getContext('2d');
+        const stars = [];
+        const count = 35;
+
+        function resize() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width * 2;
+            canvas.height = rect.height * 2;
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+        }
+
+        function init() {
+            resize();
+            stars.length = 0;
+            for (let i = 0; i < count; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    r: 0.5 + Math.random() * 1.5,
+                    phase: Math.random() * Math.PI * 2,
+                    speed: 0.8 + Math.random() * 1.5
+                });
+            }
+        }
+
+        function draw(t) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            stars.forEach(s => {
+                const opacity = 0.3 + 0.5 * Math.sin(s.phase + t * 0.001 * s.speed);
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255,255,255,${opacity})`;
+                ctx.fill();
+            });
+            requestAnimationFrame(draw);
+        }
+
+        init();
+        requestAnimationFrame(draw);
+        window.addEventListener('resize', resize);
+    });
 
     // ── Showcase: stars + messy rotations ──
     // Generate stars
