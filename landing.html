@@ -595,7 +595,7 @@
     <div class="brand-glow"></div>
 
     <div class="brand-books" id="brand-books">
-        <svg viewBox="0 0 1100 320" aria-label="Falling books animation">
+        <svg viewBox="0 0 1100 400" aria-label="Falling book tower animation">
             <defs>
                 <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
                     <feGaussianBlur stdDeviation="20" result="blur"/>
@@ -607,57 +607,53 @@
                 </filter>
             </defs>
 
-            <ellipse cx="550" cy="160" rx="200" ry="80" fill="#D9AE7E" opacity="0.08" filter="url(#softGlow)"/>
+            <ellipse cx="550" cy="200" rx="200" ry="80" fill="#D9AE7E" opacity="0.08" filter="url(#softGlow)"/>
 
             <g id="books-group">
-                <!-- Center books (fall down) -->
-                <g class="book" data-dx="-80" data-dy="200" data-rot="-14">
-                    <rect x="510" y="30" width="100" height="16" rx="8" fill="#ffffff"/>
-                    <rect x="526" y="34" width="3" height="9" rx="1.5" fill="#000000" fill-opacity="0.15"/>
+                <!-- Tower of books — all stacked at center top, will fall and scatter -->
+                <g class="book" data-w="110" data-h="16">
+                    <rect x="495" y="10" width="110" height="16" rx="8" fill="#ffffff"/>
+                    <rect x="514" y="13" width="3" height="10" rx="1.5" fill="#000" fill-opacity="0.15"/>
                 </g>
-                <g class="book" data-dx="90" data-dy="220" data-rot="12">
-                    <rect x="500" y="52" width="78" height="16" rx="8" fill="#ffffff"/>
-                    <rect x="518" y="56" width="3" height="9" rx="1.5" fill="#000000" fill-opacity="0.15"/>
+                <g class="book" data-w="80" data-h="16">
+                    <rect x="510" y="28" width="80" height="16" rx="8" fill="#ffffff"/>
+                    <rect x="530" y="31" width="3" height="10" rx="1.5" fill="#000" fill-opacity="0.15"/>
                 </g>
-                <g class="book" data-dx="-100" data-dy="240" data-rot="-10">
-                    <rect x="490" y="74" width="120" height="16" rx="8" fill="#ffffff"/>
-                    <rect x="510" y="78" width="3" height="9" rx="1.5" fill="#000000" fill-opacity="0.15"/>
+                <g class="book" data-w="130" data-h="16">
+                    <rect x="485" y="46" width="130" height="16" rx="8" fill="#ffffff"/>
+                    <rect x="508" y="49" width="3" height="10" rx="1.5" fill="#000" fill-opacity="0.15"/>
                 </g>
-                <g class="book" data-dx="70" data-dy="255" data-rot="8">
-                    <rect x="515" y="96" width="70" height="16" rx="8" fill="#ffffff"/>
-                    <rect x="532" y="100" width="3" height="9" rx="1.5" fill="#000000" fill-opacity="0.15"/>
+                <g class="book" data-w="70" data-h="16">
+                    <rect x="515" y="64" width="70" height="16" rx="8" fill="#ffffff"/>
+                    <rect x="532" y="67" width="3" height="10" rx="1.5" fill="#000" fill-opacity="0.15"/>
                 </g>
-                <g class="book" data-dx="-60" data-dy="270" data-rot="-6">
-                    <rect x="505" y="118" width="90" height="16" rx="8" fill="#ffffff"/>
-                    <rect x="522" y="122" width="3" height="9" rx="1.5" fill="#000000" fill-opacity="0.15"/>
+                <g class="book" data-w="100" data-h="16">
+                    <rect x="500" y="82" width="100" height="16" rx="8" fill="#ffffff"/>
+                    <rect x="520" y="85" width="3" height="10" rx="1.5" fill="#000" fill-opacity="0.15"/>
                 </g>
-
-                <!-- Left side books (slide in from left) -->
-                <g class="book book-side" data-dx="-320" data-dy="180" data-rot="-22" data-from="left">
-                    <rect x="520" y="40" width="60" height="14" rx="7" fill="rgba(255,255,255,0.7)"/>
-                    <rect x="534" y="43" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.1"/>
+                <g class="book" data-w="60" data-h="14">
+                    <rect x="520" y="100" width="60" height="14" rx="7" fill="rgba(255,255,255,0.85)"/>
+                    <rect x="536" y="103" width="3" height="8" rx="1.5" fill="#000" fill-opacity="0.12"/>
                 </g>
-                <g class="book book-side" data-dx="-280" data-dy="230" data-rot="-16" data-from="left">
-                    <rect x="520" y="65" width="80" height="14" rx="7" fill="rgba(255,255,255,0.6)"/>
-                    <rect x="538" y="68" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.1"/>
+                <g class="book" data-w="120" data-h="16">
+                    <rect x="490" y="116" width="120" height="16" rx="8" fill="#ffffff"/>
+                    <rect x="512" y="119" width="3" height="10" rx="1.5" fill="#000" fill-opacity="0.15"/>
                 </g>
-                <g class="book book-side" data-dx="-350" data-dy="260" data-rot="-12" data-from="left">
-                    <rect x="520" y="90" width="50" height="14" rx="7" fill="rgba(255,255,255,0.5)"/>
-                    <rect x="532" y="93" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.1"/>
+                <g class="book" data-w="90" data-h="16">
+                    <rect x="505" y="134" width="90" height="16" rx="8" fill="#ffffff"/>
+                    <rect x="524" y="137" width="3" height="10" rx="1.5" fill="#000" fill-opacity="0.15"/>
                 </g>
-
-                <!-- Right side books (slide in from right) -->
-                <g class="book book-side" data-dx="310" data-dy="190" data-rot="20" data-from="right">
-                    <rect x="520" y="48" width="70" height="14" rx="7" fill="rgba(255,255,255,0.7)"/>
-                    <rect x="538" y="51" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.1"/>
+                <g class="book" data-w="75" data-h="14">
+                    <rect x="512" y="152" width="75" height="14" rx="7" fill="rgba(255,255,255,0.85)"/>
+                    <rect x="530" y="155" width="3" height="8" rx="1.5" fill="#000" fill-opacity="0.12"/>
                 </g>
-                <g class="book book-side" data-dx="270" data-dy="240" data-rot="14" data-from="right">
-                    <rect x="520" y="75" width="90" height="14" rx="7" fill="rgba(255,255,255,0.6)"/>
-                    <rect x="542" y="78" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.1"/>
+                <g class="book" data-w="105" data-h="16">
+                    <rect x="497" y="168" width="105" height="16" rx="8" fill="#ffffff"/>
+                    <rect x="518" y="171" width="3" height="10" rx="1.5" fill="#000" fill-opacity="0.15"/>
                 </g>
-                <g class="book book-side" data-dx="340" data-dy="268" data-rot="10" data-from="right">
-                    <rect x="520" y="95" width="55" height="14" rx="7" fill="rgba(255,255,255,0.5)"/>
-                    <rect x="534" y="98" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.1"/>
+                <g class="book" data-w="55" data-h="14">
+                    <rect x="522" y="186" width="55" height="14" rx="7" fill="rgba(255,255,255,0.8)"/>
+                    <rect x="538" y="189" width="3" height="8" rx="1.5" fill="#000" fill-opacity="0.1"/>
                 </g>
             </g>
         </svg>
@@ -796,166 +792,135 @@
 </footer>
 
 <script>
-    // ── Book falling + sliding physics ──
+    // ── Tower fall + scatter physics ──
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const allBooks = Array.from(document.querySelectorAll(".book"));
     const brandName = document.getElementById('brand-name');
-
-    const baseConfigs = allBooks.map((book, index) => {
-        const isSide = book.classList.contains('book-side');
-        const from = book.dataset.from || null; // 'left' or 'right'
-        return {
-            node: book,
-            dx: Number(book.dataset.dx),
-            dy: Number(book.dataset.dy),
-            rot: Number(book.dataset.rot),
-            delay: isSide ? 400 + index * 120 : index * 150,
-            isSide,
-            from
-        };
-    });
-
     let rafId = null;
 
-    function renderState(book, x, y, rotation, opacity) {
-        book.style.transform = `translate(${x}px, ${y}px) rotate(${rotation}deg)`;
-        book.style.opacity = String(opacity);
+    function renderState(el, x, y, rot, opacity) {
+        el.style.transform = `translate(${x}px, ${y}px) rotate(${rot}deg)`;
+        el.style.opacity = String(opacity);
     }
 
     function resetAll() {
         if (rafId) cancelAnimationFrame(rafId);
         rafId = null;
-        baseConfigs.forEach(({ node }) => renderState(node, 0, 0, 0, 0));
+        allBooks.forEach(b => renderState(b, 0, 0, 0, 1));
         brandName.classList.remove('revealed');
-    }
-
-    function clampSigned(value, target) {
-        return target < 0 ? Math.max(target, value) : Math.min(target, value);
     }
 
     function playAnimation() {
         resetAll();
         if (prefersReducedMotion) {
-            baseConfigs.forEach(({ node, dx, dy, rot }) => renderState(node, dx, dy, rot, 0));
             brandName.classList.add('revealed');
             return;
         }
 
         const startTime = performance.now();
-        let lastFrameTime = startTime;
+        let lastFrame = startTime;
         let brandRevealed = false;
+        const totalRun = 4500;
+        const floorY = 160; // impact point
+        const gravity = 900;
 
-        const gravity = 1600;
-        const drag = 0.002;
-        const angularDrag = 0.0025;
-        const totalRun = 4000;
-
-        const bodies = baseConfigs.map((config, index) => {
-            if (config.isSide) {
-                // Side books: slide horizontally from off-screen
-                const startX = config.from === 'left' ? -600 : 600;
-                return {
-                    ...config,
-                    active: false,
-                    finished: false,
-                    x: startX,
-                    y: config.dy * 0.3,
-                    r: config.from === 'left' ? -30 : 30,
-                    vx: config.from === 'left' ? 280 : -280,
-                    vy: 60,
-                    vr: config.from === 'left' ? 12 : -12
-                };
-            }
-            // Center books: fall down with slight horizontal spread
-            const direction = index % 2 === 0 ? -1 : 1;
+        // Phase 1: Tower falls together (0 → ~0.6s)
+        // Phase 2: Impact — books scatter with bounce physics
+        const count = allBooks.length;
+        const bodies = allBooks.map((node, i) => {
+            // Each book gets a random scatter direction on impact
+            const angle = ((i / count) * Math.PI * 2) + (Math.random() - 0.5) * 0.8;
+            const spread = 120 + Math.random() * 280; // how far it flies
+            const scatterVx = Math.cos(angle) * spread;
+            const scatterVy = -(200 + Math.random() * 250); // bounce up
+            const spinDir = Math.random() > 0.5 ? 1 : -1;
             return {
-                ...config,
-                active: false,
-                finished: false,
+                node,
+                index: i,
+                // Phase 1: tower state
+                towerY: 0,
+                towerVy: 0,
+                // Phase 2: scatter state
+                phase: 'falling', // 'falling' | 'scattering' | 'done'
                 x: 0, y: 0, r: 0,
-                vx: direction * (50 + index * 8),
-                vy: 0,
-                vr: direction * (16 + index * 2)
+                vx: scatterVx,
+                vy: scatterVy,
+                vr: spinDir * (300 + Math.random() * 400),
+                opacity: 1,
+                // Stagger: books at top of stack scatter slightly later
+                scatterDelay: i * 30,
+                impactTime: 0
             };
         });
 
         function step(now) {
-            let someoneActive = false;
             const elapsed = now - startTime;
-            const dt = Math.min(0.032, (now - lastFrameTime) / 1000 || 1 / 60);
-            lastFrameTime = now;
+            const dt = Math.min(0.033, (now - lastFrame) / 1000 || 1/60);
+            lastFrame = now;
 
-            // Reveal brand after 2s
-            if (!brandRevealed && elapsed > 2000) {
+            if (!brandRevealed && elapsed > 2200) {
                 brandRevealed = true;
                 brandName.classList.add('revealed');
             }
 
-            bodies.forEach((body) => {
-                if (body.finished) return;
-                const local = elapsed - body.delay;
-                if (local <= 0) {
-                    if (!body.isSide) renderState(body.node, 0, 0, 0, 1);
-                    else renderState(body.node, body.x, body.y, body.r, 0);
-                    someoneActive = true;
-                    return;
-                }
-                body.active = true;
-                someoneActive = true;
+            let allDone = true;
 
-                if (body.isSide) {
-                    // Side books: decelerate toward target
-                    const progress = Math.min(1, local / 1200);
-                    const ease = 1 - Math.pow(1 - progress, 3); // ease-out cubic
-                    const startX = body.from === 'left' ? -600 : 600;
-                    const startR = body.from === 'left' ? -30 : 30;
+            bodies.forEach(b => {
+                if (b.phase === 'done') return;
+                allDone = false;
 
-                    const currentX = startX + (body.dx - startX) * ease;
-                    const currentY = (body.dy * 0.3) + (body.dy - body.dy * 0.3) * ease;
-                    const currentR = startR + (body.rot - startR) * ease;
+                if (b.phase === 'falling') {
+                    // All books fall together as a tower
+                    b.towerVy += gravity * dt;
+                    b.towerY += b.towerVy * dt;
 
-                    const fadeIn = Math.min(1, local / 300);
-                    const fadeOut = progress > 0.6 ? Math.max(0, 1 - (progress - 0.6) / 0.4) : 1;
-                    const opacity = fadeIn * fadeOut;
-
-                    renderState(body.node, currentX, currentY, currentR, opacity);
-
-                    if (progress >= 1) {
-                        body.finished = true;
-                        renderState(body.node, body.dx, body.dy, body.rot, 0);
+                    if (b.towerY >= floorY) {
+                        // Impact! Switch to scatter
+                        b.phase = 'scattering';
+                        b.impactTime = elapsed;
+                        b.x = 0;
+                        b.y = 0;
+                        b.r = 0;
+                        renderState(b.node, 0, floorY, 0, 1);
+                    } else {
+                        renderState(b.node, 0, b.towerY, 0, 1);
                     }
-                } else {
-                    // Center books: gravity fall
-                    body.vy += gravity * dt;
-                    body.vx *= 1 - drag * 16;
-                    body.vr *= 1 - angularDrag * 16;
-                    body.x += body.vx * dt;
-                    body.y += body.vy * dt;
-                    body.r += body.vr * dt;
+                }
 
-                    const progressY = Math.min(1, body.y / body.dy);
-                    const fadeStart = 0.42;
-                    const opacity = progressY < fadeStart
-                        ? 1
-                        : Math.max(0, 1 - ((progressY - fadeStart) / (1 - fadeStart)));
+                if (b.phase === 'scattering') {
+                    const scatterElapsed = elapsed - b.impactTime - b.scatterDelay;
+                    if (scatterElapsed < 0) {
+                        renderState(b.node, 0, floorY, 0, 1);
+                        return;
+                    }
 
-                    const finalX = clampSigned(body.x, body.dx);
-                    const finalY = Math.min(body.dy, body.y);
-                    const finalR = clampSigned(body.r, body.rot);
+                    // Apply physics
+                    b.vy += 800 * dt; // gravity pulls back down
+                    b.vx *= (1 - 2.5 * dt); // air drag
+                    b.vr *= (1 - 3.0 * dt); // angular drag
 
-                    renderState(body.node, finalX, finalY, finalR, opacity);
+                    b.x += b.vx * dt;
+                    b.y += b.vy * dt;
+                    b.r += b.vr * dt;
 
-                    if (finalY >= body.dy || elapsed > totalRun) {
-                        body.finished = true;
-                        renderState(body.node, body.dx, body.dy, body.rot, 0);
+                    // Fade out as books fly away
+                    const dist = Math.sqrt(b.x * b.x + b.y * b.y);
+                    b.opacity = Math.max(0, 1 - dist / 350);
+
+                    renderState(b.node, b.x, floorY + b.y, b.r, b.opacity);
+
+                    if (b.opacity <= 0.01 || scatterElapsed > 2500) {
+                        b.phase = 'done';
+                        renderState(b.node, b.x, floorY + b.y, b.r, 0);
                     }
                 }
             });
 
-            if (someoneActive && elapsed <= totalRun) {
+            if (!allDone && elapsed < totalRun) {
                 rafId = requestAnimationFrame(step);
             }
         }
+
         rafId = requestAnimationFrame(step);
     }
 
