@@ -379,13 +379,34 @@
             z-index: 2;
         }
 
-        .snap-viewfinder svg {
-            opacity: 0.2;
-            transition: opacity 0.4s ease;
+        .snap-corners {
+            position: absolute;
+            width: 100px;
+            height: 140px;
         }
 
-        .snap-demo.active .snap-viewfinder svg {
+        .snap-corners::before, .snap-corners::after,
+        .snap-corner-bl::before, .snap-corner-br::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.25);
+        }
+
+        .snap-corners::before { top: 0; left: 0; border-right: none; border-bottom: none; border-radius: 4px 0 0 0; }
+        .snap-corners::after { top: 0; right: 0; border-left: none; border-bottom: none; border-radius: 0 4px 0 0; }
+        .snap-corner-bl::before { bottom: 0; left: 0; border-right: none; border-top: none; border-radius: 0 0 0 4px; }
+        .snap-corner-br::before { bottom: 0; right: 0; border-left: none; border-top: none; border-radius: 0 0 4px 0; }
+
+        .snap-demo .snap-viewfinder {
+            opacity: 1;
+            transition: opacity 0.3s ease 0.3s;
+        }
+
+        .snap-demo.active .snap-viewfinder {
             opacity: 0;
+            transition-delay: 0.5s;
         }
 
         .snap-flash {
@@ -399,144 +420,213 @@
         }
 
         .snap-demo.active .snap-flash {
-            animation: flashBurst 0.6s ease-out 0.3s;
+            animation: flashBurst 0.5s ease-out 0.4s;
         }
 
         @keyframes flashBurst {
             0% { opacity: 0; }
-            15% { opacity: 0.7; }
+            12% { opacity: 0.85; }
             100% { opacity: 0; }
         }
 
-        .snap-cover {
-            width: 90px;
-            height: 130px;
-            border-radius: 4px;
-            overflow: hidden;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-            opacity: 0;
-            transform: scale(0.8);
-            transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        .snap-book-svg {
             z-index: 3;
+            opacity: 0;
+            transform: scale(0.85) translateY(8px);
+            transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+            filter: drop-shadow(0 8px 24px rgba(0,0,0,0.4));
         }
 
-        .snap-demo.active .snap-cover {
+        .snap-demo.active .snap-book-svg {
             opacity: 1;
-            transform: scale(1);
-            transition-delay: 0.7s;
-        }
-
-        .snap-cover img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
+            transform: scale(1) translateY(-8px);
+            transition-delay: 0.8s;
         }
 
         .snap-info {
             position: absolute;
-            bottom: 16px;
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
+            bottom: 14px;
+            left: 0; right: 0;
             text-align: center;
-            opacity: 0;
-            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
             z-index: 4;
-            white-space: nowrap;
         }
 
-        .snap-demo.active .snap-info {
+        .snap-info-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 8px 16px;
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .snap-demo.active .snap-info-row {
             opacity: 1;
-            transform: translateX(-50%) translateY(0);
-            transition-delay: 1.2s;
+            transform: translateY(0);
+            transition-delay: 1.4s;
+        }
+
+        .snap-info-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: dotPulse 1.5s ease infinite;
+        }
+
+        @keyframes dotPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.7); }
         }
 
         .snap-info-title {
             font-size: 11px;
             font-weight: 600;
-            color: rgba(255,255,255,0.8);
+            color: rgba(255,255,255,0.75);
             letter-spacing: -0.02em;
+        }
+
+        .snap-info-sep {
+            width: 1px;
+            height: 10px;
+            background: rgba(255,255,255,0.12);
         }
 
         .snap-info-author {
             font-size: 10px;
             color: rgba(255,255,255,0.35);
-            margin-top: 2px;
         }
 
-        /* ── Card 2: Build your shelf ── */
+        /* ── Card 2: Build your shelf (horizontal spines) ── */
         .shelf-demo {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            perspective: 400px;
-            padding-bottom: 20px;
-        }
-
-        .shelf-book {
-            border-radius: 3px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
-            border: 1px solid rgba(255,255,255,0.08);
-            transform-origin: bottom center;
-            opacity: 0;
-            transform: translateY(40px) rotateX(15deg);
-            transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-
-        .shelf-demo.active .shelf-book {
-            opacity: 1;
-            transform: translateY(0) rotateX(0deg);
-        }
-
-        .shelf-demo.active .shelf-book:nth-child(1) { transition-delay: 0.1s; }
-        .shelf-demo.active .shelf-book:nth-child(2) { transition-delay: 0.22s; }
-        .shelf-demo.active .shelf-book:nth-child(3) { transition-delay: 0.34s; }
-        .shelf-demo.active .shelf-book:nth-child(4) { transition-delay: 0.46s; }
-        .shelf-demo.active .shelf-book:nth-child(5) { transition-delay: 0.58s; }
-        .shelf-demo.active .shelf-book:nth-child(6) { transition-delay: 0.7s; }
-        .shelf-demo.active .shelf-book:nth-child(7) { transition-delay: 0.82s; }
-        .shelf-demo.active .shelf-book:nth-child(8) { transition-delay: 0.94s; }
-
-        .shelf-floor {
-            position: absolute;
-            bottom: 18px;
-            left: 10%;
-            right: 10%;
-            height: 1px;
-            background: rgba(255,255,255,0.06);
-        }
-
-        /* ── Card 3: Share your library ── */
-        .share-demo {
             width: 100%;
             height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 14px;
+            gap: 0;
+            padding: 12px 16px;
+            perspective: 600px;
         }
 
-        .share-url {
-            font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
-            font-size: 13px;
-            color: rgba(255,255,255,0.5);
-            letter-spacing: -0.02em;
+        .shelf-spine {
+            width: 85%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 2px;
             position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateX(-30px) rotateY(8deg);
+            transition: opacity 0.35s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 1px 0 rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+
+        .shelf-demo.active .shelf-spine {
+            opacity: 1;
+            transform: translateX(0) rotateY(0deg);
+        }
+
+        .shelf-spine-title {
+            font-size: 7px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.85);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 8px;
+        }
+
+        .shelf-spine-author {
+            font-size: 5.5px;
+            color: rgba(255,255,255,0.45);
+            letter-spacing: 0.04em;
+            position: absolute;
+            right: 6px;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+        }
+
+        /* ── Card 3: Share — browser mockup ── */
+        .share-demo {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 12px;
+            gap: 0;
+        }
+
+        .share-browser {
+            width: 100%;
+            flex: 1;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(0,0,0,0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transform: translateY(20px) scale(0.96);
+            transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .share-demo.active .share-browser {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .share-browser-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .share-browser-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .share-browser-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.12);
+        }
+
+        .share-browser-url {
+            flex: 1;
+            background: rgba(255,255,255,0.04);
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 9px;
+            color: rgba(255,255,255,0.35);
             overflow: hidden;
         }
 
-        .share-url-text {
+        .share-browser-url-text {
             display: inline;
         }
 
         .share-cursor {
             display: inline-block;
             width: 1px;
-            height: 14px;
-            background: rgba(255,255,255,0.6);
+            height: 10px;
+            background: rgba(255,255,255,0.5);
             vertical-align: middle;
             margin-left: 1px;
             animation: cursorBlink 0.8s step-end infinite;
@@ -547,39 +637,87 @@
             50% { opacity: 0; }
         }
 
-        .share-btn-demo {
+        .share-browser-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 12px;
+            gap: 10px;
+        }
+
+        .share-mini-shelf {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            align-items: center;
+            justify-content: center;
+            width: 80%;
+        }
+
+        .share-mini-spine {
+            border-radius: 1px;
+            box-shadow: 0 0.5px 0 rgba(0,0,0,0.3);
+        }
+
+        .share-profile {
+            text-align: center;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .share-demo.active .share-profile {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 1.8s;
+        }
+
+        .share-profile-name {
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.6);
+            letter-spacing: -0.02em;
+        }
+
+        .share-profile-count {
+            font-size: 8px;
+            color: rgba(255,255,255,0.25);
+            margin-top: 2px;
+        }
+
+        .share-toast {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
             display: flex;
             align-items: center;
             gap: 6px;
-            padding: 8px 16px;
-            border-radius: 20px;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
-            font-size: 11px;
-            color: rgba(255,255,255,0.4);
-            letter-spacing: 0.02em;
-            opacity: 0;
-            transform: translateY(10px);
-            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease;
-        }
-
-        .share-demo.active .share-btn-demo {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .share-btn-demo.copied {
+            padding: 6px 14px;
+            border-radius: 16px;
             background: rgba(76, 175, 80, 0.15);
-            border-color: rgba(76, 175, 80, 0.3);
+            border: 1px solid rgba(76, 175, 80, 0.25);
+            font-size: 10px;
             color: rgba(76, 175, 80, 0.8);
+            opacity: 0;
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            white-space: nowrap;
         }
 
-        .share-btn-demo svg {
-            width: 12px;
-            height: 12px;
+        .share-demo.active .share-toast {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            transition-delay: 2.6s;
+        }
+
+        .share-toast svg {
+            width: 10px;
+            height: 10px;
             stroke: currentColor;
             fill: none;
-            stroke-width: 2;
+            stroke-width: 2.5;
             stroke-linecap: round;
             stroke-linejoin: round;
         }
@@ -877,15 +1015,35 @@
             <div class="feature-visual">
                 <div class="snap-demo" id="snap-demo">
                     <div class="snap-viewfinder">
-                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.8" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        <div class="snap-corners">
+                            <div class="snap-corner-bl" style="position:absolute;bottom:0;left:0;width:16px;height:16px;"></div>
+                            <div class="snap-corner-br" style="position:absolute;bottom:0;right:0;width:16px;height:16px;"></div>
+                        </div>
                     </div>
                     <div class="snap-flash"></div>
-                    <div class="snap-cover">
-                        <img src="https://covers.openlibrary.org/b/isbn/0385333486-M.jpg" alt="Cat's Cradle" loading="lazy">
-                    </div>
+                    <!-- SVG book cover for Cat's Cradle -->
+                    <svg class="snap-book-svg" width="100" height="140" viewBox="0 0 100 140">
+                        <defs>
+                            <linearGradient id="bookCover" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#d4a574"/>
+                                <stop offset="100%" stop-color="#b8875a"/>
+                            </linearGradient>
+                        </defs>
+                        <rect width="100" height="140" rx="3" fill="url(#bookCover)"/>
+                        <rect x="0" y="0" width="6" height="140" rx="2" fill="rgba(0,0,0,0.15)"/>
+                        <text x="50" y="52" text-anchor="middle" font-family="Georgia,serif" font-size="11" font-weight="700" fill="rgba(0,0,0,0.8)" letter-spacing="-0.02em">CAT'S</text>
+                        <text x="50" y="68" text-anchor="middle" font-family="Georgia,serif" font-size="11" font-weight="700" fill="rgba(0,0,0,0.8)" letter-spacing="-0.02em">CRADLE</text>
+                        <line x1="30" y1="78" x2="70" y2="78" stroke="rgba(0,0,0,0.2)" stroke-width="0.5"/>
+                        <text x="50" y="92" text-anchor="middle" font-family="Georgia,serif" font-size="7" fill="rgba(0,0,0,0.5)">KURT</text>
+                        <text x="50" y="102" text-anchor="middle" font-family="Georgia,serif" font-size="7" fill="rgba(0,0,0,0.5)">VONNEGUT</text>
+                    </svg>
                     <div class="snap-info">
-                        <div class="snap-info-title">Cat's Cradle</div>
-                        <div class="snap-info-author">Kurt Vonnegut</div>
+                        <div class="snap-info-row">
+                            <div class="snap-info-dot"></div>
+                            <span class="snap-info-title">Cat's Cradle</span>
+                            <div class="snap-info-sep"></div>
+                            <span class="snap-info-author">Kurt Vonnegut</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -903,18 +1061,17 @@
             </div>
             <h3 class="feature-card-title">Build your shelf</h3>
             <p class="feature-card-desc">Watch your books stack into a 3D shelf. Browse by scrolling through your collection — every spine, every cover.</p>
-            <div class="feature-visual" style="position:relative;">
+            <div class="feature-visual">
                 <div class="shelf-demo" id="shelf-demo">
-                    <div class="shelf-book" style="width:16px;height:72px;background:linear-gradient(180deg,rgba(200,180,160,0.2),rgba(200,180,160,0.06));"></div>
-                    <div class="shelf-book" style="width:20px;height:90px;margin-left:4px;background:linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0.04));"></div>
-                    <div class="shelf-book" style="width:14px;height:65px;margin-left:4px;background:linear-gradient(180deg,rgba(180,200,220,0.18),rgba(180,200,220,0.05));"></div>
-                    <div class="shelf-book" style="width:22px;height:98px;margin-left:4px;background:linear-gradient(180deg,rgba(255,255,255,0.12),rgba(255,255,255,0.04));"></div>
-                    <div class="shelf-book" style="width:13px;height:70px;margin-left:4px;background:linear-gradient(180deg,rgba(220,200,180,0.2),rgba(220,200,180,0.06));"></div>
-                    <div class="shelf-book" style="width:24px;height:85px;margin-left:4px;background:linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.03));"></div>
-                    <div class="shelf-book" style="width:15px;height:76px;margin-left:4px;background:linear-gradient(180deg,rgba(190,180,200,0.18),rgba(190,180,200,0.05));"></div>
-                    <div class="shelf-book" style="width:18px;height:82px;margin-left:4px;background:linear-gradient(180deg,rgba(255,255,255,0.13),rgba(255,255,255,0.04));"></div>
+                    <div class="shelf-spine" style="height:18px;background:linear-gradient(90deg,#8b7355,#a0845c);"><span class="shelf-spine-title">Dune</span><span class="shelf-spine-author">Herbert</span></div>
+                    <div class="shelf-spine" style="height:13px;background:linear-gradient(90deg,#c4b8a0,#d4c8b0);"><span class="shelf-spine-title" style="color:rgba(0,0,0,0.7);">El Principito</span><span class="shelf-spine-author" style="color:rgba(0,0,0,0.35);">Saint-Exupéry</span></div>
+                    <div class="shelf-spine" style="height:16px;background:linear-gradient(90deg,#9e3b3b,#b54545);"><span class="shelf-spine-title">Fahrenheit 451</span><span class="shelf-spine-author">Bradbury</span></div>
+                    <div class="shelf-spine" style="height:20px;background:linear-gradient(90deg,#5a6e5a,#6d856d);"><span class="shelf-spine-title">El Cisne Negro</span><span class="shelf-spine-author">Taleb</span></div>
+                    <div class="shelf-spine" style="height:12px;background:linear-gradient(90deg,#b8a88a,#ccc0a8);"><span class="shelf-spine-title" style="color:rgba(0,0,0,0.7);">El Club de la Lucha</span><span class="shelf-spine-author" style="color:rgba(0,0,0,0.35);">Palahniuk</span></div>
+                    <div class="shelf-spine" style="height:22px;background:linear-gradient(90deg,#6b7ba3,#8090b8);"><span class="shelf-spine-title">Gravity's Rainbow</span><span class="shelf-spine-author">Pynchon</span></div>
+                    <div class="shelf-spine" style="height:14px;background:linear-gradient(90deg,#c4a882,#d4b892);"><span class="shelf-spine-title" style="color:rgba(0,0,0,0.7);">Empire of Pain</span><span class="shelf-spine-author" style="color:rgba(0,0,0,0.35);">Keefe</span></div>
+                    <div class="shelf-spine" style="height:17px;background:linear-gradient(90deg,#a08878,#b09888);"><span class="shelf-spine-title">Grandes Esperanzas</span><span class="shelf-spine-author">Dickens</span></div>
                 </div>
-                <div class="shelf-floor"></div>
             </div>
         </div>
 
@@ -928,14 +1085,33 @@
             </div>
             <h3 class="feature-card-title">Share your library</h3>
             <p class="feature-card-desc">Get a unique link to your shelf. Anyone can browse your collection — no account needed. Your reading identity, public.</p>
-            <div class="feature-visual">
+            <div class="feature-visual" style="position:relative;">
                 <div class="share-demo" id="share-demo">
-                    <div class="share-url">
-                        <span class="share-url-text" id="share-url-text"></span><span class="share-cursor"></span>
+                    <div class="share-browser">
+                        <div class="share-browser-bar">
+                            <div class="share-browser-dots"><span></span><span></span><span></span></div>
+                            <div class="share-browser-url">
+                                <span class="share-browser-url-text" id="share-url-text"></span><span class="share-cursor"></span>
+                            </div>
+                        </div>
+                        <div class="share-browser-content">
+                            <div class="share-mini-shelf" id="share-mini-shelf">
+                                <div class="share-mini-spine" style="width:65%;height:8px;background:#8b7355;"></div>
+                                <div class="share-mini-spine" style="width:55%;height:6px;background:#c4b8a0;"></div>
+                                <div class="share-mini-spine" style="width:70%;height:7px;background:#9e3b3b;"></div>
+                                <div class="share-mini-spine" style="width:60%;height:9px;background:#5a6e5a;"></div>
+                                <div class="share-mini-spine" style="width:50%;height:6px;background:#b8a88a;"></div>
+                                <div class="share-mini-spine" style="width:75%;height:8px;background:#6b7ba3;"></div>
+                            </div>
+                            <div class="share-profile">
+                                <div class="share-profile-name">@yourname</div>
+                                <div class="share-profile-count">24 books</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="share-btn-demo" id="share-btn-demo">
-                        <svg viewBox="0 0 24 24" class="share-copy-icon"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                        <span class="share-btn-label">Copy link</span>
+                    <div class="share-toast">
+                        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                        Link copied
                     </div>
                 </div>
             </div>
@@ -1166,14 +1342,14 @@
         entries.forEach(entry => {
             if (entry.isIntersecting && !snapPlayed) {
                 snapPlayed = true;
-                setTimeout(() => snapDemo.classList.add('active'), 200);
+                setTimeout(() => snapDemo.classList.add('active'), 300);
             }
         });
     }, { threshold: 0.5 });
 
     if (snapDemo) snapObserver.observe(snapDemo);
 
-    // ── Card 2: Shelf build animation ──
+    // ── Card 2: Shelf build animation (staggered spines) ──
     const shelfDemo = document.getElementById('shelf-demo');
     let shelfPlayed = false;
 
@@ -1181,17 +1357,20 @@
         entries.forEach(entry => {
             if (entry.isIntersecting && !shelfPlayed) {
                 shelfPlayed = true;
+                const spines = shelfDemo.querySelectorAll('.shelf-spine');
+                spines.forEach((spine, i) => {
+                    spine.style.transitionDelay = `${i * 0.12}s`;
+                });
                 setTimeout(() => shelfDemo.classList.add('active'), 100);
             }
         });
-    }, { threshold: 0.4 });
+    }, { threshold: 0.3 });
 
     if (shelfDemo) shelfObserver.observe(shelfDemo);
 
-    // ── Card 3: Share URL typewriter + copy ──
+    // ── Card 3: Share — browser mockup with typewriter ──
     const shareDemo = document.getElementById('share-demo');
     const shareUrlText = document.getElementById('share-url-text');
-    const shareBtn = document.getElementById('share-btn-demo');
     const fullUrl = 'shelvd.app/@yourname';
     let sharePlayed = false;
 
@@ -1201,7 +1380,7 @@
             if (i <= text.length) {
                 el.textContent = text.slice(0, i);
                 i++;
-                setTimeout(type, 45 + Math.random() * 35);
+                setTimeout(type, 40 + Math.random() * 30);
             } else if (callback) {
                 callback();
             }
@@ -1209,25 +1388,34 @@
         setTimeout(type, delay);
     }
 
+    // Animate mini shelf spines appearing
+    function animateMiniShelf() {
+        const spines = document.querySelectorAll('.share-mini-spine');
+        spines.forEach((spine, i) => {
+            spine.style.opacity = '0';
+            spine.style.transform = 'translateX(-10px)';
+            spine.style.transition = 'opacity 0.3s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1)';
+            setTimeout(() => {
+                spine.style.opacity = '1';
+                spine.style.transform = 'translateX(0)';
+            }, 1200 + i * 100);
+        });
+    }
+
     const shareObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting && !sharePlayed) {
                 sharePlayed = true;
-                typeUrl(fullUrl, shareUrlText, 300, () => {
-                    // Show copy button after typing
-                    setTimeout(() => {
-                        shareDemo.classList.add('active');
-                        // Auto "copy" after a beat
-                        setTimeout(() => {
-                            shareBtn.classList.add('copied');
-                            shareBtn.querySelector('.share-btn-label').textContent = 'Copied!';
-                            shareBtn.querySelector('.share-copy-icon').innerHTML = '<polyline points="20 6 9 17 4 12"/>';
-                        }, 1200);
-                    }, 400);
+                // First show browser
+                shareDemo.classList.add('active');
+                // Then type the URL
+                typeUrl(fullUrl, shareUrlText, 600, () => {
+                    // Animate spines appearing inside browser
+                    animateMiniShelf();
                 });
             }
         });
-    }, { threshold: 0.5 });
+    }, { threshold: 0.4 });
 
     if (shareDemo) shareObserver.observe(shareDemo);
 </script>
