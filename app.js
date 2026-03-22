@@ -928,23 +928,7 @@ function setupEventListeners() {
         camera.position.y = clampedY;
         controls.target.y = clampedY;
         controls.update();
-        checkFocusedBook();
     }, { passive: false });
-
-    // Pan sound: detect single-finger pan (scroll) on mobile/desktop
-    let isPanning = false;
-    renderer.domElement.addEventListener('pointerdown', () => { isPanning = true; });
-    renderer.domElement.addEventListener('pointerup', () => {
-        if (isPanning) { isPanning = false; }
-    });
-    // Two-finger = zoom, disable sound
-    renderer.domElement.addEventListener('touchstart', (e) => {
-        if (e.touches.length >= 2) isPanning = false;
-    }, { passive: true });
-
-    controls.addEventListener('change', () => {
-        if (isPanning) checkFocusedBook();
-    });
 
     // Touch
     let touchStartPos = null;
