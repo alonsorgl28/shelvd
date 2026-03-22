@@ -629,25 +629,18 @@ async function loadCoversProgressively(booksData) {
         }
     } catch (e) { /* ignore */ }
 
-    // First pass: apply cached covers immediately, queue uncached for fetch
+    // First pass: apply cached digital covers immediately, queue rest for fetch
     const uncached = [];
-    const hasUserPhoto = []; // books with Supabase photo but no digital cover cached
     for (const bookData of booksData) {
         const cacheKey = `${bookData.title}|${bookData.author}`;
         if (coverCache[cacheKey]) {
-            // Have a cached digital cover — use it (best quality)
             applyCoverToBook(bookData.id, coverCache[cacheKey]);
-        } else if (bookData.cover) {
-            // Have user photo but no digital cover yet — show photo temporarily
-            applyCoverToBook(bookData.id, bookData.cover);
-            // Also try to find a clean digital cover to replace it
-            hasUserPhoto.push(bookData);
         } else {
+            // No digital cover cached yet — fetch from Open Library/Google
+            // Never use raw Supabase photos as 3D textures
             uncached.push(bookData);
         }
     }
-    // Merge: fetch digital covers for both uncached and user-photo books
-    uncached.push(...hasUserPhoto);
 
     // Second pass: fetch uncached in parallel batches (smaller on mobile)
     const isMobileCover = window.innerWidth <= 768;
