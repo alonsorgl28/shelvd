@@ -3,12 +3,18 @@
 const SUPABASE_URL = 'https://ttdxdcxighxlauwcmhgk.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0ZHhkY3hpZ2h4bGF1d2NtaGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTgzMzksImV4cCI6MjA4OTY5NDMzOX0.XLbEFU8xaCFk9B2yAjuyk2pRMW1casXn30zICv3bIu8';
 
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+        flowType: 'pkce',
+        detectSessionInUrl: true
+    }
+});
 window.shelvdAuth = { supabase: sb, currentUser: null, currentProfile: null };
 
 // ─── DOM refs ───
 const authScreen = document.getElementById('auth-screen');
 const emailForm = document.getElementById('auth-email-form');
+const magicLinkForm = document.getElementById('auth-magic-link-form');
 const emailInput = document.getElementById('auth-email');
 const submitBtn = document.getElementById('auth-submit-btn');
 const checkEmail = document.getElementById('auth-check-email');
@@ -28,28 +34,11 @@ function getPublicUsername() {
     return match ? match[1].toLowerCase() : null;
 }
 
-// ─── Check session on load ───
+// ─── Auth state management ───
 let hasEnteredLibrary = false;
 
-async function checkAuth() {
+async function handleSession(session) {
     if (hasEnteredLibrary) return;
-    const publicUsername = getPublicUsername();
-
-    // If visiting /@username → load public profile, no login needed
-    if (publicUsername) {
-        authScreen.style.display = 'none';
-        enterLibrary(publicUsername, true);
-        return;
-    }
-
-    // Otherwise check if logged in
-    const { data: { session }, error: sessionErr } = await sb.auth.getSession();
-    console.log('Session check:', session ? 'found' : 'none', sessionErr || '');
-
-    if (!session) {
-        authScreen.style.display = 'flex';
-        return;
-    }
 
     window.shelvdAuth.currentUser = session.user;
     cardNumber.textContent = 'No. ' + session.user.id.substring(0, 6).toUpperCase();
@@ -70,19 +59,79 @@ async function checkAuth() {
         emailForm.style.display = 'none';
         checkEmail.style.display = 'none';
         usernameForm.style.display = 'flex';
+        authScreen.style.display = 'flex';
         cardStamp.classList.add('stamped');
     }
 }
 
-// ─── Listen for auth changes (magic link callback) ───
-sb.auth.onAuthStateChange(async (event) => {
-    if (event === 'SIGNED_IN') {
-        checkAuth();
+// ─── Handle OAuth callback code manually ───
+async function handleOAuthCallback() {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+
+    if (code) {
+        console.log('[Shelvd] OAuth code detected, exchanging...');
+        // Clean URL immediately
+        window.history.replaceState({}, '', window.location.pathname);
+
+        const { data, error } = await sb.auth.exchangeCodeForSession(code);
+        if (error) {
+            console.error('[Shelvd] Code exchange failed:', error.message);
+        } else {
+            console.log('[Shelvd] Code exchange success');
+        }
+        // Session will be handled by onAuthStateChange
+        return true;
+    }
+
+    // Also check hash fragment (implicit flow / magic links)
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token')) {
+        console.log('[Shelvd] Hash token detected');
+        // Supabase client handles this automatically
+        return true;
+    }
+
+    return false;
+}
+
+// ─── Auth listener ───
+sb.auth.onAuthStateChange(async (event, session) => {
+    console.log('[Shelvd] Auth event:', event, session ? 'has session' : 'no session');
+    if (hasEnteredLibrary) return;
+
+    // Public profile — skip auth entirely
+    const publicUsername = getPublicUsername();
+    if (publicUsername) {
+        authScreen.style.display = 'none';
+        enterLibrary(publicUsername, true);
+        return;
+    }
+
+    if (session) {
+        handleSession(session);
+    } else if (event === 'INITIAL_SESSION') {
+        // No session on initial load — show login
+        authScreen.style.display = 'flex';
     }
 });
 
-// ─── Email form ───
-emailForm.addEventListener('submit', async (e) => {
+// Process OAuth callback before anything else
+handleOAuthCallback();
+
+// ─── Google OAuth ───
+document.getElementById('auth-google-btn').addEventListener('click', async () => {
+    const { error } = await sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+            redirectTo: window.location.origin + window.location.pathname
+        }
+    });
+    if (error) console.error('Google auth error:', error.message);
+});
+
+// ─── Magic link form ───
+magicLinkForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = emailInput.value.trim();
     if (!email) return;
@@ -477,4 +526,4 @@ function resizeAndEncode(file, maxSize) {
 }
 
 // ─── Start ───
-checkAuth();
+// Auth is handled by onAuthStateChange listener above
