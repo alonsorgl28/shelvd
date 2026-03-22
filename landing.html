@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shelvd — Your Personal Library</title>
+    <meta name="description" content="Snap a cover, build your shelf, share your library. Shelvd turns your books into a beautiful 3D collection.">
+    <meta property="og:title" content="Shelvd — Your Personal Library">
+    <meta property="og:description" content="Snap a cover, build your shelf, share your library.">
+    <meta name="theme-color" content="#000000">
+    <link rel="icon" href="/icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap');
+
+        :root {
+            --black: #000000;
+            --surface: #1e1e1e;
+            --bg-subtle: #0a0a0a;
+            --white: #ffffff;
+            --muted: rgba(255,255,255,0.45);
+            --border: rgba(255,255,255,0.08);
+            --border-hover: rgba(255,255,255,0.16);
+            --accent: #2b4eff;
+            --radius: 24px;
+            --radius-sm: 14px;
+            --font: 'Helvetica Neue', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            background: var(--black);
+            color: var(--white);
+            font-family: var(--font);
+            overflow-x: hidden;
+        }
+
+        /* ── Nav ── */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-logo {
+            font-size: 18px;
+            font-weight: 500;
+            letter-spacing: -0.04em;
+            color: var(--white);
+            text-decoration: none;
+        }
+
+        .nav-logo span {
+            font-weight: 700;
+        }
+
+        .nav-cta {
+            background: var(--white);
+            color: var(--black);
+            border: none;
+            border-radius: 40px;
+            padding: 10px 24px;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: var(--font);
+            letter-spacing: -0.01em;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s;
+        }
+
+        .nav-cta:hover {
+            transform: scale(1.03);
+        }
+
+        .nav-cta:active {
+            transform: scale(0.97);
+        }
+
+        /* ── Hero ── */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 40px 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-glow {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 400px;
+            background: radial-gradient(ellipse, rgba(208,170,126,0.08), transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-books {
+            position: relative;
+            width: min(700px, 90vw);
+            margin-bottom: 48px;
+        }
+
+        .hero-books svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .hero-books .book {
+            transform-box: fill-box;
+            transform-origin: center;
+            will-change: transform, opacity;
+        }
+
+        .hero-books .wordmark {
+            fill: rgba(255,255,255,0.94);
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 74px;
+            font-weight: 500;
+            letter-spacing: -0.055em;
+        }
+
+        .hero-books .subline {
+            fill: rgba(255,255,255,0.3);
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.32em;
+        }
+
+        .hero-headline {
+            font-size: clamp(42px, 7vw, 80px);
+            font-weight: 500;
+            letter-spacing: -0.045em;
+            line-height: 1.05;
+            text-align: center;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
+
+        .hero-sub {
+            font-size: clamp(15px, 2vw, 18px);
+            color: var(--muted);
+            text-align: center;
+            max-width: 480px;
+            line-height: 1.5;
+            letter-spacing: -0.01em;
+            margin-bottom: 40px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--white);
+            border: none;
+            border-radius: 40px;
+            padding: 14px 32px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: var(--font);
+            letter-spacing: -0.01em;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.04);
+            filter: brightness(1.15);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.96);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--white);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 40px;
+            padding: 14px 32px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: var(--font);
+            letter-spacing: -0.01em;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s;
+        }
+
+        .btn-secondary:hover {
+            transform: scale(1.04);
+            border-color: rgba(255,255,255,0.4);
+        }
+
+        .btn-secondary:active {
+            transform: scale(0.96);
+        }
+
+        /* ── Section shared ── */
+        .section {
+            padding: 120px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-eyebrow {
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 500;
+            letter-spacing: -0.04em;
+            line-height: 1.1;
+            margin-bottom: 64px;
+        }
+
+        /* ── Features grid ── */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .feature-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transition: border-color 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            /* Scroll reveal */
+            opacity: 0;
+            transform: translateY(40px);
+        }
+
+        .feature-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.3s ease;
+        }
+
+        .feature-card:nth-child(2).visible {
+            transition-delay: 0.1s;
+        }
+
+        .feature-card:nth-child(3).visible {
+            transition-delay: 0.2s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-4px);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .feature-card-title {
+            font-size: 20px;
+            font-weight: 500;
+            letter-spacing: -0.03em;
+            color: var(--white);
+        }
+
+        .feature-card-desc {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.6;
+            letter-spacing: -0.01em;
+        }
+
+        .feature-visual {
+            width: 100%;
+            aspect-ratio: 1.4;
+            background: rgba(255,255,255,0.03);
+            border-radius: var(--radius-sm);
+            margin-top: auto;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feature-visual-inner {
+            font-size: 40px;
+            opacity: 0.15;
+        }
+
+        /* ── Showcase ── */
+        .showcase {
+            padding: 0 40px 120px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .showcase-frame {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            position: relative;
+            /* Scroll reveal */
+            opacity: 0;
+            transform: translateY(60px) scale(0.97);
+            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .showcase-frame.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .showcase-inner {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .showcase-mock-books {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .showcase-mock-book {
+            border-radius: 3px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.04));
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .showcase-label {
+            font-size: 12px;
+            color: var(--muted);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        /* ── Stats ── */
+        .stats {
+            padding: 80px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stat {
+            text-align: center;
+            padding: 20px;
+            /* Scroll reveal */
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .stat.visible {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .stat:nth-child(2).visible { transition-delay: 0.1s; }
+        .stat:nth-child(3).visible { transition-delay: 0.2s; }
+
+        .stat-number {
+            font-size: clamp(36px, 5vw, 56px);
+            font-weight: 500;
+            letter-spacing: -0.04em;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--muted);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        /* ── CTA section ── */
+        .cta-section {
+            padding: 160px 40px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .cta-section .hero-glow {
+            top: 50%;
+        }
+
+        .cta-title {
+            font-size: clamp(36px, 6vw, 64px);
+            font-weight: 500;
+            letter-spacing: -0.045em;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .cta-sub {
+            font-size: 16px;
+            color: var(--muted);
+            margin-bottom: 40px;
+            letter-spacing: -0.01em;
+            position: relative;
+        }
+
+        /* ── Footer ── */
+        .footer {
+            padding: 60px 40px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-logo {
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: -0.03em;
+            color: rgba(255,255,255,0.3);
+        }
+
+        .footer-logo span {
+            font-weight: 700;
+        }
+
+        .footer-sub {
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.15);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-links a {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* ── Mobile ── */
+        @media (max-width: 768px) {
+            .nav { padding: 16px 20px; }
+            .hero { padding: 100px 20px 60px; }
+            .section { padding: 80px 20px; }
+            .showcase { padding: 0 20px 80px; }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+                padding: 40px 20px;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .btn-primary, .btn-secondary {
+                width: 100%;
+                text-align: center;
+            }
+
+            .cta-section { padding: 100px 20px; }
+
+            .footer {
+                flex-direction: column;
+                gap: 24px;
+                text-align: center;
+                padding: 40px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Nav ── -->
+<nav class="nav">
+    <a href="/" class="nav-logo"><span>S</span>helvd</a>
+    <a href="/index.html" class="nav-cta">Open Library</a>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero">
+    <div class="hero-glow"></div>
+
+    <div class="hero-books">
+        <svg viewBox="0 0 820 360" aria-label="Shelvd animated logo">
+            <defs>
+                <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="16" result="blur"/>
+                    <feColorMatrix in="blur" type="matrix"
+                        values="1 0 0 0 0.82
+                                0 1 0 0 0.67
+                                0 0 1 0 0.46
+                                0 0 0 0.16 0"/>
+                </filter>
+            </defs>
+
+            <ellipse cx="410" cy="172" rx="118" ry="54" fill="#D9AE7E" opacity="0.10" filter="url(#softGlow)"/>
+
+            <g id="books">
+                <g class="book" data-dx="-146" data-dy="156" data-rot="-18">
+                    <rect x="370" y="42" width="92" height="14" rx="7" fill="#ffffff"/>
+                    <rect x="385" y="45" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
+                </g>
+                <g class="book" data-dx="156" data-dy="174" data-rot="16">
+                    <rect x="355" y="61" width="72" height="14" rx="7" fill="#ffffff"/>
+                    <rect x="372" y="64" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
+                </g>
+                <g class="book" data-dx="-166" data-dy="196" data-rot="-12">
+                    <rect x="366" y="80" width="104" height="14" rx="7" fill="#ffffff"/>
+                    <rect x="381" y="83" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
+                </g>
+                <g class="book" data-dx="146" data-dy="214" data-rot="10">
+                    <rect x="388" y="99" width="72" height="14" rx="7" fill="#ffffff"/>
+                    <rect x="404" y="102" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
+                </g>
+                <g class="book" data-dx="-138" data-dy="236" data-rot="-8">
+                    <rect x="362" y="118" width="88" height="14" rx="7" fill="#ffffff"/>
+                    <rect x="376" y="121" width="3" height="8" rx="1.5" fill="#000000" fill-opacity="0.18"/>
+                </g>
+            </g>
+
+            <text class="wordmark" x="410" y="228" text-anchor="middle">Shelvd</text>
+            <text class="subline" x="410" y="254" text-anchor="middle">PERSONAL LIBRARY</text>
+        </svg>
+    </div>
+
+    <h1 class="hero-headline">Your books,<br>beautifully stacked</h1>
+    <p class="hero-sub">Snap a cover, let AI do the rest. Build a 3D library that's uniquely yours and share it with the world.</p>
+
+    <div class="hero-actions">
+        <a href="/index.html" class="btn-primary">Start your shelf</a>
+        <a href="#features" class="btn-secondary">See how it works</a>
+    </div>
+</section>
+
+<!-- ── Features ── -->
+<section class="section" id="features">
+    <div class="section-eyebrow">How it works</div>
+    <h2 class="section-title">Three steps to<br>your library</h2>
+
+    <div class="features-grid">
+        <div class="feature-card" data-reveal>
+            <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                </svg>
+            </div>
+            <h3 class="feature-card-title">Snap a cover</h3>
+            <p class="feature-card-desc">Take a photo of any book cover. Our AI reads the title, author, and details instantly. No typing, no searching.</p>
+            <div class="feature-visual">
+                <div class="feature-visual-inner">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.8" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="feature-card" data-reveal>
+            <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="6.25" width="16" height="1.5" rx="0.75"/>
+                    <rect x="5" y="9.25" width="14" height="1.5" rx="0.75"/>
+                    <rect x="3" y="12.25" width="18" height="1.5" rx="0.75"/>
+                    <rect x="6" y="15.25" width="12" height="1.5" rx="0.75"/>
+                    <rect x="4" y="18.25" width="16" height="1.5" rx="0.75"/>
+                </svg>
+            </div>
+            <h3 class="feature-card-title">Build your shelf</h3>
+            <p class="feature-card-desc">Watch your books stack into a 3D shelf. Browse by scrolling through your collection — every spine, every cover.</p>
+            <div class="feature-visual">
+                <div class="showcase-mock-books">
+                    <div class="showcase-mock-book" style="width:18px;height:80px;"></div>
+                    <div class="showcase-mock-book" style="width:22px;height:95px;"></div>
+                    <div class="showcase-mock-book" style="width:16px;height:70px;"></div>
+                    <div class="showcase-mock-book" style="width:20px;height:88px;"></div>
+                    <div class="showcase-mock-book" style="width:14px;height:75px;"></div>
+                    <div class="showcase-mock-book" style="width:24px;height:92px;"></div>
+                    <div class="showcase-mock-book" style="width:17px;height:68px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="feature-card" data-reveal>
+            <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                    <polyline points="16 6 12 2 8 6"/>
+                    <line x1="12" y1="2" x2="12" y2="15"/>
+                </svg>
+            </div>
+            <h3 class="feature-card-title">Share your library</h3>
+            <p class="feature-card-desc">Get a unique link to your shelf. Anyone can browse your collection — no account needed. Your reading identity, public.</p>
+            <div class="feature-visual">
+                <div class="feature-visual-inner" style="font-size:14px;opacity:0.3;font-family:monospace;">
+                    shelvd.app/@yourname
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Showcase ── -->
+<div class="showcase">
+    <div class="showcase-frame" data-reveal>
+        <div class="showcase-inner">
+            <div class="showcase-mock-books" style="gap:12px;">
+                <div class="showcase-mock-book" style="width:28px;height:120px;"></div>
+                <div class="showcase-mock-book" style="width:34px;height:140px;"></div>
+                <div class="showcase-mock-book" style="width:24px;height:105px;"></div>
+                <div class="showcase-mock-book" style="width:30px;height:132px;"></div>
+                <div class="showcase-mock-book" style="width:22px;height:115px;"></div>
+                <div class="showcase-mock-book" style="width:36px;height:145px;"></div>
+                <div class="showcase-mock-book" style="width:26px;height:110px;"></div>
+                <div class="showcase-mock-book" style="width:32px;height:128px;"></div>
+                <div class="showcase-mock-book" style="width:20px;height:100px;"></div>
+                <div class="showcase-mock-book" style="width:28px;height:136px;"></div>
+            </div>
+            <div class="showcase-label">Your shelf, in 3D</div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Stats ── -->
+<div class="stats">
+    <div class="stat" data-reveal>
+        <div class="stat-number">2s</div>
+        <div class="stat-label">To add a book</div>
+    </div>
+    <div class="stat" data-reveal>
+        <div class="stat-number">3D</div>
+        <div class="stat-label">Interactive shelf</div>
+    </div>
+    <div class="stat" data-reveal>
+        <div class="stat-number">&infin;</div>
+        <div class="stat-label">Books on your shelf</div>
+    </div>
+</div>
+
+<!-- ── CTA ── -->
+<section class="cta-section">
+    <div class="hero-glow"></div>
+    <h2 class="cta-title">Claim your shelf</h2>
+    <p class="cta-sub">Free forever. No ads. Just your books.</p>
+    <a href="/index.html" class="btn-primary">Get started</a>
+</section>
+
+<!-- ── Footer ── -->
+<footer class="footer">
+    <div>
+        <div class="footer-logo"><span>S</span>helvd</div>
+        <div class="footer-sub">Personal Library</div>
+    </div>
+    <div class="footer-links">
+        <a href="/index.html">App</a>
+    </div>
+</footer>
+
+<script>
+    // ── Book falling animation (from logo prototype) ──
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const books = Array.from(document.querySelectorAll(".book"));
+    const baseConfigs = books.map((book, index) => ({
+        node: book,
+        dx: Number(book.dataset.dx),
+        dy: Number(book.dataset.dy),
+        rot: Number(book.dataset.rot),
+        delay: index * 170
+    }));
+
+    let rafId = null;
+    let startTime = 0;
+    let lastFrameTime = 0;
+
+    function renderState(book, x, y, rotation, opacity) {
+        book.style.transform = `translate(${x}px, ${y}px) rotate(${rotation}deg)`;
+        book.style.opacity = String(opacity);
+    }
+
+    function resetBooks() {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = null;
+        baseConfigs.forEach(({ node }) => renderState(node, 0, 0, 0, 1));
+    }
+
+    function clampSigned(value, target) {
+        return target < 0 ? Math.max(target, value) : Math.min(target, value);
+    }
+
+    function playOnce() {
+        resetBooks();
+        if (prefersReducedMotion) return;
+
+        startTime = performance.now();
+        lastFrameTime = startTime;
+
+        const gravity = 1780;
+        const drag = 0.0018;
+        const angularDrag = 0.0022;
+        const totalRun = 3600;
+
+        const bodies = baseConfigs.map((config, index) => {
+            const direction = index % 2 === 0 ? -1 : 1;
+            return {
+                ...config,
+                active: false,
+                finished: false,
+                x: 0, y: 0, r: 0,
+                vx: direction * (54 + index * 10),
+                vy: 0,
+                vr: direction * (18 + index * 2.4)
+            };
+        });
+
+        function step(now) {
+            let someoneActive = false;
+            const elapsed = now - startTime;
+            const dt = Math.min(0.032, (now - lastFrameTime) / 1000 || 1 / 60);
+            lastFrameTime = now;
+
+            bodies.forEach((body) => {
+                if (body.finished) return;
+                const local = elapsed - body.delay;
+                if (local <= 0) {
+                    renderState(body.node, 0, 0, 0, 1);
+                    someoneActive = true;
+                    return;
+                }
+                body.active = true;
+                someoneActive = true;
+
+                body.vy += gravity * dt;
+                body.vx *= 1 - drag * 16;
+                body.vr *= 1 - angularDrag * 16;
+                body.x += body.vx * dt;
+                body.y += body.vy * dt;
+                body.r += body.vr * dt;
+
+                const progressY = Math.min(1, body.y / body.dy);
+                const fadeStart = 0.42;
+                const opacity = progressY < fadeStart
+                    ? 1
+                    : Math.max(0, 1 - ((progressY - fadeStart) / (1 - fadeStart)));
+
+                const finalX = clampSigned(body.x, body.dx);
+                const finalY = Math.min(body.dy, body.y);
+                const finalR = clampSigned(body.r, body.rot);
+
+                renderState(body.node, finalX, finalY, finalR, opacity);
+
+                if (finalY >= body.dy || elapsed > totalRun) {
+                    body.finished = true;
+                    renderState(body.node, body.dx, body.dy, body.rot, 0);
+                }
+            });
+
+            if (someoneActive && elapsed <= totalRun) {
+                rafId = requestAnimationFrame(step);
+            }
+        }
+        rafId = requestAnimationFrame(step);
+    }
+
+    playOnce();
+
+    // ── Scroll reveal ──
+    const revealElements = document.querySelectorAll('[data-reveal]');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.15 });
+
+    revealElements.forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
