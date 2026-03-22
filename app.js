@@ -1285,8 +1285,10 @@ if (!document.getElementById('auth-screen') ||
 window.addEventListener('shelvd:book-added', async (e) => {
     const { book, coverUrl } = e.detail;
 
+    // Prefix Supabase ID to avoid collision with books.json IDs
+    const safeId = `sb-${book.id}`;
     const bookData = {
-        id: book.id,
+        id: safeId,
         title: book.title,
         author: book.author,
         pages: book.pages || 250,
@@ -1296,20 +1298,21 @@ window.addEventListener('shelvd:book-added', async (e) => {
     createBook(bookData, bookObjects.length);
     arrangeBooksInStack();
 
-    // Try to find a clean digital cover (Open Library → Google Books)
-    // Fall back to user's photo if no digital cover found
-    console.log(`[Shelvd] Looking for digital cover for "${book.title}"...`);
+    // Expose updated bookObjects for import-export
+    window.shelvdBookObjects = bookObjects;
+
+    // Find a clean digital cover (Open Library → Google Books)
     let digitalCover = await fetchCoverWithFallbacks(book.title, book.author);
-    const finalCover = digitalCover || coverUrl;
-    console.log(`[Shelvd] Final cover for "${book.title}":`, finalCover ? 'found' : 'none', finalCover);
+    const finalCover = digitalCover || null; // never use raw photo in shelf
 
     if (finalCover) {
         const cacheKey = `${book.title}|${book.author}`;
         coverCache[cacheKey] = finalCover;
+        window.shelvdCoverCache = coverCache;
         try {
             localStorage.setItem('book-covers-cache', JSON.stringify(coverCache));
         } catch (err) { /* ignore */ }
 
-        applyCoverToBook(book.id, finalCover);
+        applyCoverToBook(safeId, finalCover);
     }
 });
