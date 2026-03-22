@@ -728,18 +728,6 @@
             z-index: 1;
         }
 
-        .showcase-mock-books {
-            display: flex;
-            gap: 8px;
-            align-items: flex-end;
-        }
-
-        .showcase-mock-book {
-            border-radius: 3px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.04));
-            border: 1px solid rgba(255,255,255,0.06);
-        }
-
         /* ── Showcase ── */
         .showcase {
             padding: 0 40px 120px;
@@ -750,7 +738,7 @@
         .showcase-frame {
             width: 100%;
             aspect-ratio: 16/9;
-            background: var(--surface);
+            background: #1a1f3a;
             border: 1px solid var(--border);
             border-radius: var(--radius);
             overflow: hidden;
@@ -773,14 +761,69 @@
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            gap: 16px;
+            perspective: 800px;
+        }
+
+        .showcase-stack-wrapper {
+            width: 50%;
+            max-width: 400px;
+            height: 70%;
+            overflow: hidden;
+            position: relative;
+            transform: rotateX(4deg);
+            mask-image: linear-gradient(180deg, transparent 0%, black 15%, black 85%, transparent 100%);
+            -webkit-mask-image: linear-gradient(180deg, transparent 0%, black 15%, black 85%, transparent 100%);
+        }
+
+        .showcase-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            animation: showcaseScroll 20s linear infinite;
+        }
+
+        @keyframes showcaseScroll {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-50%); }
+        }
+
+        .showcase-spine {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+            flex-shrink: 0;
+        }
+
+        .showcase-spine-title {
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 10px;
+        }
+
+        .showcase-spine-author {
+            font-size: 6px;
+            position: absolute;
+            right: 8px;
+            letter-spacing: 0.03em;
         }
 
         .showcase-label {
-            font-size: 12px;
-            color: var(--muted);
+            font-size: 11px;
+            color: rgba(255,255,255,0.2);
             letter-spacing: 0.15em;
             text-transform: uppercase;
+            position: absolute;
+            bottom: 16px;
+            left: 0; right: 0;
+            text-align: center;
         }
 
         /* ── Stats ── */
@@ -1122,17 +1165,58 @@
 <div class="showcase">
     <div class="showcase-frame" data-reveal>
         <div class="showcase-inner">
-            <div class="showcase-mock-books" style="gap:12px;">
-                <div class="showcase-mock-book" style="width:28px;height:120px;"></div>
-                <div class="showcase-mock-book" style="width:34px;height:140px;"></div>
-                <div class="showcase-mock-book" style="width:24px;height:105px;"></div>
-                <div class="showcase-mock-book" style="width:30px;height:132px;"></div>
-                <div class="showcase-mock-book" style="width:22px;height:115px;"></div>
-                <div class="showcase-mock-book" style="width:36px;height:145px;"></div>
-                <div class="showcase-mock-book" style="width:26px;height:110px;"></div>
-                <div class="showcase-mock-book" style="width:32px;height:128px;"></div>
-                <div class="showcase-mock-book" style="width:20px;height:100px;"></div>
-                <div class="showcase-mock-book" style="width:28px;height:136px;"></div>
+            <div class="showcase-stack-wrapper">
+                <div class="showcase-stack" id="showcase-stack">
+                    <div class="showcase-spine" style="height:22px;background:linear-gradient(90deg,#8b7355,#a0845c);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Dune</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Herbert</span></div>
+                    <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#c4b8a0,#d4c8b0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">El Almuerzo Desnudo</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Burroughs</span></div>
+                    <div class="showcase-spine" style="height:15px;background:linear-gradient(90deg,#bfb8a8,#d0c8b8);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">El Amor en los Tiempos del Colera</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">García Márquez</span></div>
+                    <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#5a6e5a,#6d856d);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">El Cisne Negro</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Taleb</span></div>
+                    <div class="showcase-spine" style="height:13px;background:linear-gradient(90deg,#9e3b3b,#b54545);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">El Club de la Lucha</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Palahniuk</span></div>
+                    <div class="showcase-spine" style="height:15px;background:linear-gradient(90deg,#8a7a6a,#9a8a7a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">El Corazon de las Tinieblas</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Conrad</span></div>
+                    <div class="showcase-spine" style="height:12px;background:linear-gradient(90deg,#c8bca8,#d8ccb8);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">El Principito</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Saint-Exupéry</span></div>
+                    <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#a09080,#b0a090);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">El Retrato de Dorian Gray</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Wilde</span></div>
+                    <div class="showcase-spine" style="height:22px;background:linear-gradient(90deg,#7a8a5a,#8a9a6a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Empire of Pain</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Keefe</span></div>
+                    <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#a0946e,#b0a47e);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">En el Camino</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Kerouac</span></div>
+                    <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#c4b090,#d4c0a0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">Factfulness</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Rosling</span></div>
+                    <div class="showcase-spine" style="height:13px;background:linear-gradient(90deg,#c85a3a,#d86a4a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Fahrenheit 451</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Bradbury</span></div>
+                    <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#8a7a5a,#9a8a6a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Grandes Esperanzas</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Dickens</span></div>
+                    <div class="showcase-spine" style="height:24px;background:linear-gradient(90deg,#6b7ba3,#8090b8);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Gravity's Rainbow</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Pynchon</span></div>
+                    <div class="showcase-spine" style="height:22px;background:linear-gradient(90deg,#c4a882,#d4b892);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">Gray's Anatomy</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Gray</span></div>
+                    <div class="showcase-spine" style="height:18px;background:linear-gradient(90deg,#6a8a6a,#7a9a7a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Libertad</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Franzen</span></div>
+                    <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#a0906a,#b0a07a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">Lolita</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Nabokov</span></div>
+                    <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#7ac0d0,#8ad0e0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.7);">Moby Dick</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.35);">Melville</span></div>
+                    <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#2a2a2a,#3a3a3a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.8);">On the Origin of Species</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.35);">Darwin</span></div>
+                    <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#5a8a3a,#6a9a4a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">One Flew Over the Cuckoo's Nest</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Kesey</span></div>
+                    <div class="showcase-spine" style="height:18px;background:linear-gradient(90deg,#c8ba90,#d8caa0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">Principles</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Dalio</span></div>
+                    <div class="showcase-spine" style="height:13px;background:linear-gradient(90deg,#c8a050,#d8b060);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.7);">Steppenwolf</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.35);">Hesse</span></div>
+                    <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#8a7a6a,#9a8a7a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">The Grapes of Wrath</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Steinbeck</span></div>
+                    <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#d85a5a,#e86a6a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">The Subtle Art</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Manson</span></div>
+                    <!-- Duplicate for seamless loop -->
+                    <div class="showcase-spine" style="height:22px;background:linear-gradient(90deg,#8b7355,#a0845c);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Dune</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Herbert</span></div>
+                    <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#c4b8a0,#d4c8b0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">El Almuerzo Desnudo</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Burroughs</span></div>
+                    <div class="showcase-spine" style="height:15px;background:linear-gradient(90deg,#bfb8a8,#d0c8b8);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">El Amor en los Tiempos del Colera</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">García Márquez</span></div>
+                    <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#5a6e5a,#6d856d);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">El Cisne Negro</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Taleb</span></div>
+                    <div class="showcase-spine" style="height:13px;background:linear-gradient(90deg,#9e3b3b,#b54545);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">El Club de la Lucha</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Palahniuk</span></div>
+                    <div class="showcase-spine" style="height:15px;background:linear-gradient(90deg,#8a7a6a,#9a8a7a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">El Corazon de las Tinieblas</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Conrad</span></div>
+                    <div class="showcase-spine" style="height:12px;background:linear-gradient(90deg,#c8bca8,#d8ccb8);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">El Principito</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Saint-Exupéry</span></div>
+                    <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#a09080,#b0a090);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">El Retrato de Dorian Gray</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Wilde</span></div>
+                    <div class="showcase-spine" style="height:22px;background:linear-gradient(90deg,#7a8a5a,#8a9a6a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Empire of Pain</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Keefe</span></div>
+                    <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#a0946e,#b0a47e);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">En el Camino</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Kerouac</span></div>
+                    <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#c4b090,#d4c0a0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">Factfulness</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Rosling</span></div>
+                    <div class="showcase-spine" style="height:13px;background:linear-gradient(90deg,#c85a3a,#d86a4a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Fahrenheit 451</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Bradbury</span></div>
+                    <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#8a7a5a,#9a8a6a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Grandes Esperanzas</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Dickens</span></div>
+                    <div class="showcase-spine" style="height:24px;background:linear-gradient(90deg,#6b7ba3,#8090b8);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Gravity's Rainbow</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Pynchon</span></div>
+                    <div class="showcase-spine" style="height:22px;background:linear-gradient(90deg,#c4a882,#d4b892);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">Gray's Anatomy</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Gray</span></div>
+                    <div class="showcase-spine" style="height:18px;background:linear-gradient(90deg,#6a8a6a,#7a9a7a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Libertad</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Franzen</span></div>
+                    <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#a0906a,#b0a07a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">Lolita</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Nabokov</span></div>
+                    <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#7ac0d0,#8ad0e0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.7);">Moby Dick</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.35);">Melville</span></div>
+                    <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#2a2a2a,#3a3a3a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.8);">On the Origin of Species</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.35);">Darwin</span></div>
+                    <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#5a8a3a,#6a9a4a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">One Flew Over the Cuckoo's Nest</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Kesey</span></div>
+                    <div class="showcase-spine" style="height:18px;background:linear-gradient(90deg,#c8ba90,#d8caa0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">Principles</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Dalio</span></div>
+                    <div class="showcase-spine" style="height:13px;background:linear-gradient(90deg,#c8a050,#d8b060);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.7);">Steppenwolf</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.35);">Hesse</span></div>
+                    <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#8a7a6a,#9a8a7a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">The Grapes of Wrath</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Steinbeck</span></div>
+                    <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#d85a5a,#e86a6a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">The Subtle Art</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Manson</span></div>
+                </div>
             </div>
             <div class="showcase-label">Your shelf, in 3D</div>
         </div>
