@@ -738,7 +738,7 @@
         .showcase-frame {
             width: 100%;
             aspect-ratio: 16/9;
-            background: #1a1f3a;
+            background: #141a2e;
             border: 1px solid var(--border);
             border-radius: var(--radius);
             overflow: hidden;
@@ -746,6 +746,26 @@
             opacity: 0;
             transform: translateY(60px) scale(0.97);
             transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .showcase-stars {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .showcase-stars span {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.4);
+            animation: starTwinkle 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes starTwinkle {
+            0% { opacity: 0.15; }
+            100% { opacity: 0.6; }
         }
 
         .showcase-frame.visible {
@@ -788,13 +808,19 @@
         }
 
         .showcase-spine {
-            width: 100%;
+            width: 92%;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            box-shadow: 0 1px 0 rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+            box-shadow:
+                0 2px 4px rgba(0,0,0,0.5),
+                0 4px 8px rgba(0,0,0,0.2),
+                inset 0 1px 0 rgba(255,255,255,0.1),
+                inset 0 -1px 0 rgba(0,0,0,0.15);
             flex-shrink: 0;
+            margin: 0 auto;
+            border-radius: 1px;
         }
 
         .showcase-spine-title {
@@ -1164,6 +1190,7 @@
 <!-- ── Showcase ── -->
 <div class="showcase">
     <div class="showcase-frame" data-reveal>
+        <div class="showcase-stars" id="showcase-stars"></div>
         <div class="showcase-inner">
             <div class="showcase-stack-wrapper">
                 <div class="showcase-stack" id="showcase-stack">
@@ -1514,6 +1541,33 @@
     }, { threshold: 0.4 });
 
     if (shareDemo) shareObserver.observe(shareDemo);
+
+    // ── Showcase: stars + messy rotations ──
+    // Generate stars
+    const starsContainer = document.getElementById('showcase-stars');
+    if (starsContainer) {
+        for (let i = 0; i < 40; i++) {
+            const star = document.createElement('span');
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.width = (1 + Math.random() * 2) + 'px';
+            star.style.height = star.style.width;
+            star.style.animationDelay = (Math.random() * 3) + 's';
+            star.style.animationDuration = (2 + Math.random() * 3) + 's';
+            starsContainer.appendChild(star);
+        }
+    }
+
+    // Apply messy rotations and offsets to showcase spines
+    const showcaseSpines = document.querySelectorAll('.showcase-spine');
+    showcaseSpines.forEach((spine, i) => {
+        const rot = (Math.random() - 0.5) * 4; // -2° to 2°
+        const offsetX = (Math.random() - 0.5) * 16; // -8px to 8px
+        spine.style.transform = `rotate(${rot}deg) translateX(${offsetX}px)`;
+        // Vary widths slightly
+        const widthVariance = 85 + Math.random() * 15; // 85% to 100%
+        spine.style.width = widthVariance + '%';
+    });
 </script>
 
 </body>
