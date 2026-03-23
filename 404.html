@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shelvd</title>
+    <meta name="description" content="Your personal book library in 3D — Shelvd">
+    <meta property="og:title" content="Shelvd">
+    <meta property="og:description" content="Your personal book library, stacked and browsable in 3D">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0f1a">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── Login: Library Card ── -->
+<div class="auth-screen" id="auth-screen">
+    <div class="auth-stars" id="auth-stars"></div>
+    <div class="library-card" id="library-card">
+        <div class="library-card-header">
+            <div class="library-card-logo">
+                <svg class="lc-books" width="22" height="28" viewBox="0 0 58 68" fill="none">
+                    <rect x="10" y="0" width="48" height="10" rx="5" fill="currentColor"/>
+                    <rect x="2" y="14" width="38" height="10" rx="5" fill="currentColor"/>
+                    <rect x="8" y="28" width="54" height="10" rx="5" fill="currentColor"/>
+                    <rect x="20" y="42" width="38" height="10" rx="5" fill="currentColor"/>
+                    <rect x="6" y="56" width="46" height="10" rx="5" fill="currentColor"/>
+                </svg>
+                Shelvd
+            </div>
+            <div class="library-card-subtitle">LIBRARY CARD</div>
+        </div>
+        <div class="library-card-stamp" id="library-card-stamp"></div>
+        <div class="library-card-body" id="auth-form-container">
+            <!-- Step 1: Login -->
+            <div id="auth-email-form" class="auth-step">
+                <button type="button" class="auth-google-btn" id="auth-google-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                    Continue with Google
+                </button>
+                <div class="auth-divider">
+                    <span>or</span>
+                </div>
+                <label class="auth-label">Email</label>
+                <form id="auth-magic-link-form" style="display:contents;">
+                    <input type="email" id="auth-email" class="auth-input" placeholder="you@email.com" required autocomplete="email">
+                    <button type="submit" class="auth-button" id="auth-submit-btn">Send magic link</button>
+                </form>
+            </div>
+            <!-- Step 2: Check email -->
+            <div id="auth-check-email" class="auth-step" style="display:none;">
+                <div class="auth-check-icon">&#9993;</div>
+                <div class="auth-check-text">Check your email</div>
+                <div class="auth-check-sub">We sent a login link to <strong id="auth-sent-email"></strong></div>
+                <button class="auth-link-btn" id="auth-back-btn">Use a different email</button>
+            </div>
+            <!-- Step 3: Choose username (new users) -->
+            <form id="auth-username-form" class="auth-step" style="display:none;">
+                <label class="auth-label">Choose your username</label>
+                <div class="auth-username-preview">shelvd.app/<strong id="username-preview-text">@</strong></div>
+                <input type="text" id="auth-username" class="auth-input" placeholder="username" required minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]+">
+                <button type="submit" class="auth-button">Claim your shelf</button>
+                <div class="auth-error" id="username-error"></div>
+            </form>
+        </div>
+        <div class="library-card-footer">
+            <div class="library-card-number" id="library-card-number">No. ------</div>
+        </div>
+    </div>
+</div>
+<script>
+(function(){
+    var c = document.getElementById('auth-stars');
+    if (!c) return;
+    for (var i = 0; i < 60; i++) {
+        var s = document.createElement('span');
+        s.style.left = Math.random()*100+'%';
+        s.style.top = Math.random()*100+'%';
+        s.style.width = (1+Math.random()*2)+'px';
+        s.style.height = s.style.width;
+        s.style.animationDelay = (Math.random()*3)+'s';
+        s.style.animationDuration = (2+Math.random()*3)+'s';
+        c.appendChild(s);
+    }
+})();
+</script>
+
+<!-- Logo -->
+<a href="/" class="shelvd-logo">
+    <svg class="shelvd-logo-books" width="14" height="18" viewBox="0 0 58 68" fill="none">
+        <rect class="sl-book" x="10" y="0" width="48" height="10" rx="5" fill="currentColor"/>
+        <rect class="sl-book" x="2" y="14" width="38" height="10" rx="5" fill="currentColor"/>
+        <rect class="sl-book" x="8" y="28" width="54" height="10" rx="5" fill="currentColor"/>
+        <rect class="sl-book" x="20" y="42" width="38" height="10" rx="5" fill="currentColor"/>
+        <rect class="sl-book" x="6" y="56" width="46" height="10" rx="5" fill="currentColor"/>
+    </svg>
+    Shelvd
+</a>
+
+<!-- User Header -->
+<div class="library-user-header" style="display:none;">
+    <div class="library-user-header-content">
+        <div class="library-user-header-left">
+            <div class="library-user-username" id="library-user-username">@user</div>
+            <div class="library-user-stats">
+                <span id="header-book-count">0 books</span>
+            </div>
+        </div>
+        <div class="search-container" id="search-container">
+            <button class="search-toggle-btn" id="search-toggle-btn" title="Search">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+            </button>
+            <div class="search-input-wrap" id="search-input-wrap">
+                <svg class="search-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="search-input" class="search-input" placeholder="Search books..." autocomplete="off" spellcheck="false">
+                <button class="search-clear-btn" id="search-clear-btn" style="display:none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="action-bar" id="action-bar" style="display:none;">
+    <button class="action-btn add-book-btn" id="add-book-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+    </button>
+    <button class="action-btn io-btn" id="io-btn" title="Import / Export">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+    </button>
+    <button class="action-btn share-btn" id="share-btn">
+        <div class="share-btn-inner">
+            <svg class="share-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                <polyline points="16 6 12 2 8 6"/>
+                <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
+            <svg class="share-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span class="share-label">Share</span>
+        </div>
+        <div class="share-particles" id="share-particles"></div>
+    </button>
+</div>
+
+<!-- Add Book Modal -->
+<div class="add-book-modal" id="add-book-modal" style="display:none;">
+    <div class="add-book-backdrop" id="add-book-backdrop"></div>
+    <div class="add-book-card">
+        <!-- Step 0: Choose method -->
+        <div class="add-step" id="add-step-choose">
+            <div class="add-step-header">
+                <div class="add-step-title">Add books</div>
+                <button class="add-close-btn" id="add-close-btn">&times;</button>
+            </div>
+            <div class="add-choose-options">
+                <button class="add-choose-option" id="add-choose-photo">
+                    <div class="add-choose-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                    </div>
+                    <div class="add-choose-label">Photo</div>
+                    <div class="add-choose-desc">Snap or upload a cover photo</div>
+                </button>
+                <button class="add-choose-option" id="add-choose-file">
+                    <div class="add-choose-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                    </div>
+                    <div class="add-choose-label">Excel / Word</div>
+                    <div class="add-choose-desc">Import a list of books</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 1: Capture (photo) -->
+        <div class="add-step" id="add-step-capture" style="display:none;">
+            <div class="add-step-header">
+                <div class="add-step-title">Add a book</div>
+                <button class="add-close-btn add-back-btn" id="add-back-btn">&larr;</button>
+            </div>
+            <div class="add-capture-zone" id="add-capture-zone">
+                <div class="add-capture-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                </div>
+                <div class="add-capture-text">Take or upload a photo of your book cover</div>
+                <div class="add-capture-sub">We'll identify the book automatically</div>
+            </div>
+            <input type="file" id="add-book-input" accept="image/*" capture="environment" style="display:none;">
+            <!-- Upload spinner overlay -->
+            <div class="add-upload-spinner" id="add-upload-spinner" style="display:none;">
+                <div class="loading-spinner"></div>
+                <div class="add-upload-spinner-text">Processing photo...</div>
+            </div>
+        </div>
+
+        <!-- Step 2: Analyzing -->
+        <div class="add-step" id="add-step-analyzing" style="display:none;">
+            <div class="add-step-header">
+                <div class="add-step-title">Analyzing...</div>
+            </div>
+            <div class="add-analyzing">
+                <div class="add-preview-img" id="add-preview-analyzing"></div>
+                <div class="add-analyzing-bar">
+                    <div class="add-analyzing-progress"></div>
+                </div>
+                <div class="add-analyzing-text">Reading the cover</div>
+            </div>
+        </div>
+
+        <!-- Step 3: Confirm -->
+        <div class="add-step" id="add-step-confirm" style="display:none;">
+            <div class="add-step-header">
+                <div class="add-step-title">Confirm</div>
+                <button class="add-close-btn" id="add-confirm-close">&times;</button>
+            </div>
+            <div class="add-confirm-layout">
+                <div class="add-preview-img" id="add-preview-confirm"></div>
+                <div class="add-confirm-fields">
+                    <label class="add-field-label">Title</label>
+                    <input type="text" class="add-field-input" id="add-field-title" placeholder="Book title">
+                    <label class="add-field-label">Author</label>
+                    <input type="text" class="add-field-input" id="add-field-author" placeholder="Author name">
+                    <label class="add-field-label">Pages</label>
+                    <input type="number" class="add-field-input" id="add-field-pages" placeholder="250">
+                </div>
+            </div>
+            <button class="add-confirm-btn" id="add-confirm-btn">Add to shelf</button>
+            <button class="add-retake-btn" id="add-retake-btn">Retake photo</button>
+        </div>
+    </div>
+</div>
+
+<!-- Import/Export Modal -->
+<div class="io-modal" id="io-modal" style="display:none;">
+    <div class="io-backdrop" id="io-backdrop"></div>
+    <div class="io-card">
+        <div class="io-header">
+            <div class="io-title">Export catalog</div>
+            <button class="io-close" id="io-close">&times;</button>
+        </div>
+        <div class="io-options">
+            <button class="io-option" id="io-export-excel">
+                <div class="io-option-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </div>
+                <div class="io-option-text">
+                    <div class="io-option-label">Export to Excel</div>
+                    <div class="io-option-desc">Download your library as .xlsx</div>
+                </div>
+            </button>
+            <button class="io-option" id="io-export-word">
+                <div class="io-option-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                </div>
+                <div class="io-option-text">
+                    <div class="io-option-label">Export to Word</div>
+                    <div class="io-option-desc">Download catalog with covers as .docx</div>
+                </div>
+            </button>
+        </div>
+        <div class="io-progress" id="io-progress" style="display:none;">
+            <div class="io-progress-text" id="io-progress-text">Processing...</div>
+            <div class="io-progress-bar"><div class="io-progress-fill" id="io-progress-fill"></div></div>
+        </div>
+    </div>
+</div>
+<input type="file" id="io-import-input" accept=".xlsx,.xls,.csv" style="display:none;">
+
+<!-- View Toggle Pill (Bottom Center) -->
+<div class="library-view-toggle-pill" id="view-toggle-pill">
+    <div class="view-toggle">
+        <label>
+            <input type="radio" name="view" value="shelf" checked>
+            <div class="toggle-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <rect x="4" y="6.25" width="16" height="1.5" rx="0.75" fill="currentColor"/>
+                    <rect x="5" y="9.25" width="14" height="1.5" rx="0.75" fill="currentColor"/>
+                    <rect x="3" y="12.25" width="18" height="1.5" rx="0.75" fill="currentColor"/>
+                    <rect x="6" y="15.25" width="12" height="1.5" rx="0.75" fill="currentColor"/>
+                    <rect x="4" y="18.25" width="16" height="1.5" rx="0.75" fill="currentColor"/>
+                </svg>
+            </div>
+            <span>Shelf</span>
+        </label>
+        <label>
+            <input type="radio" name="view" value="grid">
+            <div class="toggle-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5"/>
+                    <rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5"/>
+                    <rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.5"/>
+                    <rect x="14" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+            </div>
+            <span>Grid</span>
+        </label>
+    </div>
+</div>
+
+<!-- Book Pull Out Arrow -->
+<div class="library-book-arrow" id="library-book-arrow">
+    <div class="library-book-arrow-button">
+        <svg viewBox="0 0 24 24">
+            <path d="M12 5v14M5 12l7-7 7 7"/>
+        </svg>
+    </div>
+    <div class="library-book-arrow-hint">Swipe up</div>
+</div>
+
+<!-- 3D Container -->
+<div class="library-3d-container" id="library-3d-container">
+    <div class="library-loading" id="library-loading">
+        <div class="loading-spinner"></div>
+    </div>
+</div>
+
+<!-- Stack Scrollbar -->
+<div class="stack-scrollbar" id="stack-scrollbar">
+    <div class="stack-scrollbar-track">
+        <div class="stack-scrollbar-thumb" id="stack-scrollbar-thumb"></div>
+    </div>
+</div>
+
+<!-- Grid View (hidden by default) -->
+<div class="grid-view" id="grid-view" style="display:none;"></div>
+
+<script src="https://unpkg.com/heic2any@0.0.4/dist/heic2any.min.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+    }
+}
+</script>
+<script type="module" src="auth.js"></script>
+<script src="analytics.js"></script>
+<script type="module" src="app.js"></script>
+<!-- PWA Install Banner -->
+<div class="pwa-install-banner" id="pwa-install-banner" style="display:none;">
+    <div class="pwa-install-content">
+        <div class="pwa-install-icon">S</div>
+        <div class="pwa-install-text">
+            <div class="pwa-install-title">Add Shelvd to Home Screen</div>
+            <div class="pwa-install-sub">Quick access to your library</div>
+        </div>
+    </div>
+    <div class="pwa-install-actions">
+        <button class="pwa-install-btn" id="pwa-install-btn">Install</button>
+        <button class="pwa-dismiss-btn" id="pwa-dismiss-btn">Not now</button>
+    </div>
+</div>
+
+<!-- iOS Install Instructions -->
+<div class="ios-install-sheet" id="ios-install-sheet" style="display:none;">
+    <div class="ios-install-content">
+        <div class="ios-install-header">
+            <div class="ios-install-title">Add to Home Screen</div>
+            <button class="ios-install-close" id="ios-install-close">&times;</button>
+        </div>
+        <div class="ios-install-steps">
+            <div class="ios-step">
+                <span class="ios-step-num">1</span>
+                <span>Tap the <strong>Share</strong> button <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> in Safari</span>
+            </div>
+            <div class="ios-step">
+                <span class="ios-step-num">2</span>
+                <span>Scroll down and tap <strong>Add to Home Screen</strong></span>
+            </div>
+            <div class="ios-step">
+                <span class="ios-step-num">3</span>
+                <span>Tap <strong>Add</strong> to confirm</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+</script>
+<script type="module" src="pwa-install.js"></script>
+<script src="import-export.js" defer></script>
+</body>
+</html>
