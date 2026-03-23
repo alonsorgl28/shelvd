@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shelvd-v10';
+const CACHE_NAME = 'shelvd-v11';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -7,6 +7,7 @@ const STATIC_ASSETS = [
     '/app.js',
     '/pwa-install.js',
     '/import-export.js',
+    '/analytics.js',
     '/books.json',
     '/icon-192.png',
     '/icon-512.png',

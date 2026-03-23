@@ -239,9 +239,10 @@ function enterLibrary(username, isPublic) {
     actionBar.style.display = '';
     document.getElementById('share-btn').setAttribute('data-username', username);
 
-    // Hide add button for public view
+    // Hide owner-only buttons for public view
     if (isPublic) {
         document.getElementById('add-book-btn').style.display = 'none';
+        document.getElementById('logout-btn').style.display = 'none';
         const ioBtn = document.getElementById('io-btn');
         if (ioBtn) ioBtn.style.display = 'none';
     }
@@ -264,6 +265,15 @@ function enterLibrary(username, isPublic) {
         }, 600);
     }
 }
+
+// ─── Logout Button ───
+document.getElementById('logout-btn').addEventListener('click', async () => {
+    await sb.auth.signOut();
+    // Clear local caches
+    localStorage.removeItem('book-covers-cache');
+    localStorage.removeItem('book-covers-version');
+    window.location.href = '/';
+});
 
 // ─── Share Button ───
 document.getElementById('share-btn').addEventListener('click', function () {
