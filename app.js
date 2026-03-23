@@ -44,7 +44,14 @@ async function loadBooksData(username, isPublic) {
             return baseBooks;
         }
 
-        // Merge: base books + user books (deduplicate by title+author)
+        // Public view: return only user's books (no merge with demo data)
+        if (isPublic) {
+            const publicBooks = userBooks.map(b => ({ ...b, id: `sb-${b.id}` }));
+            publicBooks.sort((a, b) => a.title.localeCompare(b.title, 'es', { sensitivity: 'base' }));
+            return publicBooks;
+        }
+
+        // Private view: merge base books + user books (deduplicate by title+author)
         const seen = new Set(baseBooks.map(b => `${b.title.toLowerCase()}|${b.author.toLowerCase()}`));
         const uniqueUserBooks = userBooks
             .filter(b => {
