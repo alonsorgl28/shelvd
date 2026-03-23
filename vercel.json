@@ -1,6 +1,6 @@
 {
   "cleanUrls": true,
-  "routes": [
-    { "src": "/@([a-zA-Z0-9_]+)", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/@:username", "destination": "/index.html" }
   ]
 }
