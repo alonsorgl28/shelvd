@@ -1,6 +1,6 @@
 {
   "cleanUrls": true,
-  "rewrites": [
-    { "source": "/:path(@[a-zA-Z0-9_]+)", "destination": "/index.html" }
+  "routes": [
+    { "src": "/@([a-zA-Z0-9_]+)", "dest": "/index.html" }
   ]
 }
