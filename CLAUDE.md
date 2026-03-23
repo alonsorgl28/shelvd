@@ -31,8 +31,8 @@ App web PWA para catalogar tu biblioteca personal. Tomas foto de la portada, se 
 
 ## Brand
 - **Tipografía:** Helvetica Neue, weight 500, letter-spacing -0.04em
-- **Logo:** Icono de 5 libros apilados (horizontal bars) + "Shelvd"
-- **Logo SVG oficial:** `/Users/hola/Library/Mobile Documents/iCloud~md~obsidian/Documents/ALPHA/Shelvd-brand/shelvd-logo-primary.svg`
+- **Logo:** Texto "**S**helvd" (S bold) — SIN iconos SVG de libros. Nunca agregar gráficos al logo.
+- **Logo archivos:** `/Users/hola/Library/Mobile Documents/iCloud~md~obsidian/Documents/ALPHA/Shelvd-brand/`
 - **Colores app:** Navy oscuro `#141a2e` fondo, estrellas animadas
 - **Landing:** Fondo blanco, texto negro, showcase oscuro como contraste
 

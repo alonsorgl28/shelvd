@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shelvd-v5';
+const CACHE_NAME = 'shelvd-v10';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -65,6 +65,16 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
     // Skip non-GET and Supabase API/auth requests
     if (e.request.method !== 'GET' || e.request.url.includes('supabase') || e.request.url.includes('googleapis')) {
+        return;
+    }
+
+    const requestUrl = new URL(e.request.url);
+    if (
+        requestUrl.pathname === '/ops' ||
+        requestUrl.pathname.startsWith('/ops/') ||
+        requestUrl.pathname === '/ops-preview' ||
+        requestUrl.pathname.startsWith('/ops-preview/')
+    ) {
         return;
     }
 
