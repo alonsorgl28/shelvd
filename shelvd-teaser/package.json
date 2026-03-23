@@ -1,0 +1,30 @@
+{
+  "name": "shelvd-teaser",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "npx remotion studio src/index.ts",
+    "build": "npx remotion render src/index.ts ShelvdTeaser out/teaser.mp4",
+    "preview": "npx remotion preview src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@remotion/cli": "^4.0.438",
+    "@remotion/renderer": "^4.0.438",
+    "@types/react": "^19.2.14",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "remotion": "^4.0.438",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@react-three/fiber": "^9.5.0",
+    "@remotion/three": "^4.0.438",
+    "@types/three": "^0.183.1",
+    "three": "^0.183.2"
+  }
+}
