@@ -1688,5 +1688,23 @@
     });
 </script>
 
+<!-- Analytics: track landing visit -->
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+(function() {
+    try {
+        var sb = window.supabase.createClient(
+            'https://ttdxdcxighxlauwcmhgk.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0ZHhkY3hpZ2h4bGF1d2NtaGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTgzMzksImV4cCI6MjA4OTY5NDMzOX0.XLbEFU8xaCFk9B2yAjuyk2pRMW1casXn30zICv3bIu8'
+        );
+        sb.from('events').insert({
+            event: 'landing_visit',
+            props: {},
+            url: window.location.pathname,
+            referrer: document.referrer || null
+        });
+    } catch(e) {}
+})();
+</script>
 </body>
 </html>

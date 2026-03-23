@@ -73,7 +73,23 @@ async function init(username, isPublic) {
     initialized = true;
 
     try {
-    const booksData = await loadBooksData(username, isPublic);
+    let booksData = await loadBooksData(username, isPublic);
+
+    // ── Point 2: In public view, show ONLY user's actual books (no demo data) ──
+    if (isPublic) {
+        booksData = booksData.filter(b => String(b.id).startsWith('sb-'));
+
+        // ── Point 1: Handle non-existent profile or empty library ──
+        if (booksData.length === 0) {
+            document.getElementById('library-loading').innerHTML =
+                `<div style="color:rgba(255,255,255,0.5);font-size:15px;text-align:center;padding:20px;">
+                    <div style="font-size:24px;margin-bottom:12px;">No books yet</div>
+                    <div>This shelf is empty.</div>
+                    <a href="/" style="color:rgba(255,228,196,0.8);margin-top:16px;display:inline-block;text-decoration:none;">Create your own shelf &rarr;</a>
+                </div>`;
+            return;
+        }
+    }
 
     // Scene — deep navy ink
     scene = new THREE.Scene();
@@ -664,15 +680,17 @@ async function loadCoversProgressively(booksData) {
         }
     } catch (e) { /* ignore */ }
 
-    // First pass: apply cached digital covers immediately, queue rest for fetch
+    // First pass: apply cached/persisted covers, queue rest for fetch
     const uncached = [];
     for (const bookData of booksData) {
         const cacheKey = `${bookData.title}|${bookData.author}`;
-        if (coverCache[cacheKey]) {
+        // Check DB-persisted cover first (works cross-device)
+        if (bookData.digital_cover_url) {
+            coverCache[cacheKey] = bookData.digital_cover_url;
+            applyCoverToBook(bookData.id, bookData.digital_cover_url);
+        } else if (coverCache[cacheKey]) {
             applyCoverToBook(bookData.id, coverCache[cacheKey]);
         } else {
-            // No digital cover cached yet — fetch from Open Library/Google
-            // Never use raw Supabase photos as 3D textures
             uncached.push(bookData);
         }
     }
@@ -693,6 +711,16 @@ async function loadCoversProgressively(booksData) {
             if (coverUrl) {
                 coverCache[cacheKey] = coverUrl;
                 applyCoverToBook(bookData.id, coverUrl);
+
+                // Persist to DB so it works cross-device (only for user books)
+                if (String(bookData.id).startsWith('sb-')) {
+                    const realId = bookData.id.replace('sb-', '');
+                    const sb = window.shelvdAuth?.supabase;
+                    if (sb) {
+                        sb.from('books').update({ digital_cover_url: coverUrl })
+                            .eq('id', realId).then(() => {});
+                    }
+                }
             }
         });
 
@@ -1505,6 +1533,9 @@ function onResize() {
 }
 
 // ─── Start ───
+// Track app visit
+if (window.shelvdTrack) shelvdTrack('app_visit');
+
 // Wait for auth before starting
 window.addEventListener('shelvd:authenticated', (e) => {
     const { username, isPublic } = e.detail || {};

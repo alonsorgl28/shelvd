@@ -119,12 +119,18 @@ sb.auth.onAuthStateChange(async (event, session) => {
 // Process OAuth callback before anything else
 handleOAuthCallback();
 
+// ─── Auth redirect: always go to root (not back to /@username) ───
+function getAuthRedirectUrl() {
+    return window.location.origin + '/';
+}
+
 // ─── Google OAuth ───
 document.getElementById('auth-google-btn').addEventListener('click', async () => {
+    if (window.shelvdTrack) shelvdTrack('auth_started', { method: 'google' });
     const { error } = await sb.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: window.location.origin + window.location.pathname
+            redirectTo: getAuthRedirectUrl()
         }
     });
     if (error) console.error('Google auth error:', error.message);
@@ -136,13 +142,14 @@ magicLinkForm.addEventListener('submit', async (e) => {
     const email = emailInput.value.trim();
     if (!email) return;
 
+    if (window.shelvdTrack) shelvdTrack('auth_started', { method: 'magic_link' });
     submitBtn.disabled = true;
     submitBtn.textContent = 'Sending...';
 
     const { error } = await sb.auth.signInWithOtp({
         email,
         options: {
-            emailRedirectTo: window.location.origin + window.location.pathname
+            emailRedirectTo: getAuthRedirectUrl()
         }
     });
 
@@ -242,10 +249,12 @@ function enterLibrary(username, isPublic) {
     if (isPublic) {
         // Public view — skip auth animation, start immediately
         authScreen.style.display = 'none';
+        if (window.shelvdTrack) shelvdTrack('public_profile_viewed', { username });
         window.dispatchEvent(new CustomEvent('shelvd:authenticated', {
             detail: { username, isPublic: true }
         }));
     } else {
+        if (window.shelvdTrack) shelvdTrack('auth_completed', { username });
         authScreen.classList.add('exiting');
         setTimeout(() => {
             authScreen.style.display = 'none';
@@ -263,6 +272,7 @@ document.getElementById('share-btn').addEventListener('click', function () {
 
     const username = btn.getAttribute('data-username') || 'user';
     const shareUrl = `${window.location.origin}/@${username}`;
+    if (window.shelvdTrack) shelvdTrack('share_clicked', { username });
 
     // Copy to clipboard
     navigator.clipboard.writeText(shareUrl).catch(() => {
@@ -454,13 +464,14 @@ document.getElementById('add-confirm-btn').addEventListener('click', async () =>
             return;
         }
 
-        // Upload cover image to Supabase Storage
+        // Upload cover image to Supabase Storage (compressed)
         let coverUrl = null;
         if (currentImageBlob) {
+            const compressedBlob = await compressForUpload(currentImageBlob, 800);
             const fileName = `${session.user.id}/${Date.now()}.jpg`;
             const { error: uploadErr } = await sb.storage
                 .from('covers')
-                .upload(fileName, currentImageBlob, {
+                .upload(fileName, compressedBlob, {
                     contentType: 'image/jpeg',
                     upsert: false
                 });
@@ -493,6 +504,8 @@ document.getElementById('add-confirm-btn').addEventListener('click', async () =>
             return;
         }
 
+        if (window.shelvdTrack) shelvdTrack('book_added', { title, author });
+
         // Dispatch event so app.js can add the book to the 3D scene
         window.dispatchEvent(new CustomEvent('shelvd:book-added', {
             detail: { book, coverUrl }
@@ -512,6 +525,34 @@ document.getElementById('add-confirm-btn').addEventListener('click', async () =>
         confirmBtn.disabled = false;
     }
 });
+
+// Compress image for Storage upload (max 800px, JPEG 0.8) — returns Blob
+function compressForUpload(file, maxSize = 800) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const img = new Image();
+            img.onload = function () {
+                const canvas = document.createElement('canvas');
+                let w = img.width;
+                let h = img.height;
+                if (w > maxSize || h > maxSize) {
+                    const scale = maxSize / Math.max(w, h);
+                    w = Math.round(w * scale);
+                    h = Math.round(h * scale);
+                }
+                canvas.width = w;
+                canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                canvas.toBlob((blob) => {
+                    resolve(blob || file); // fallback to original if toBlob fails
+                }, 'image/jpeg', 0.8);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
 
 // Resize image and return base64 (without data:... prefix)
 function resizeAndEncode(file, maxSize) {
