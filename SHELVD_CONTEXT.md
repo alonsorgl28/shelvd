@@ -17,7 +17,7 @@ Vercel (static hosting)
 ├── pwa-install.js ── Install banner (Android/iOS)
 ├── analytics.js ──── Tracking mínimo de funnel
 ├── 404.html ──────── Fallback SPA (copia de index.html)
-├── sw.js ─────────── Service worker cache v5
+├── sw.js ─────────── Service worker cache v11
 └── vercel.json ───── Rewrites (/@:username + catch-all)
 
 Supabase
@@ -39,8 +39,10 @@ Supabase
 | Landing page | ✅ Done | Hero, brand animation, features, showcase |
 | Import/Export | ✅ Done | Excel/CSV import, Excel/Word export (SheetJS + FileSaver) |
 | Scroll sound | ✅ Done | Wood knock via Web Audio API, scrollbar thumb only |
-| Analytics | ✅ Done | Funnel events: landing, app, auth, book_added, share, profile |
+| Analytics | ✅ Done | landing_visit, app_visit, auth_started, auth_completed, book_added, share_clicked, public_profile_viewed |
 | Share loop fix | ✅ Done | Public profile shows only user books, no demo data |
+| Upload optimization | ✅ Done | Covers se comprimen a 800px JPEG antes de subir a Storage |
+| Logout | ✅ Done | Sign out en action bar; limpia caché local y se oculta en perfil público |
 
 ## 4. Landing page (landing.html)
 - **Hero:** "Your books, beautifully stacked." + botones con starfield canvas
@@ -61,14 +63,16 @@ Proyecto Remotion para video promocional. 1080x1920 vertical, 30fps, 300 frames 
 - Share loop /@username funcionando (404.html fallback + catch-all rewrite)
 - Perfil público muestra solo libros del usuario (sin demo data)
 - Analytics mínimos implementados (analytics.js)
+- Upload a Storage comprimido antes de subir (800px JPEG)
+- Logout button agregado al action bar
 - Video teaser Remotion con logo 3D + book cascade
 - PWA icons: 4-bar book stack con degradado y sombras
 - Landing page completa con animaciones interactivas
 
 ## 7. Problemas conocidos
 - Open Library covers pueden tardar en cargar (fallback a Google Books)
-- Service worker necesita bump manual de versión (`shelvd-v5`)
+- Service worker necesita bump manual de versión (`shelvd-v11`)
 - `loadBooksData()` en app.js es frágil — no modificar
 - Video teaser pendiente de revisión visual y render final
 - Covers frágiles: dependen de APIs externas en cliente (Open Library/Google Books + localStorage)
-- Uploads a Storage no optimizados (se sube blob original sin comprimir)
+- Falta persistencia/cache más robusta de covers entre dispositivos

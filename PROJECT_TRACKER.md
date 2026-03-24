@@ -7,7 +7,7 @@ Fase 2: UX Mobile        ██████████████████�
 Fase 3: PWA              ████████████████████ 100%
 Fase 4: Landing Page     ████████████████████ 100%
 Fase 5: Brand Identity   ████████████████████ 100%
-Fase 6: Product Hardening ████████░░░░░░░░░░░░ 40%
+Fase 6: Product Hardening ████████████████░░░░ 80%
 Fase 7: Video Teaser     ██████████░░░░░░░░░░ 50%
 ```
 
@@ -35,7 +35,7 @@ Fase 7: Video Teaser     ██████████░░░░░░░░�
 | Feature | Estado | Notas |
 |---------|--------|-------|
 | manifest.json | ✅ | Icons, standalone, portrait |
-| Service worker | ✅ | Cache v3 |
+| Service worker | ✅ | Cache v11 + analytics.js en static assets |
 | Install banner (Android) | ✅ | beforeinstallprompt |
 | iOS install sheet | ✅ | Safari detection |
 | Offline fallback | ✅ | Offline page + cached CDN libs + cached covers |
@@ -67,9 +67,10 @@ Fase 7: Video Teaser     ██████████░░░░░░░░�
 |---------|--------|-------|
 | Share loop (/@username) | ✅ | 404.html fallback + catch-all rewrite |
 | Public = solo user books | ✅ | Sin demo data, fix deduplicación (96→104 books) |
-| Analytics funnel | ✅ | landing_visit, app_visit, auth, book_added, share, profile |
+| Analytics funnel | ✅ | landing_visit, app_visit, auth_started, auth_completed, book_added, share_clicked, public_profile_viewed |
 | Covers server-side cache | ⬜ | Pendiente: Open Library/Google Books frágil en cliente |
-| Upload optimization | ⬜ | Pendiente: comprimir antes de subir a Supabase Storage |
+| Upload optimization | ✅ | Compresión a 800px JPEG antes de subir a Supabase Storage |
+| Logout UX | ✅ | Botón de sign out en action bar, oculto en perfil público |
 
 ## Fase 7: Video Teaser (Remotion)
 | Feature | Estado | Notas |
@@ -86,7 +87,7 @@ Fase 7: Video Teaser     ██████████░░░░░░░░�
 | 2026-03-22 | Landing page: feature cards, showcase, white theme, starfield buttons, logo integrado |
 | 2026-03-22 | Bug fixes: sb- prefix IDs, digital covers only, grid click fix. Features: search bar, scroll sound, import/export Excel/Word. Logo revertido a text-only |
 | 2026-03-23 | PWA icons rediseñados: 4-bar book stack con degradado y sombras |
-| 2026-03-23 | Video teaser Remotion: rewrite LogoScene3D (física correcta) + BookStack3D (cascada con colores). Share loop fix: 404.html fallback, catch-all rewrite, public profile solo user books (96→104), analytics.js |
+| 2026-03-23 | Video teaser Remotion: rewrite LogoScene3D (física correcta) + BookStack3D (cascada con colores). Product hardening: 404.html fallback, catch-all rewrite, public profile solo user books (96→104), analytics.js, upload compression, logout button, SW v11 |
 
 ## Quick Reference: Session Start
 ```

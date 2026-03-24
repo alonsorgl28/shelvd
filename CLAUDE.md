@@ -16,18 +16,20 @@ App web PWA para catalogar tu biblioteca personal. Tomas foto de la portada, se 
 | `landing.html` | Landing page marketing |
 | `style.css` | Todos los estilos de la app |
 | `app.js` | Lógica del shelf 3D, renderizado de libros |
-| `auth.js` | Login (Google OAuth + magic link), upload de fotos |
+| `auth.js` | Login (Google OAuth + magic link), share/logout, upload de fotos |
 | `pwa-install.js` | Banner de instalación PWA (Android + iOS) |
-| `sw.js` | Service worker (cache `shelvd-v3`) |
+| `analytics.js` | Tracking mínimo del funnel hacia Supabase |
+| `404.html` | Fallback SPA para rutas públicas |
+| `sw.js` | Service worker (cache `shelvd-v11`) |
 | `import-export.js` | Import/export de biblioteca |
-| `vercel.json` | Rewrites (`/@:username` → index.html) |
+| `vercel.json` | Rewrites (`/@:username` + catch-all → index.html) |
 | `manifest.json` | Config PWA |
 
 ## Reglas críticas
 - **NO tocar `loadBooksData()` en app.js** — maneja la carga de libros y es frágil
 - **Dominio Vercel:** `shelvd-mu.vercel.app` (no `shelvd.vercel.app`)
 - **CORS portadas:** Usar Open Library primero (tiene CORS), no Google Books directo
-- **Vercel routing:** Solo `cleanUrls: true` + rewrite `/@:username`. NO catch-all rewrites o rompe archivos estáticos
+- **Vercel routing actual:** `cleanUrls: true` + rewrite `/@:username` + catch-all `/(.*)` a `index.html`, con `404.html` como fallback. Si cambias esto, vuelve a validar `/@username` en producción
 
 ## Brand
 - **Tipografía:** Helvetica Neue, weight 500, letter-spacing -0.04em
@@ -39,4 +41,5 @@ App web PWA para catalogar tu biblioteca personal. Tomas foto de la portada, se 
 ## Gotchas
 - Service worker cache: bumpar versión en `sw.js` cuando cambias assets estáticos
 - Landing page es un archivo separado (`landing.html`), no parte del SPA
+- Upload a Storage: se comprime a `800px` JPEG antes de subir; el resize para análisis sigue separado (`1024px`)
 - Los libros en el SVG de la brand section usan colores oscuros (`#222`, `#333`) porque el fondo de la landing es blanco
