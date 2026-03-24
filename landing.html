@@ -1132,7 +1132,7 @@
         </span>
         Shelvd
     </a>
-    <a href="/index.html" class="nav-btn" aria-label="Open Library" data-star-count="16">
+    <a href="/index.html" class="nav-btn" aria-label="Open Library" data-star-count="20" data-star-brightness="1.16" data-star-drift="0.78" data-star-glow="1.22">
         <canvas></canvas>
         <span class="nav-btn-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1152,7 +1152,7 @@
     <h1 class="hero-headline">Your books,<br>beautifully stacked.</h1>
     <p class="hero-desc">Snap a cover, catalog your collection. Build a 3D library that's uniquely yours and share it with the world.</p>
     <div class="hero-buttons">
-        <a href="/index.html" class="btn-primary" id="hero-btn-primary">
+        <a href="/index.html" class="btn-primary" id="hero-btn-primary" data-star-count="28" data-star-brightness="1.14" data-star-drift="0.88" data-star-glow="1.2">
             <canvas></canvas>
             <span>Start your shelf</span>
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
@@ -1325,7 +1325,7 @@
 
 <!-- ── Showcase ── -->
 <div class="showcase">
-    <div class="showcase-frame" data-reveal data-star-count="108" data-star-brightness="1.12" data-star-drift="1.2" data-star-glow="1.15">
+    <div class="showcase-frame" data-reveal data-star-count="132" data-star-brightness="1.28" data-star-drift="1.42" data-star-glow="1.3">
         <canvas class="showcase-canvas" aria-hidden="true"></canvas>
         <div class="showcase-inner">
             <div class="showcase-stack-wrapper">
@@ -1406,7 +1406,7 @@
 <section class="cta-section">
     <h2 class="cta-title">Claim your shelf</h2>
     <p class="cta-sub">Free forever. No ads. Just your books.</p>
-    <a href="/index.html" class="btn-primary" id="cta-btn-primary">
+    <a href="/index.html" class="btn-primary" id="cta-btn-primary" data-star-count="28" data-star-brightness="1.14" data-star-drift="0.88" data-star-glow="1.2">
         <canvas></canvas>
         <span>Get started</span>
         <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
@@ -1680,6 +1680,8 @@
     if (shareDemo) shareObserver.observe(shareDemo);
 
     // ── Starfield buttons ──
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     document.querySelectorAll('.btn-primary canvas, .nav-btn canvas, .showcase-frame canvas').forEach(canvas => {
         const host = canvas.parentElement;
         const ctx = canvas.getContext('2d');
@@ -1707,16 +1709,29 @@
             resize();
             stars.length = 0;
             for (let i = 0; i < count; i++) {
+                const accent = Math.random() > 0.74;
+                const radius = accent ? 0.95 + Math.random() * 1.2 : 0.38 + Math.random() * 0.95;
+                const baseOpacity = accent ? 0.62 + Math.random() * 0.26 : 0.38 + Math.random() * 0.22;
+                const speed = prefersReducedMotion
+                    ? 0
+                    : (accent ? 0.06 + Math.random() * 0.08 : 0.022 + Math.random() * 0.04) * drift;
+                const angle = -0.55 + (Math.random() - 0.5) * 1.2;
+                const wobble = prefersReducedMotion ? 0 : (accent ? 0.07 + Math.random() * 0.08 : 0.03 + Math.random() * 0.05);
+
                 stars.push({
                     x: Math.random() * width,
                     y: Math.random() * height,
-                    r: 0.45 + Math.random() * 1.4,
+                    r: radius,
+                    baseOpacity,
                     phase: Math.random() * Math.PI * 2,
-                    twinkleSpeed: 0.7 + Math.random() * 1.6,
-                    driftAngle: Math.random() * Math.PI * 2,
-                    driftSpeed: (0.03 + Math.random() * 0.08) * drift,
-                    turnSpeed: (Math.random() - 0.5) * 0.004,
-                    glow: (0.75 + Math.random() * 1.35) * glowStrength,
+                    twinkleSpeed: 0.3 + Math.random() * 0.9,
+                    twinkleAmount: accent ? 0.16 + Math.random() * 0.08 : 0.08 + Math.random() * 0.05,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    wobblePhase: Math.random() * Math.PI * 2,
+                    wobbleSpeed: 0.25 + Math.random() * 0.55,
+                    wobble,
+                    glow: (accent ? 1.2 : 0.9) * (0.9 + Math.random() * 0.65) * glowStrength,
                     wrap: 10 + Math.random() * 14
                 });
             }
@@ -1725,19 +1740,21 @@
         function draw(t) {
             ctx.clearRect(0, 0, width, height);
             stars.forEach(s => {
-                s.driftAngle += s.turnSpeed;
-                s.x += Math.cos(s.driftAngle) * s.driftSpeed;
-                s.y += Math.sin(s.driftAngle) * s.driftSpeed;
+                const wobbleX = Math.cos(s.wobblePhase + t * 0.00018 * s.wobbleSpeed) * s.wobble;
+                const wobbleY = Math.sin(s.wobblePhase + t * 0.00016 * s.wobbleSpeed) * s.wobble;
+
+                s.x += s.vx + wobbleX;
+                s.y += s.vy + wobbleY;
 
                 if (s.x < -s.wrap) s.x = width + s.wrap;
                 if (s.x > width + s.wrap) s.x = -s.wrap;
                 if (s.y < -s.wrap) s.y = height + s.wrap;
                 if (s.y > height + s.wrap) s.y = -s.wrap;
 
-                const pulse = 0.55 + 0.45 * Math.sin(s.phase + t * 0.001 * s.twinkleSpeed);
-                const glowRadius = s.r * (2.4 + pulse * 1.45) * s.glow;
-                const glowOpacity = Math.min(0.18, (0.028 + pulse * 0.075) * brightness);
-                const coreOpacity = Math.min(1, (0.34 + pulse * 0.56) * brightness);
+                const pulse = 1 + Math.sin(s.phase + t * 0.00038 * s.twinkleSpeed) * s.twinkleAmount;
+                const glowRadius = s.r * (2.8 + pulse * 1.15) * s.glow;
+                const glowOpacity = Math.min(0.22, s.baseOpacity * 0.16 * brightness * pulse);
+                const coreOpacity = Math.min(1, s.baseOpacity * brightness * pulse);
 
                 ctx.beginPath();
                 ctx.arc(s.x, s.y, glowRadius, 0, Math.PI * 2);
