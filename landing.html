@@ -74,7 +74,7 @@
 
         .logo-book {
             transform-origin: center;
-            animation: logoBookFall 3.4s ease-in-out infinite;
+            animation: logoBookFall 3.6s ease-in-out infinite;
         }
 
         .logo-book:nth-child(1) { animation-delay: 0s; }
@@ -83,11 +83,12 @@
         .logo-book:nth-child(4) { animation-delay: 0.45s; }
 
         @keyframes logoBookFall {
-            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            18% { transform: translateY(0) rotate(0deg) translateX(0); opacity: 1; }
-            52% { transform: translateY(7px) rotate(var(--rot)) translateX(var(--dx)); opacity: 0.62; }
-            64% { transform: translateY(8px) rotate(calc(var(--rot) * 1.05)) translateX(var(--dx)); opacity: 0.5; }
-            86% { transform: translateY(0) rotate(0deg) translateX(0); opacity: 1; }
+            0%, 100% { transform: translateY(0) rotate(0deg) translateX(0); opacity: 1; }
+            14% { transform: translateY(0) rotate(0deg) translateX(0); opacity: 1; }
+            42% { transform: translateY(7px) rotate(var(--rot)) translateX(var(--dx)); opacity: 0.68; }
+            56% { transform: translateY(16px) rotate(calc(var(--rot) * 1.15)) translateX(calc(var(--dx) * 1.2)); opacity: 0; }
+            57% { transform: translateY(-8px) rotate(0deg) translateX(0); opacity: 0; }
+            76% { transform: translateY(0) rotate(0deg) translateX(0); opacity: 1; }
         }
 
         .nav-btn {
