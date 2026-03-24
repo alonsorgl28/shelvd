@@ -172,12 +172,14 @@
 }
 
 .auth-iso-stack {
-    --iso-side: 22px;
-    --iso-top: 20px;
+    --iso-side: 28px;
+    --iso-top: 28px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding-top: var(--iso-top);
+    gap: 10px;
+    padding: 8px 0 4px;
+    transform: skewY(-14deg);
+    transform-origin: top center;
 }
 
 .auth-iso-item {
@@ -185,14 +187,12 @@
     isolation: isolate;
     width: calc(100% - var(--iso-side));
     margin-left: var(--iso-side);
-    min-height: 56px;
-    border-radius: 18px;
-    border: 1px solid var(--iso-border, rgba(169, 182, 228, 0.28));
+    min-height: 54px;
+    border-radius: 8px;
+    border: 1px solid var(--iso-border, rgba(116, 134, 201, 0.42));
     background: var(--iso-front, rgba(219, 226, 255, 0.95));
-    box-shadow:
-        0 14px 28px rgba(7, 11, 22, 0.16),
-        inset 0 1px 0 rgba(255, 255, 255, 0.35);
-    transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+    box-shadow: 0 12px 24px rgba(7, 11, 22, 0.14);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     color: #16213d;
     z-index: var(--iso-index, 1);
 }
@@ -213,7 +213,6 @@
     background: var(--iso-side-face, rgba(142, 154, 207, 0.95));
     transform-origin: right;
     transform: skewY(45deg);
-    border-radius: 14px 0 0 12px;
 }
 
 .auth-iso-item::after {
@@ -224,60 +223,56 @@
     background: var(--iso-top-face, rgba(225, 232, 255, 0.98));
     transform-origin: bottom;
     transform: skewX(45deg);
-    border-radius: 14px 14px 0 0;
 }
 
 .auth-iso-item:hover {
-    transform: translateX(-10px);
-    filter: brightness(1.02);
-    box-shadow:
-        0 18px 34px rgba(7, 11, 22, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.38);
+    transform: translateX(-20px);
+    box-shadow: 0 18px 30px rgba(7, 11, 22, 0.2);
 }
 
 .auth-iso-item:has(.auth-button-iso:active),
 .auth-iso-item:has(.auth-input-iso:focus) {
-    transform: translateX(-6px);
+    transform: translateX(-12px);
 }
 
 .auth-iso-item-meta {
-    --iso-front: linear-gradient(180deg, rgba(228, 233, 255, 0.98), rgba(204, 212, 245, 0.96));
-    --iso-top-face: rgba(239, 243, 255, 1);
-    --iso-side-face: rgba(179, 190, 232, 0.98);
+    --iso-front: rgba(226, 232, 255, 0.98);
+    --iso-top-face: rgba(241, 245, 255, 1);
+    --iso-side-face: rgba(183, 194, 236, 0.98);
     --iso-border: rgba(166, 180, 227, 0.36);
 }
 
 .auth-iso-item-meta-claim {
-    --iso-front: linear-gradient(180deg, rgba(215, 224, 255, 0.98), rgba(188, 200, 241, 0.96));
-    --iso-top-face: rgba(230, 236, 255, 1);
-    --iso-side-face: rgba(160, 176, 227, 0.98);
+    --iso-front: rgba(216, 225, 255, 0.98);
+    --iso-top-face: rgba(233, 239, 255, 1);
+    --iso-side-face: rgba(164, 180, 230, 0.98);
 }
 
 .auth-iso-item-field {
-    --iso-front: linear-gradient(180deg, rgba(203, 214, 252, 0.98), rgba(177, 190, 236, 0.96));
-    --iso-top-face: rgba(216, 226, 255, 0.98);
-    --iso-side-face: rgba(129, 146, 208, 0.98);
+    --iso-front: rgba(194, 203, 247, 0.98);
+    --iso-top-face: rgba(212, 222, 255, 0.98);
+    --iso-side-face: rgba(126, 144, 207, 0.98);
     --iso-border: rgba(145, 160, 220, 0.34);
 }
 
 .auth-iso-item-preview {
-    --iso-front: linear-gradient(180deg, rgba(191, 203, 245, 0.98), rgba(164, 178, 227, 0.96));
-    --iso-top-face: rgba(209, 220, 255, 0.98);
+    --iso-front: rgba(185, 197, 242, 0.98);
+    --iso-top-face: rgba(204, 217, 255, 0.98);
     --iso-side-face: rgba(118, 136, 196, 0.98);
     --iso-border: rgba(133, 151, 216, 0.34);
     color: #f4f7ff;
 }
 
 .auth-iso-item-action {
-    --iso-front: linear-gradient(180deg, rgba(63, 83, 138, 0.98), rgba(28, 42, 79, 0.98));
-    --iso-top-face: rgba(102, 121, 185, 0.98);
-    --iso-side-face: rgba(32, 46, 92, 0.98);
+    --iso-front: rgba(34, 49, 94, 0.98);
+    --iso-top-face: rgba(95, 116, 181, 0.98);
+    --iso-side-face: rgba(28, 42, 84, 0.98);
     --iso-border: rgba(124, 143, 201, 0.22);
     color: rgba(245, 248, 255, 0.96);
 }
 
 .auth-iso-item-action-claim {
-    --iso-front: linear-gradient(180deg, rgba(56, 77, 128, 0.98), rgba(22, 35, 68, 0.98));
+    --iso-front: rgba(29, 43, 82, 0.98);
     --iso-top-face: rgba(95, 116, 181, 0.98);
     --iso-side-face: rgba(28, 42, 84, 0.98);
 }
@@ -289,11 +284,12 @@
     position: relative;
     z-index: 1;
     width: 100%;
-    min-height: 56px;
+    min-height: 54px;
     border: 0;
-    border-radius: 18px;
+    border-radius: 8px;
     background: transparent;
     box-shadow: none;
+    transform: skewY(14deg);
 }
 
 .auth-iso-copy {
@@ -301,7 +297,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 14px;
-    padding: 15px 18px;
+    padding: 14px 18px;
 }
 
 .auth-iso-title {
@@ -320,7 +316,7 @@
 }
 
 .auth-input-iso {
-    padding: 16px 18px;
+    padding: 14px 18px;
     color: #18233f;
     font-weight: 600;
 }
@@ -336,7 +332,7 @@
 }
 
 .auth-button-iso {
-    padding: 16px 18px;
+    padding: 14px 18px;
     color: inherit;
     font-weight: 600;
     text-align: left;
@@ -354,7 +350,7 @@
 .auth-username-preview-iso {
     display: flex;
     align-items: center;
-    padding: 16px 18px;
+    padding: 14px 18px;
     justify-content: flex-start;
     gap: 6px;
     color: rgba(241, 245, 255, 0.9);
@@ -598,23 +594,15 @@
     }
 
     .auth-iso-stack {
-        --iso-side: 16px;
-        --iso-top: 14px;
-        gap: 12px;
-        padding-top: 14px;
+        --iso-side: 20px;
+        --iso-top: 18px;
+        gap: 10px;
+        padding-top: 6px;
     }
 
     .auth-iso-item {
         min-height: 52px;
-        border-radius: 16px;
-    }
-
-    .auth-iso-item::before {
-        border-radius: 12px 0 0 10px;
-    }
-
-    .auth-iso-item::after {
-        border-radius: 12px 12px 0 0;
+        border-radius: 7px;
     }
 
     .auth-iso-copy,
@@ -622,7 +610,7 @@
     .auth-button-iso,
     .auth-username-preview-iso {
         min-height: 52px;
-        border-radius: 16px;
+        border-radius: 7px;
         padding: 14px 16px;
     }
 
