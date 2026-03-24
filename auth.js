@@ -1049,7 +1049,7 @@ function queueIsbnRefresh() {
     const edition = readEditionFields();
     const typedIsbn = edition.isbn_13 || edition.isbn_10;
     const analyzedIsbn = addState.analysis?.isbn_13 || addState.analysis?.isbn_10;
-    if (!typedIsbn || typedIsbn === analyzedIsbn) return;
+    if (!typedIsbn || (typedIsbn.length !== 10 && typedIsbn.length !== 13) || typedIsbn === analyzedIsbn) return;
 
     isbnRefreshTimeout = setTimeout(() => {
         analyzeEditionEvidence('Checking ISBN and edition details');
@@ -1070,23 +1070,24 @@ async function analyzeEditionEvidence(message = 'Checking the exact edition') {
     const currentFields = readEditionFields();
 
     try {
-        const resp = await fetch(`${SUPABASE_URL}/functions/v1/analyze-book`, {
-            method: 'POST',
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session?.access_token) {
+            throw new Error('Session expired');
+        }
+
+        const { data, error } = await sb.functions.invoke('analyze-book', {
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                Authorization: `Bearer ${session.access_token}`
             },
-            body: JSON.stringify({
+            body: {
                 cover_image: addState.base64.cover,
                 spine_image: addState.base64.spine,
                 back_image: addState.base64.back,
                 manual_overrides: buildManualOverrides()
-            })
+            }
         });
-
-        const data = await resp.json();
-        if (!resp.ok) {
-            throw new Error(data?.error || 'Analysis failed');
+        if (error) {
+            throw new Error(error.message || 'Analysis failed');
         }
 
         addState.analysis = normalizeAnalysisResponse(data);
@@ -1185,6 +1186,7 @@ Object.values(addFieldRefs).forEach((input) => {
 });
 
 if (addFieldRefs.isbn_13) {
+    addFieldRefs.isbn_13.addEventListener('input', queueIsbnRefresh);
     addFieldRefs.isbn_13.addEventListener('change', queueIsbnRefresh);
     addFieldRefs.isbn_13.addEventListener('blur', queueIsbnRefresh);
 }

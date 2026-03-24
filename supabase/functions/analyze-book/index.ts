@@ -812,7 +812,7 @@ Deno.serve(async (req) => {
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info",
       },
     });
   }
@@ -839,6 +839,8 @@ Deno.serve(async (req) => {
 
     let extracted = await extractEditionSignals(images);
     if (
+      extracted.missing_fields.includes("title") ||
+      extracted.missing_fields.includes("author") ||
       extracted.missing_fields.includes("publisher") ||
       extracted.missing_fields.includes("isbn_13") ||
       !extracted.published_year
@@ -901,8 +903,9 @@ Deno.serve(async (req) => {
       matchStatus = "manual_required";
     }
 
+    const metadataCandidate = exactIsbnCandidate || (matchStatus === "exact_match" ? matchedCandidate : null);
     const verifiedCandidate = matchStatus === "exact_match" ? matchedCandidate : null;
-    const merged = mergeSignalsWithCandidate(extracted, verifiedCandidate);
+    const merged = mergeSignalsWithCandidate(extracted, metadataCandidate);
     return jsonResponse({
       ...merged,
       match_status: matchStatus,

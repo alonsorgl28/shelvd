@@ -1,16 +1,16 @@
-const CACHE_NAME = 'shelvd-v17';
+const CACHE_NAME = 'shelvd-v18';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
     '/style.css',
     '/auth.js',
-    '/auth.js?v=20260324f',
+    '/auth.js?v=20260324g',
     '/app.js',
-    '/app.js?v=20260324f',
+    '/app.js?v=20260324g',
     '/pwa-install.js',
     '/pwa-install.js?v=20260324b',
     '/import-export.js',
-    '/import-export.js?v=20260324f',
+    '/import-export.js?v=20260324g',
     '/analytics.js',
     '/analytics.js?v=20260324b',
     '/books.json',
