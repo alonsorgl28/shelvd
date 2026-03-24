@@ -1325,7 +1325,7 @@
 
 <!-- ── Showcase ── -->
 <div class="showcase">
-    <div class="showcase-frame" data-reveal data-star-count="90">
+    <div class="showcase-frame" data-reveal data-star-count="108" data-star-brightness="1.12" data-star-drift="1.2" data-star-glow="1.15">
         <canvas class="showcase-canvas" aria-hidden="true"></canvas>
         <div class="showcase-inner">
             <div class="showcase-stack-wrapper">
@@ -1681,16 +1681,26 @@
 
     // ── Starfield buttons ──
     document.querySelectorAll('.btn-primary canvas, .nav-btn canvas, .showcase-frame canvas').forEach(canvas => {
+        const host = canvas.parentElement;
         const ctx = canvas.getContext('2d');
         const stars = [];
-        const count = Number(canvas.parentElement.dataset.starCount || 35);
+        const count = Number(host.dataset.starCount || 35);
+        const brightness = Number(host.dataset.starBrightness || 1);
+        const drift = Number(host.dataset.starDrift || 1);
+        const glowStrength = Number(host.dataset.starGlow || 1);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        let width = 0;
+        let height = 0;
 
         function resize() {
-            const rect = canvas.parentElement.getBoundingClientRect();
-            canvas.width = rect.width * 2;
-            canvas.height = rect.height * 2;
+            const rect = host.getBoundingClientRect();
+            width = rect.width;
+            height = rect.height;
+            canvas.width = Math.max(1, Math.round(width * dpr));
+            canvas.height = Math.max(1, Math.round(height * dpr));
             canvas.style.width = rect.width + 'px';
             canvas.style.height = rect.height + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
 
         function init() {
@@ -1698,30 +1708,45 @@
             stars.length = 0;
             for (let i = 0; i < count; i++) {
                 stars.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    r: 0.5 + Math.random() * 1.5,
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    r: 0.45 + Math.random() * 1.4,
                     phase: Math.random() * Math.PI * 2,
-                    speed: 0.8 + Math.random() * 1.5,
-                    vx: (Math.random() - 0.5) * 0.4,
-                    vy: (Math.random() - 0.5) * 0.3
+                    twinkleSpeed: 0.7 + Math.random() * 1.6,
+                    driftAngle: Math.random() * Math.PI * 2,
+                    driftSpeed: (0.03 + Math.random() * 0.08) * drift,
+                    turnSpeed: (Math.random() - 0.5) * 0.004,
+                    glow: (0.75 + Math.random() * 1.35) * glowStrength,
+                    wrap: 10 + Math.random() * 14
                 });
             }
         }
 
         function draw(t) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, width, height);
             stars.forEach(s => {
-                s.x += s.vx;
-                s.y += s.vy;
-                if (s.x < 0) s.x = canvas.width;
-                if (s.x > canvas.width) s.x = 0;
-                if (s.y < 0) s.y = canvas.height;
-                if (s.y > canvas.height) s.y = 0;
-                const opacity = 0.3 + 0.5 * Math.sin(s.phase + t * 0.001 * s.speed);
+                s.driftAngle += s.turnSpeed;
+                s.x += Math.cos(s.driftAngle) * s.driftSpeed;
+                s.y += Math.sin(s.driftAngle) * s.driftSpeed;
+
+                if (s.x < -s.wrap) s.x = width + s.wrap;
+                if (s.x > width + s.wrap) s.x = -s.wrap;
+                if (s.y < -s.wrap) s.y = height + s.wrap;
+                if (s.y > height + s.wrap) s.y = -s.wrap;
+
+                const pulse = 0.55 + 0.45 * Math.sin(s.phase + t * 0.001 * s.twinkleSpeed);
+                const glowRadius = s.r * (2.4 + pulse * 1.45) * s.glow;
+                const glowOpacity = Math.min(0.18, (0.028 + pulse * 0.075) * brightness);
+                const coreOpacity = Math.min(1, (0.34 + pulse * 0.56) * brightness);
+
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, glowRadius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255,255,255,${glowOpacity})`;
+                ctx.fill();
+
                 ctx.beginPath();
                 ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255,255,255,${opacity})`;
+                ctx.fillStyle = `rgba(255,255,255,${coreOpacity})`;
                 ctx.fill();
             });
             requestAnimationFrame(draw);
@@ -1729,7 +1754,7 @@
 
         init();
         requestAnimationFrame(draw);
-        window.addEventListener('resize', resize);
+        window.addEventListener('resize', init);
     });
 
     // Apply messy rotations and offsets to showcase spines
