@@ -29,6 +29,14 @@ const cardNumber = document.getElementById('library-card-number');
 const actionBar = document.getElementById('action-bar');
 const utilityMenuToggle = document.getElementById('utility-menu-toggle');
 const searchToggleBtn = document.getElementById('search-toggle-btn');
+const mobileUtilityMenu = document.getElementById('mobile-utility-menu');
+const mobileUtilityBackdrop = document.getElementById('mobile-utility-backdrop');
+const mobileUtilityPanel = document.getElementById('mobile-utility-panel');
+const mobileUtilityGrid = document.getElementById('mobile-utility-grid');
+const mobileAddBookBtn = document.getElementById('mobile-add-book-btn');
+const mobileShareBtn = document.getElementById('mobile-share-btn');
+const mobileIOBtn = document.getElementById('mobile-io-btn');
+const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
 
 // ─── Check if viewing a public profile ───
 function getPublicUsername() {
@@ -66,6 +74,14 @@ async function handleSession(session) {
         cardStamp.classList.add('stamped');
     }
 }
+
+function syncMobileUtilityLayout() {
+    if (!mobileUtilityGrid) return;
+    const visibleTiles = [mobileShareBtn, mobileIOBtn].filter((button) => button && button.style.display !== 'none');
+    mobileUtilityGrid.classList.toggle('single-tile', visibleTiles.length <= 1);
+}
+
+syncMobileUtilityLayout();
 
 // ─── Handle OAuth callback code manually ───
 async function handleOAuthCallback() {
@@ -241,6 +257,7 @@ function enterLibrary(username, isPublic) {
     actionBar.style.display = '';
     closeUtilityMenu();
     document.getElementById('share-btn').setAttribute('data-username', username);
+    if (mobileShareBtn) mobileShareBtn.setAttribute('data-username', username);
 
     // Hide owner-only buttons for public view
     if (isPublic) {
@@ -248,7 +265,16 @@ function enterLibrary(username, isPublic) {
         document.getElementById('logout-btn').style.display = 'none';
         const ioBtn = document.getElementById('io-btn');
         if (ioBtn) ioBtn.style.display = 'none';
+        if (mobileAddBookBtn) mobileAddBookBtn.style.display = 'none';
+        if (mobileIOBtn) mobileIOBtn.style.display = 'none';
+        if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'none';
+    } else {
+        if (mobileAddBookBtn) mobileAddBookBtn.style.display = '';
+        if (mobileIOBtn) mobileIOBtn.style.display = '';
+        if (mobileLogoutBtn) mobileLogoutBtn.style.display = '';
     }
+
+    syncMobileUtilityLayout();
 
     if (isPublic) {
         // Public view — skip auth animation, start immediately
@@ -274,33 +300,42 @@ function isMobileLibraryUI() {
 }
 
 function closeUtilityMenu() {
-    if (!actionBar || !utilityMenuToggle) return;
-    actionBar.classList.remove('mobile-open');
+    if (!utilityMenuToggle || !mobileUtilityMenu) return;
+    mobileUtilityMenu.classList.remove('is-open');
+    mobileUtilityMenu.setAttribute('aria-hidden', 'true');
     utilityMenuToggle.classList.remove('active');
     utilityMenuToggle.setAttribute('aria-expanded', 'false');
 }
 
 function openUtilityMenu() {
-    if (!actionBar || !utilityMenuToggle || !isMobileLibraryUI()) return;
-    actionBar.classList.add('mobile-open');
+    if (!utilityMenuToggle || !mobileUtilityMenu || !isMobileLibraryUI()) return;
+    mobileUtilityMenu.classList.add('is-open');
+    mobileUtilityMenu.setAttribute('aria-hidden', 'false');
     utilityMenuToggle.classList.add('active');
     utilityMenuToggle.setAttribute('aria-expanded', 'true');
 }
 
-if (utilityMenuToggle && actionBar) {
+if (utilityMenuToggle && mobileUtilityMenu) {
     utilityMenuToggle.addEventListener('click', (event) => {
         event.stopPropagation();
         if (!isMobileLibraryUI()) return;
-        if (actionBar.classList.contains('mobile-open')) {
+        if (mobileUtilityMenu.classList.contains('is-open')) {
             closeUtilityMenu();
         } else {
             openUtilityMenu();
         }
     });
 
+    if (mobileUtilityBackdrop) {
+        mobileUtilityBackdrop.addEventListener('click', () => {
+            if (!isMobileLibraryUI()) return;
+            closeUtilityMenu();
+        });
+    }
+
     document.addEventListener('click', (event) => {
-        if (!isMobileLibraryUI() || !actionBar.classList.contains('mobile-open')) return;
-        if (actionBar.contains(event.target) || utilityMenuToggle.contains(event.target)) return;
+        if (!isMobileLibraryUI() || !mobileUtilityMenu.classList.contains('is-open')) return;
+        if ((mobileUtilityPanel && mobileUtilityPanel.contains(event.target)) || utilityMenuToggle.contains(event.target)) return;
         closeUtilityMenu();
     });
 
@@ -328,41 +363,68 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
     window.location.href = '/';
 });
 
-// ─── Share Button ───
-document.getElementById('share-btn').addEventListener('click', function () {
-    const btn = this;
-    if (btn.classList.contains('copied')) return;
-
-    const username = btn.getAttribute('data-username') || 'user';
-    const shareUrl = `${window.location.origin}/@${username}`;
-    if (window.shelvdTrack) shelvdTrack('share_clicked', { username });
-
-    // Copy to clipboard
-    navigator.clipboard.writeText(shareUrl).catch(() => {
-        // Fallback
+function copyText(text) {
+    return navigator.clipboard.writeText(text).catch(() => {
         const ta = document.createElement('textarea');
-        ta.value = shareUrl;
+        ta.value = text;
         document.body.appendChild(ta);
         ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
     });
+}
 
-    // Subtle acknowledgement pulse
+function handleDesktopShareState(btn) {
     btn.classList.add('stamping');
 
-    // Switch to check icon
     setTimeout(() => {
         btn.classList.remove('stamping');
         btn.classList.add('copied');
         btn.querySelector('.share-label').textContent = 'Copied';
     }, 220);
 
-    // Reset after 2s
     setTimeout(() => {
         btn.classList.remove('copied');
         btn.querySelector('.share-label').textContent = 'Share';
     }, 2200);
+}
+
+function handleMobileShareState(btn) {
+    const label = btn.querySelector('.mobile-utility-tile-label');
+    const meta = btn.querySelector('.mobile-utility-tile-meta');
+    btn.classList.add('is-copied');
+    if (label) label.textContent = 'Copied';
+    if (meta) meta.textContent = 'Link copied';
+
+    setTimeout(() => {
+        btn.classList.remove('is-copied');
+        if (label) label.textContent = 'Share';
+        if (meta) meta.textContent = 'Copy link';
+    }, 2200);
+}
+
+function handleShareAction(btn) {
+    if (!btn) return;
+    if (btn.classList.contains('copied') || btn.classList.contains('is-copied')) return;
+
+    const username = btn.getAttribute('data-username') || document.getElementById('share-btn').getAttribute('data-username') || 'user';
+    const shareUrl = `${window.location.origin}/@${username}`;
+    if (window.shelvdTrack) shelvdTrack('share_clicked', { username });
+
+    if (btn === mobileShareBtn) closeUtilityMenu();
+
+    copyText(shareUrl);
+
+    if (btn === mobileShareBtn) {
+        handleMobileShareState(btn);
+    } else {
+        handleDesktopShareState(btn);
+    }
+}
+
+// ─── Share Button ───
+document.getElementById('share-btn').addEventListener('click', function () {
+    handleShareAction(this);
 });
 
 // ─── Add Book Modal ───
@@ -386,6 +448,7 @@ const ADD_BUTTON_HALO_MS = 480;
 let addModalOpenFrame = null;
 let addModalCloseTimeout = null;
 let addModalHaloTimeout = null;
+let addLaunchTrigger = addBtn;
 
 function clearAddModalTimers() {
     if (addModalOpenFrame) {
@@ -405,7 +468,10 @@ function clearAddModalTimers() {
 }
 
 function setAddModalLaunchVector() {
-    const addBtnRect = addBtn.getBoundingClientRect();
+    const launchTrigger = (isMobileLibraryUI() && addLaunchTrigger) ? addLaunchTrigger : addBtn;
+    const fallbackTrigger = utilityMenuToggle || addBtn;
+    const trigger = (launchTrigger && launchTrigger.offsetWidth > 0 && launchTrigger.offsetHeight > 0) ? launchTrigger : fallbackTrigger;
+    const addBtnRect = trigger.getBoundingClientRect();
     const addCardRect = addCard.getBoundingClientRect();
     const addBtnCenterX = addBtnRect.left + (addBtnRect.width / 2);
     const addBtnCenterY = addBtnRect.top + (addBtnRect.height / 2);
@@ -462,6 +528,33 @@ function openAddModal() {
     });
 });
 
+if (mobileAddBookBtn) {
+    mobileAddBookBtn.addEventListener('click', () => {
+        addLaunchTrigger = mobileAddBookBtn;
+        openAddModal();
+    });
+}
+
+if (mobileIOBtn && ioBtn) {
+    mobileIOBtn.addEventListener('click', () => {
+        closeUtilityMenu();
+        ioBtn.click();
+    });
+}
+
+if (mobileLogoutBtn && logoutBtn) {
+    mobileLogoutBtn.addEventListener('click', () => {
+        closeUtilityMenu();
+        logoutBtn.click();
+    });
+}
+
+if (mobileShareBtn) {
+    mobileShareBtn.addEventListener('click', () => {
+        handleShareAction(mobileShareBtn);
+    });
+}
+
 function closeAddModal() {
     clearAddModalTimers();
 
@@ -482,6 +575,7 @@ function closeAddModal() {
         addModal.style.display = 'none';
         addBtn.classList.remove('active');
         addBtn.classList.remove('launching');
+        addLaunchTrigger = addBtn;
         addModalCloseTimeout = null;
     }, ADD_MODAL_TRANSITION_MS);
 }
