@@ -1027,6 +1027,10 @@
     gap: 6px;
 }
 
+.add-field-block-primary {
+    grid-column: 1 / -1;
+}
+
 .add-field-helper {
     display: flex;
     align-items: center;

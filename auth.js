@@ -1079,6 +1079,95 @@ function buildIsbnOverride(isbn) {
     };
 }
 
+function isbn13To10(isbn13) {
+    const normalized = normalizeIsbn(isbn13);
+    if (!normalized || normalized.length !== 13 || !normalized.startsWith('978')) return null;
+    const core = normalized.slice(3, 12);
+    let sum = 0;
+    for (let i = 0; i < core.length; i += 1) {
+        sum += (10 - i) * parseInt(core[i], 10);
+    }
+    const remainder = 11 - (sum % 11);
+    const check = remainder === 11 ? '0' : remainder === 10 ? 'X' : String(remainder % 11);
+    return `${core}${check}`;
+}
+
+function parsePublishedYear(value) {
+    const match = String(value || '').match(/\b(1[5-9]\d{2}|20\d{2}|2100)\b/);
+    return match ? parseInt(match[1], 10) : null;
+}
+
+function firstDistinct(values) {
+    const seen = new Set();
+    for (const value of values || []) {
+        const cleaned = String(value || '').trim();
+        if (!cleaned) continue;
+        const key = cleaned.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        return cleaned;
+    }
+    return null;
+}
+
+function openLibraryEditionFromRecord(record, requestedIsbn) {
+    if (!record || typeof record !== 'object') return null;
+    const identifiers = record.identifiers && typeof record.identifiers === 'object'
+        ? record.identifiers
+        : {};
+    const isbn13 = Array.isArray(identifiers.isbn_13)
+        ? normalizeIsbn(identifiers.isbn_13[0])
+        : requestedIsbn.length === 13 ? requestedIsbn : null;
+    const isbn10 = Array.isArray(identifiers.isbn_10)
+        ? normalizeIsbn(identifiers.isbn_10[0])
+        : requestedIsbn.length === 13 ? isbn13To10(requestedIsbn) : requestedIsbn.length === 10 ? requestedIsbn : null;
+
+    const matchedCoverUrl = record.cover?.large || record.cover?.medium || record.cover?.small || null;
+
+    return {
+        title: String(record.title || '').trim() || null,
+        author: firstDistinct((record.authors || []).map((entry) => entry?.name)),
+        publisher: firstDistinct((record.publishers || []).map((entry) => entry?.name)),
+        published_year: parsePublishedYear(record.publish_date),
+        pages: Number.isFinite(record.number_of_pages) ? record.number_of_pages : null,
+        isbn_13: isbn13,
+        isbn_10: isbn10,
+        matched_cover_url: matchedCoverUrl,
+        match_status: matchedCoverUrl ? 'exact_match' : 'manual_required',
+        missing_fields: [],
+        rationale: 'Metadata filled from Open Library ISBN lookup.',
+        analysis_issue: null,
+        lookup_issue: null
+    };
+}
+
+async function fetchOpenLibraryEditionByIsbn(isbn) {
+    const normalized = normalizeIsbn(isbn);
+    if (!normalized || (normalized.length !== 10 && normalized.length !== 13)) return null;
+
+    const isbnKeys = [normalized];
+    if (normalized.length === 13) {
+        const isbn10 = isbn13To10(normalized);
+        if (isbn10) isbnKeys.push(isbn10);
+    }
+
+    const bibkeys = isbnKeys.map((key) => `ISBN:${key}`).join(',');
+    const url = `https://openlibrary.org/api/books?bibkeys=${encodeURIComponent(bibkeys)}&format=json&jscmd=data`;
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Open Library lookup failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    for (const key of isbnKeys) {
+        const record = data[`ISBN:${key}`];
+        const edition = openLibraryEditionFromRecord(record, normalized);
+        if (edition) return edition;
+    }
+
+    return null;
+}
+
 function applyAnalysisResult(data, currentFields, fallbackStatus = '') {
     addState.analysis = normalizeAnalysisResponse(data);
     addState.selectedCandidateSourceId = addState.analysis.match_status === 'exact_match'
@@ -1225,27 +1314,30 @@ async function lookupEditionByIsbn(isbn, message = 'Checking ISBN details') {
     const normalized = normalizeIsbn(isbn);
     if (!normalized) return false;
 
-    showAnalyzingState(message);
+    setAddStatus(message, 'info');
     const currentFields = readEditionFields();
 
     try {
-        const data = await invokeEditionAnalysis({
-            cover_image: addState.base64.cover,
-            manual_overrides: {
-                ...buildManualOverrides(),
-                ...buildIsbnOverride(normalized)
-            },
-            lookup_only: true
-        });
+        const edition = await fetchOpenLibraryEditionByIsbn(normalized);
+        if (!edition) {
+            setAddStatus('Could not find metadata for that ISBN yet. You can keep editing the fields manually.', 'warning');
+            renderConfirmStep();
+            return false;
+        }
 
-        applyAnalysisResult(
-            data,
-            {
-                ...currentFields,
-                ...buildIsbnOverride(normalized)
-            },
-            'We found the ISBN but could not complete the metadata yet.'
-        );
+        addState.analysis = normalizeAnalysisResponse({
+            ...addState.analysis,
+            ...edition,
+            matched_cover_url: addState.analysis.matched_cover_url || edition.matched_cover_url
+        });
+        addState.selectedCandidateSourceId = null;
+        fillEditionFields({
+            ...currentFields,
+            ...edition,
+            isbn_13: edition.isbn_13 || (normalized.length === 13 ? normalized : null),
+            isbn_10: edition.isbn_10 || (normalized.length === 10 ? normalized : null)
+        });
+        setAddStatus('Metadata filled from ISBN. Review the details before saving.', 'success');
         renderConfirmStep();
         return Boolean(readEditionFields().title || readEditionFields().author || readEditionFields().publisher);
     } catch (err) {
