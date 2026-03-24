@@ -1715,6 +1715,7 @@
             const angle = Math.random() * Math.PI * 2;
 
             return {
+                accent,
                 x: Math.random() * width,
                 y: Math.random() * height,
                 r: radius,
@@ -1774,6 +1775,22 @@
                 const pulse = 0.52 + 0.48 * Math.sin(s.twinklePhase + t * 0.0014 * s.twinkleSpeed);
                 const shimmer = 0.64 + pulse * (0.62 + s.twinkleAmount);
                 const coreOpacity = Math.min(1, s.baseOpacity * brightness * shimmer);
+
+                if (s.accent) {
+                    const sparkleOpacity = Math.min(0.82, coreOpacity * (0.34 + pulse * 0.28));
+                    const sparkleRadius = s.r * (1.9 + shimmer * 0.52) * Math.max(0.82, s.glow * 0.72);
+
+                    ctx.strokeStyle = `rgba(255,255,255,${sparkleOpacity})`;
+                    ctx.lineWidth = Math.max(0.55, s.r * 0.42);
+                    ctx.lineCap = 'round';
+
+                    ctx.beginPath();
+                    ctx.moveTo(drawX - sparkleRadius, drawY);
+                    ctx.lineTo(drawX + sparkleRadius, drawY);
+                    ctx.moveTo(drawX, drawY - sparkleRadius);
+                    ctx.lineTo(drawX, drawY + sparkleRadius);
+                    ctx.stroke();
+                }
 
                 ctx.beginPath();
                 ctx.arc(drawX, drawY, s.r, 0, Math.PI * 2);
