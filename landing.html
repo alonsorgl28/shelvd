@@ -1130,15 +1130,12 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 24px;
+            gap: 0;
         }
 
         .contact-iso .wrapper {
             position: relative;
             transform: skewY(-14deg);
-            display: flex;
-            flex-direction: column;
-            gap: 22px;
             margin: 0;
             padding: 0;
         }
@@ -1147,25 +1144,25 @@
         .contact-iso button {
             position: relative;
             list-style: none;
-            width: 320px;
+            width: 200px;
             z-index: var(--i);
-            transition: 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-            color: #fff8ee;
+            transition: 0.3s;
+            color: #fff7ef;
         }
 
         .contact-iso .input,
         .contact-iso button {
             width: 100%;
-            height: 52px;
+            height: 40px;
             position: relative;
-            padding: 0 16px;
-            border: 0.1px solid #8d6847;
+            padding: 10px;
+            border: 0.1px solid #7d5942;
             border-radius: 0;
             font-family: inherit;
         }
 
         .contact-iso button {
-            background: #8d6847;
+            background: #7d5942;
             border: none;
             cursor: pointer;
             font-size: 15px;
@@ -1180,62 +1177,62 @@
             top: 0;
             left: -40px;
             width: 40px;
-            height: 52px;
+            height: 40px;
             transform-origin: right;
             transform: skewY(45deg);
-            transition: 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: 0.3s;
         }
 
         .contact-iso .wrapper li::after,
         .contact-iso button::after {
             position: absolute;
             content: '';
-            width: 320px;
+            width: 200px;
             height: 40px;
             top: -40px;
             left: 0;
             transform-origin: bottom;
             transform: skewX(45deg);
-            transition: 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: 0.3s;
         }
 
         .contact-iso .wrapper li:nth-child(1)::after,
         .contact-iso .wrapper li:nth-child(1)::before {
-            background-color: #d9bf9a;
+            background-color: #d7bd99;
         }
 
         .contact-iso .wrapper li:nth-child(2)::after,
         .contact-iso .wrapper li:nth-child(2)::before {
-            background-color: #c79f73;
+            background-color: #c59c72;
         }
 
         .contact-iso .wrapper li:nth-child(3)::after,
         .contact-iso .wrapper li:nth-child(3)::before {
-            background-color: #ab754d;
+            background-color: #ad754d;
         }
 
         .contact-iso .wrapper li:nth-child(1) .input {
-            background: #d9bf9a;
+            background: #d7bd99;
         }
 
         .contact-iso .wrapper li:nth-child(2) .input {
-            background: #c79f73;
+            background: #c59c72;
         }
 
         .contact-iso .wrapper li:nth-child(3) .input {
-            background: #ab754d;
+            background: #ad754d;
         }
 
         .contact-iso .wrapper li:nth-child(1) .input::placeholder {
-            color: rgba(44, 24, 12, 0.72);
+            color: #2c180c;
         }
 
         .contact-iso .wrapper li:nth-child(2) .input::placeholder {
-            color: rgba(39, 22, 12, 0.74);
+            color: #2c180c;
         }
 
         .contact-iso .wrapper li:nth-child(3) .input::placeholder {
-            color: rgba(255, 248, 238, 0.78);
+            color: #fff7ef;
         }
 
         .contact-iso .wrapper li .input {
@@ -1245,22 +1242,22 @@
         }
 
         .contact-iso .wrapper li:nth-child(3) .input {
-            color: #fff8ee;
+            color: #fff7ef;
         }
 
         .contact-iso .wrapper li:nth-child(1) .input:focus {
             outline: none;
-            border: 3px solid #d9bf9a;
+            border: 3.5px solid #d7bd99;
         }
 
         .contact-iso .wrapper li:nth-child(2) .input:focus {
             outline: none;
-            border: 3px solid #c79f73;
+            border: 3.5px solid #c59c72;
         }
 
         .contact-iso .wrapper li:nth-child(3) .input:focus {
             outline: none;
-            border: 3px solid #ab754d;
+            border: 3.5px solid #ad754d;
         }
 
         .contact-iso .wrapper li:hover,
@@ -1270,13 +1267,13 @@
 
         .contact-iso button::before,
         .contact-iso button::after {
-            background: #8d6847;
+            background: #7d5942;
         }
 
         .contact-iso button:hover,
         .contact-iso button:hover::before,
         .contact-iso button:hover::after {
-            background: #6e4d32;
+            background: #5f4330;
         }
 
         .contact-iso button:active {
@@ -1284,7 +1281,7 @@
         }
 
         .contact-help {
-            margin-top: 4px;
+            margin-top: 18px;
             font-size: 12px;
             color: rgba(0,0,0,0.38);
             letter-spacing: 0.01em;
@@ -1369,33 +1366,7 @@
             }
 
             .contact-iso .wrapper {
-                gap: 18px;
-                transform: skewY(-10deg);
-            }
-
-            .contact-iso .wrapper li,
-            .contact-iso button {
-                width: 252px;
-            }
-
-            .contact-iso .input,
-            .contact-iso button {
-                height: 48px;
-                padding: 0 14px;
-            }
-
-            .contact-iso .wrapper li::before,
-            .contact-iso button::before {
-                left: -30px;
-                width: 30px;
-                height: 48px;
-            }
-
-            .contact-iso .wrapper li::after,
-            .contact-iso button::after {
-                width: 252px;
-                height: 30px;
-                top: -30px;
+                transform: skewY(-12deg);
             }
 
             .footer {
