@@ -317,6 +317,7 @@ document.getElementById('share-btn').addEventListener('click', function () {
 const addBtn = document.getElementById('add-book-btn');
 const addModal = document.getElementById('add-book-modal');
 const addBackdrop = document.getElementById('add-book-backdrop');
+const addCard = addModal.querySelector('.add-book-card');
 const captureZone = document.getElementById('add-capture-zone');
 const fileInput = document.getElementById('add-book-input');
 const stepCapture = document.getElementById('add-step-capture');
@@ -325,39 +326,101 @@ const stepConfirm = document.getElementById('add-step-confirm');
 
 let currentImageBase64 = null;
 let currentImageBlob = null;
-const ADD_MODAL_OPEN_DELAY_MS = 280;
-let addModalOpenTimeout = null;
+const ADD_MODAL_TRANSITION_MS = 340;
+const ADD_BUTTON_HALO_MS = 480;
+let addModalOpenFrame = null;
+let addModalCloseTimeout = null;
+let addModalHaloTimeout = null;
+
+function clearAddModalTimers() {
+    if (addModalOpenFrame) {
+        cancelAnimationFrame(addModalOpenFrame);
+        addModalOpenFrame = null;
+    }
+
+    if (addModalCloseTimeout) {
+        clearTimeout(addModalCloseTimeout);
+        addModalCloseTimeout = null;
+    }
+
+    if (addModalHaloTimeout) {
+        clearTimeout(addModalHaloTimeout);
+        addModalHaloTimeout = null;
+    }
+}
+
+function setAddModalLaunchVector() {
+    const addBtnRect = addBtn.getBoundingClientRect();
+    const addCardRect = addCard.getBoundingClientRect();
+    const addBtnCenterX = addBtnRect.left + (addBtnRect.width / 2);
+    const addBtnCenterY = addBtnRect.top + (addBtnRect.height / 2);
+    const addCardCenterX = addCardRect.left + (addCardRect.width / 2);
+    const addCardCenterY = addCardRect.top + (addCardRect.height / 2);
+    const originX = ((addBtnCenterX - addCardRect.left) / addCardRect.width) * 100;
+    const originY = ((addBtnCenterY - addCardRect.top) / addCardRect.height) * 100;
+
+    addModal.style.setProperty('--add-launch-x', `${addBtnCenterX - addCardCenterX}px`);
+    addModal.style.setProperty('--add-launch-y', `${addBtnCenterY - addCardCenterY}px`);
+    addModal.style.setProperty('--add-origin-x', `${originX}%`);
+    addModal.style.setProperty('--add-origin-y', `${originY}%`);
+}
+
+function resetAddModalContent() {
+    const stepChoose = document.getElementById('add-step-choose');
+    if (stepChoose) {
+        stepChoose.style.display = '';
+        stepCapture.style.display = 'none';
+    } else {
+        stepCapture.style.display = '';
+    }
+    stepAnalyzing.style.display = 'none';
+    stepConfirm.style.display = 'none';
+}
 
 function openAddModal() {
-    if (addModalOpenTimeout || addModal.style.display === 'flex') return;
+    if (addModal.classList.contains('is-open') || addModal.style.display === 'flex' || addModalCloseTimeout) return;
 
+    clearAddModalTimers();
+    resetAddModalContent();
     addBtn.classList.add('active');
+    addBtn.classList.add('launching');
+    addModal.classList.remove('is-open');
+    addModal.style.display = 'flex';
+    setAddModalLaunchVector();
 
-    addModalOpenTimeout = setTimeout(() => {
-        addModal.style.display = 'flex';
-        const stepChoose = document.getElementById('add-step-choose');
-        if (stepChoose) {
-            stepChoose.style.display = '';
-            stepCapture.style.display = 'none';
-        } else {
-            stepCapture.style.display = '';
-        }
-        stepAnalyzing.style.display = 'none';
-        stepConfirm.style.display = 'none';
-        addModalOpenTimeout = null;
-    }, ADD_MODAL_OPEN_DELAY_MS);
+    addModalOpenFrame = requestAnimationFrame(() => {
+        addModal.classList.add('is-open');
+        addModalOpenFrame = null;
+    });
+
+    addModalHaloTimeout = setTimeout(() => {
+        addBtn.classList.remove('launching');
+        addModalHaloTimeout = null;
+    }, ADD_BUTTON_HALO_MS);
 }
 
 function closeAddModal() {
-    if (addModalOpenTimeout) {
-        clearTimeout(addModalOpenTimeout);
-        addModalOpenTimeout = null;
+    clearAddModalTimers();
+
+    if (addModal.style.display !== 'flex') {
+        addBtn.classList.remove('active');
+        addBtn.classList.remove('launching');
+        currentImageBase64 = null;
+        currentImageBlob = null;
+        return;
     }
 
-    addModal.style.display = 'none';
+    setAddModalLaunchVector();
+    addModal.classList.remove('is-open');
     currentImageBase64 = null;
     currentImageBlob = null;
-    addBtn.classList.remove('active');
+
+    addModalCloseTimeout = setTimeout(() => {
+        addModal.style.display = 'none';
+        addBtn.classList.remove('active');
+        addBtn.classList.remove('launching');
+        addModalCloseTimeout = null;
+    }, ADD_MODAL_TRANSITION_MS);
 }
 
 addBtn.addEventListener('click', openAddModal);

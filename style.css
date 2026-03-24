@@ -518,6 +518,17 @@
     transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
 
+.add-book-btn::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.22);
+    opacity: 0;
+    transform: scale(0.86);
+    pointer-events: none;
+}
+
 .add-book-glyph {
     position: relative;
     width: 18px;
@@ -570,46 +581,43 @@
     transform: translate(-50%, -50%);
 }
 
+.add-book-btn.launching::after {
+    animation: addBookHalo 0.48s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 .add-book-btn.active .add-book-glyph {
-    transform: rotate(45deg);
+    transform: rotate(45deg) scale(1.02);
     opacity: 1;
-    animation: plusSplitToXGlyph 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .add-book-btn.active .add-book-bar-v {
     transform: translate(-50%, -50%) rotate(90deg);
-    animation: plusSplitToXVertical 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .add-book-btn.active .add-book-bar-h {
     transform: translate(-50%, -50%);
-    animation: plusSplitToXHorizontal 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .add-book-btn.active:hover .add-book-glyph {
-    transform: rotate(45deg);
+    transform: rotate(45deg) scale(1.02);
 }
 
 .add-book-btn.active:active .add-book-glyph {
     transform: rotate(45deg) scale(0.96);
 }
 
-@keyframes plusSplitToXGlyph {
-    0% { transform: rotate(0deg) scale(1); }
-    48% { transform: rotate(12deg) scale(0.96); }
-    100% { transform: rotate(45deg) scale(1); }
-}
-
-@keyframes plusSplitToXVertical {
-    0% { transform: translate(-50%, -50%) rotate(90deg); }
-    46% { transform: translate(calc(-50% - 3px), calc(-50% - 2px)) rotate(90deg) scaleX(0.82); }
-    100% { transform: translate(-50%, -50%) rotate(90deg); }
-}
-
-@keyframes plusSplitToXHorizontal {
-    0% { transform: translate(-50%, -50%); }
-    46% { transform: translate(calc(-50% + 3px), calc(-50% + 2px)) scaleX(0.82); }
-    100% { transform: translate(-50%, -50%); }
+@keyframes addBookHalo {
+    0% {
+        opacity: 0;
+        transform: scale(0.86);
+    }
+    32% {
+        opacity: 0.52;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.28);
+    }
 }
 
 /* ── Share Button ── */
@@ -707,6 +715,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    pointer-events: none;
+    --add-launch-x: 0px;
+    --add-launch-y: 0px;
+    --add-origin-x: 50%;
+    --add-origin-y: 50%;
+}
+
+.add-book-modal.is-open {
+    pointer-events: auto;
 }
 
 .add-book-backdrop {
@@ -716,6 +733,12 @@
     background: rgba(0,0,0,0.7);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.add-book-modal.is-open .add-book-backdrop {
+    opacity: 1;
 }
 
 .add-book-card {
@@ -728,6 +751,17 @@
     padding: 24px;
     overflow-y: auto;
     box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    opacity: 0;
+    transform: translate3d(var(--add-launch-x), var(--add-launch-y), 0) scale(0.84);
+    transform-origin: var(--add-origin-x) var(--add-origin-y);
+    transition:
+        transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.22s ease;
+}
+
+.add-book-modal.is-open .add-book-card {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
 }
 
 .add-step-header {
