@@ -26,6 +26,9 @@ const usernamePreview = document.getElementById('username-preview-text');
 const usernameError = document.getElementById('username-error');
 const cardStamp = document.getElementById('library-card-stamp');
 const cardNumber = document.getElementById('library-card-number');
+const actionBar = document.getElementById('action-bar');
+const utilityMenuToggle = document.getElementById('utility-menu-toggle');
+const searchToggleBtn = document.getElementById('search-toggle-btn');
 
 // ─── Check if viewing a public profile ───
 function getPublicUsername() {
@@ -235,8 +238,8 @@ function enterLibrary(username, isPublic) {
     document.title = `Shelvd — @${username}`;
 
     // Show action bar with staggered animation
-    const actionBar = document.getElementById('action-bar');
     actionBar.style.display = '';
+    closeUtilityMenu();
     document.getElementById('share-btn').setAttribute('data-username', username);
 
     // Hide owner-only buttons for public view
@@ -264,6 +267,56 @@ function enterLibrary(username, isPublic) {
             }));
         }, 600);
     }
+}
+
+function isMobileLibraryUI() {
+    return window.matchMedia('(max-width: 768px)').matches;
+}
+
+function closeUtilityMenu() {
+    if (!actionBar || !utilityMenuToggle) return;
+    actionBar.classList.remove('mobile-open');
+    utilityMenuToggle.classList.remove('active');
+    utilityMenuToggle.setAttribute('aria-expanded', 'false');
+}
+
+function openUtilityMenu() {
+    if (!actionBar || !utilityMenuToggle || !isMobileLibraryUI()) return;
+    actionBar.classList.add('mobile-open');
+    utilityMenuToggle.classList.add('active');
+    utilityMenuToggle.setAttribute('aria-expanded', 'true');
+}
+
+if (utilityMenuToggle && actionBar) {
+    utilityMenuToggle.addEventListener('click', (event) => {
+        event.stopPropagation();
+        if (!isMobileLibraryUI()) return;
+        if (actionBar.classList.contains('mobile-open')) {
+            closeUtilityMenu();
+        } else {
+            openUtilityMenu();
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!isMobileLibraryUI() || !actionBar.classList.contains('mobile-open')) return;
+        if (actionBar.contains(event.target) || utilityMenuToggle.contains(event.target)) return;
+        closeUtilityMenu();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeUtilityMenu();
+    });
+
+    window.addEventListener('resize', () => {
+        if (!isMobileLibraryUI()) closeUtilityMenu();
+    });
+}
+
+if (searchToggleBtn) {
+    searchToggleBtn.addEventListener('click', () => {
+        if (isMobileLibraryUI()) closeUtilityMenu();
+    });
 }
 
 // ─── Logout Button ───
@@ -318,6 +371,8 @@ const addBtn = document.getElementById('add-book-btn');
 const addModal = document.getElementById('add-book-modal');
 const addBackdrop = document.getElementById('add-book-backdrop');
 const addCard = addModal.querySelector('.add-book-card');
+const ioBtn = document.getElementById('io-btn');
+const logoutBtn = document.getElementById('logout-btn');
 const captureZone = document.getElementById('add-capture-zone');
 const fileInput = document.getElementById('add-book-input');
 const stepCapture = document.getElementById('add-step-capture');
@@ -380,6 +435,7 @@ function resetAddModalContent() {
 function openAddModal() {
     if (addModal.classList.contains('is-open') || addModal.style.display === 'flex' || addModalCloseTimeout) return;
 
+    closeUtilityMenu();
     clearAddModalTimers();
     resetAddModalContent();
     addBtn.classList.add('active');
@@ -398,6 +454,13 @@ function openAddModal() {
         addModalHaloTimeout = null;
     }, ADD_BUTTON_HALO_MS);
 }
+
+[addBtn, ioBtn, logoutBtn].forEach((button) => {
+    if (!button) return;
+    button.addEventListener('click', () => {
+        if (isMobileLibraryUI()) closeUtilityMenu();
+    });
+});
 
 function closeAddModal() {
     clearAddModalTimers();
