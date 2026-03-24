@@ -943,12 +943,18 @@ Deno.serve(async (req) => {
         rationale: "Exact ISBN found, but there is no verifiable online cover for this edition.",
       };
     } else if (topCandidates.length && images && !lookupOnly) {
-      decision = await compareCandidateCovers(images, topCandidates);
-      if (decision?.selected_source_id) {
-        matchedCandidate = topCandidates.find((candidate) => candidate.source_id === decision?.selected_source_id) || null;
-        matchStatus = "needs_confirmation";
-      } else {
-        matchStatus = "needs_confirmation";
+      try {
+        decision = await compareCandidateCovers(images, topCandidates);
+        if (decision?.selected_source_id) {
+          matchedCandidate = topCandidates.find((candidate) => candidate.source_id === decision?.selected_source_id) || null;
+          matchStatus = "needs_confirmation";
+        } else {
+          matchStatus = "needs_confirmation";
+        }
+      } catch (err) {
+        console.error("[analyze-book] cover comparison failed", err);
+        analysisIssue = analysisIssue || "Could not verify the exact cover against online editions.";
+        matchStatus = "manual_required";
       }
     }
 

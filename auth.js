@@ -681,6 +681,16 @@ function clearAddStatus() {
     renderAddStatus();
 }
 
+function openFilePicker(input, statusMessage = '') {
+    if (!input) return;
+    if (statusMessage) setAddStatus(statusMessage, 'info');
+    if (typeof input.showPicker === 'function') {
+        input.showPicker();
+        return;
+    }
+    input.click();
+}
+
 function fillEditionFields(source = {}) {
     setFieldValue('title', source.title || '');
     setFieldValue('author', source.author || '');
@@ -1396,7 +1406,7 @@ async function analyzeEditionEvidence(message = 'Checking the exact edition') {
         addState.selectedCandidateSourceId = null;
         addState.advancedOpen = true;
         if (!addFieldRefs.pages.value) addFieldRefs.pages.value = '250';
-        setAddStatus('Could not analyze this photo yet. Try another cover photo or type/scan the ISBN.', 'error');
+        setAddStatus('Could not analyze the cover yet. You can keep the photo, add the ISBN, or try another shot.', 'error');
     }
 
     renderConfirmStep();
@@ -1456,7 +1466,7 @@ async function uploadEvidenceAssets(session, evidenceFiles) {
     return urls;
 }
 
-captureZone.addEventListener('click', () => coverInput.click());
+captureZone.addEventListener('click', () => openFilePicker(coverInput, 'Take a clear photo of the front cover.'));
 
 if (addStepBackBtn) {
     addStepBackBtn.addEventListener('click', () => {
@@ -1494,15 +1504,11 @@ spineInput.addEventListener('change', (event) => handleEvidenceInput('spine', ev
 backInput.addEventListener('change', (event) => handleEvidenceInput('back', event));
 
 if (addSpinePhotoBtn) {
-    addSpinePhotoBtn.addEventListener('click', () => spineInput.click());
-}
-
-if (addBackPhotoBtn) {
-    addBackPhotoBtn.addEventListener('click', () => backInput.click());
+    addSpinePhotoBtn.addEventListener('click', () => openFilePicker(spineInput, 'Take a photo of the spine if the title or author is unclear.'));
 }
 
 if (addIsbnScanBtn) {
-    addIsbnScanBtn.addEventListener('click', () => backInput.click());
+    addIsbnScanBtn.addEventListener('click', () => openFilePicker(backInput, 'Take a photo of the ISBN or barcode.'));
 }
 
 if (addRetakeBtn) {
@@ -1514,8 +1520,20 @@ if (addRetakeBtn) {
 }
 
 addConfirmBtn.addEventListener('click', async () => {
-    const edition = readEditionFields();
-    if (!edition.title) return;
+    let edition = readEditionFields();
+    if (!edition.title) {
+        if (edition.isbn_13 || edition.isbn_10) {
+            const filled = await lookupEditionByIsbn(edition.isbn_13 || edition.isbn_10, 'Checking ISBN details before saving');
+            if (!filled) {
+                setAddStatus('Add a title or a valid ISBN before saving this book.', 'warning');
+                return;
+            }
+            edition = readEditionFields();
+        } else {
+            setAddStatus('Add a title or a valid ISBN before saving this book.', 'warning');
+            return;
+        }
+    }
 
     addConfirmBtn.disabled = true;
     addConfirmBtn.textContent = 'Adding...';
