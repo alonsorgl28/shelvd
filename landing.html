@@ -1773,14 +1773,7 @@
                 const drawY = s.y + orbitY;
                 const pulse = 0.52 + 0.48 * Math.sin(s.twinklePhase + t * 0.0014 * s.twinkleSpeed);
                 const shimmer = 0.64 + pulse * (0.62 + s.twinkleAmount);
-                const glowRadius = s.r * (3.1 + shimmer * 1.45) * s.glow;
-                const glowOpacity = Math.min(0.28, s.baseOpacity * 0.18 * brightness * shimmer);
                 const coreOpacity = Math.min(1, s.baseOpacity * brightness * shimmer);
-
-                ctx.beginPath();
-                ctx.arc(drawX, drawY, glowRadius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255,255,255,${glowOpacity})`;
-                ctx.fill();
 
                 ctx.beginPath();
                 ctx.arc(drawX, drawY, s.r, 0, Math.PI * 2);
