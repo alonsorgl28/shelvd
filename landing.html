@@ -74,7 +74,7 @@
 
         .logo-book {
             transform-origin: center;
-            animation: logoBookFall 3.2s linear infinite;
+            animation: logoBookFall 3.6s ease-in-out infinite;
         }
 
         .logo-book:nth-child(1) { animation-delay: 0s; }
@@ -83,10 +83,12 @@
         .logo-book:nth-child(4) { animation-delay: 0.45s; }
 
         @keyframes logoBookFall {
-            0% { transform: translateY(-10px) rotate(0deg) translateX(0); opacity: 0; }
-            20% { transform: translateY(0) rotate(0deg) translateX(0); opacity: 1; }
-            56% { transform: translateY(8px) rotate(var(--rot)) translateX(var(--dx)); opacity: 0.72; }
-            100% { transform: translateY(18px) rotate(calc(var(--rot) * 1.15)) translateX(calc(var(--dx) * 1.2)); opacity: 0; }
+            0%, 100% { transform: translateY(0) rotate(0deg) translateX(0); opacity: 1; }
+            8% { transform: translateY(0) rotate(0deg) translateX(0); opacity: 1; }
+            34% { transform: translateY(7px) rotate(var(--rot)) translateX(var(--dx)); opacity: 0.7; }
+            58% { transform: translateY(18px) rotate(calc(var(--rot) * 1.15)) translateX(calc(var(--dx) * 1.2)); opacity: 0; }
+            59% { transform: translateY(-10px) rotate(0deg) translateX(0); opacity: 0; }
+            82% { transform: translateY(0) rotate(0deg) translateX(0); opacity: 1; }
         }
 
         .nav-btn {
