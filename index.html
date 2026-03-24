@@ -406,6 +406,10 @@
                     <div class="add-field-block">
                         <label class="add-field-label">ISBN</label>
                         <input type="text" class="add-field-input" id="add-field-isbn13" placeholder="978...">
+                        <div class="add-field-helper">
+                            <span class="add-field-helper-text">Type it manually or scan the barcode.</span>
+                            <button type="button" class="add-inline-action" id="add-isbn-scan-btn">Scan barcode</button>
+                        </div>
                     </div>
                     <div class="add-field-block">
                         <label class="add-field-label">Published year</label>
@@ -549,9 +553,9 @@
     }
 }
 </script>
-<script type="module" src="auth.js?v=20260324e"></script>
+<script type="module" src="auth.js?v=20260324f"></script>
 <script src="analytics.js?v=20260324b"></script>
-<script type="module" src="app.js?v=20260324e"></script>
+<script type="module" src="app.js?v=20260324f"></script>
 <!-- PWA Install Banner -->
 <div class="pwa-install-banner" id="pwa-install-banner" style="display:none;">
     <div class="pwa-install-content">
@@ -593,12 +597,12 @@
 
 <script>
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js?v=20260324e', { updateViaCache: 'none' })
+    navigator.serviceWorker.register('/sw.js?v=20260324f', { updateViaCache: 'none' })
         .then((registration) => registration.update())
         .catch(() => {});
 }
 </script>
 <script type="module" src="pwa-install.js?v=20260324b"></script>
-<script src="import-export.js?v=20260324e" defer></script>
+<script src="import-export.js?v=20260324f" defer></script>
 </body>
 </html>

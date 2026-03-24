@@ -1027,6 +1027,38 @@
     gap: 6px;
 }
 
+.add-field-helper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.add-field-helper-text {
+    font-size: 11px;
+    line-height: 1.35;
+    color: rgba(255,255,255,0.36);
+}
+
+.add-inline-action {
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.82);
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.add-inline-action:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.2);
+}
+
 .add-field-label {
     font-size: 10px;
     letter-spacing: 1px;
@@ -1342,6 +1374,11 @@
     .add-confirm-fields,
     .add-rescue-actions {
         grid-template-columns: 1fr;
+    }
+
+    .add-field-helper {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
 

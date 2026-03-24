@@ -44,6 +44,7 @@ type CandidateEdition = {
   format: string | null;
   cover_url: string | null;
   info_url: string | null;
+  cover_quality: number;
   score?: number;
 };
 
@@ -149,6 +150,53 @@ function normalizeEditionSignals(raw: Record<string, unknown>): EditionSignals {
   return normalized;
 }
 
+function mergeSignalNotes(...notes: Array<string | null | undefined>) {
+  const merged = notes
+    .map((entry) => cleanText(entry))
+    .filter((entry): entry is string => Boolean(entry))
+    .join(" ");
+  return merged || null;
+}
+
+function mergeSignalsPreferExisting(base: EditionSignals, detail: Partial<EditionSignals>): EditionSignals {
+  return normalizeEditionSignals({
+    title: base.title || detail.title,
+    author: base.author || detail.author,
+    pages: base.pages || detail.pages,
+    isbn_13: base.isbn_13 || detail.isbn_13,
+    isbn_10: base.isbn_10 || detail.isbn_10,
+    publisher: base.publisher || detail.publisher,
+    published_year: base.published_year || detail.published_year,
+    edition: base.edition || detail.edition,
+    language: base.language || detail.language,
+    translator: base.translator || detail.translator,
+    format: base.format || detail.format,
+    confidence: Math.max(base.confidence, detail.confidence || 0),
+    missing_fields: [],
+    notes: mergeSignalNotes(base.notes, detail.notes),
+  });
+}
+
+function applyManualOverrides(signals: EditionSignals, raw: unknown): EditionSignals {
+  const overrides = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
+  return normalizeEditionSignals({
+    title: cleanText(overrides.title) || signals.title,
+    author: cleanText(overrides.author) || signals.author,
+    pages: parsePositiveInt(overrides.pages) || signals.pages,
+    isbn_13: normalizeIsbn(overrides.isbn_13, 13) || signals.isbn_13,
+    isbn_10: normalizeIsbn(overrides.isbn_10, 10) || signals.isbn_10,
+    publisher: cleanText(overrides.publisher) || signals.publisher,
+    published_year: parseYear(overrides.published_year) || signals.published_year,
+    edition: cleanText(overrides.edition) || signals.edition,
+    language: normalizeLanguage(overrides.language) || signals.language,
+    translator: cleanText(overrides.translator) || signals.translator,
+    format: cleanText(overrides.format) || signals.format,
+    confidence: signals.confidence,
+    missing_fields: [],
+    notes: signals.notes,
+  });
+}
+
 async function callAnthropicJson<T>(
   content: Array<Record<string, unknown>>,
   maxTokens = 600,
@@ -251,6 +299,7 @@ Rules:
 - confidence is 0..1 and should reflect how reliable the extracted edition signals are.
 - missing_fields may only include: title, author, isbn_13, publisher.
 - If a barcode or ISBN is visible, extract it exactly.
+- Pay special attention to tiny publisher marks, imprints, logos, and lower-edge text on the front cover.
 - edition should be a human-readable label only if explicitly shown.
 - format can be values like hardcover, paperback, mass market paperback, unknown; otherwise null.
 - pages can be null if not visible and not strongly inferable.
@@ -259,6 +308,85 @@ Rules:
 
   const raw = await callAnthropicJson<Record<string, unknown>>(content, 500);
   return normalizeEditionSignals(raw);
+}
+
+async function extractFinePrintSignals(images: {
+  cover: ImageInput;
+  spine?: ImageInput | null;
+  back?: ImageInput | null;
+}): Promise<Partial<EditionSignals>> {
+  const content: Array<Record<string, unknown>> = [
+    {
+      type: "text",
+      text: "Inspect this cover carefully for tiny metadata: publisher imprint, logos, ISBN digits, year, subtitle, and author text.",
+    },
+    {
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: images.cover.mediaType,
+        data: images.cover.data,
+      },
+    },
+  ];
+
+  if (images.spine) {
+    content.push({ type: "text", text: "Inspect the spine for publisher, series, year, or ISBN fragments." });
+    content.push({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: images.spine.mediaType,
+        data: images.spine.data,
+      },
+    });
+  }
+
+  if (images.back) {
+    content.push({ type: "text", text: "Inspect the back cover or barcode image. Prioritize ISBN/barcode digits and publisher details." });
+    content.push({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: images.back.mediaType,
+        data: images.back.data,
+      },
+    });
+  }
+
+  content.push({
+    type: "text",
+    text:
+      `Return ONLY valid JSON:
+{
+  "title": string|null,
+  "author": string|null,
+  "isbn_13": string|null,
+  "isbn_10": string|null,
+  "publisher": string|null,
+  "published_year": number|null,
+  "confidence": number,
+  "notes": string|null
+}
+
+Rules:
+- Prefer null over guessing.
+- Extract ISBN only when digits are visually supported.
+- If you can read a publisher mark, use the publisher name, not a guess.
+- confidence is 0..1.`,
+  });
+
+  const raw = await callAnthropicJson<Record<string, unknown>>(content, 280);
+  return {
+    title: cleanText(raw.title),
+    author: cleanText(raw.author),
+    isbn_13: normalizeIsbn(raw.isbn_13, 13),
+    isbn_10: normalizeIsbn(raw.isbn_10, 10),
+    publisher: cleanText(raw.publisher),
+    published_year: parseYear(raw.published_year),
+    confidence: clampConfidence(raw.confidence),
+    notes: cleanText(raw.notes),
+  };
 }
 
 function normalizeTitle(value: string | null): string {
@@ -284,6 +412,37 @@ function normalizeCoverUrl(url: string | null | undefined): string | null {
     .replace(/^http:\/\//i, "https://")
     .replace("&edge=curl", "")
     .replace("zoom=1", "zoom=2");
+}
+
+function estimateGoogleCoverQuality(sizeLabel: string | null): number {
+  switch (sizeLabel) {
+    case "extraLarge": return 10;
+    case "large": return 9;
+    case "medium": return 8;
+    case "small": return 7;
+    case "thumbnail": return 6;
+    case "smallThumbnail": return 5;
+    default: return 0;
+  }
+}
+
+function estimateOpenLibraryCoverQuality(sizeLabel: "large" | "medium" | "small" | "generated" | null): number {
+  switch (sizeLabel) {
+    case "large": return 9;
+    case "medium": return 7;
+    case "small": return 5;
+    case "generated": return 7;
+    default: return 0;
+  }
+}
+
+function candidateCompletenessScore(candidate: CandidateEdition): number {
+  let score = candidate.cover_quality || 0;
+  if (candidate.publisher) score += 2;
+  if (candidate.published_year) score += 1;
+  if (candidate.pages) score += 1;
+  if (candidate.language) score += 0.5;
+  return score;
 }
 
 async function fetchJson(url: string): Promise<unknown> {
@@ -312,12 +471,22 @@ function normalizeGoogleCandidate(item: Record<string, unknown>): CandidateEditi
     : [];
   const isbns = googleIdentifiersToIsbns(identifiers);
   const authors = Array.isArray(info.authors) ? info.authors.filter(Boolean).join(", ") : null;
-  const coverUrl = normalizeCoverUrl(
-    typeof info.imageLinks === "object" && info.imageLinks
-      ? cleanText((info.imageLinks as Record<string, unknown>).thumbnail) ||
-        cleanText((info.imageLinks as Record<string, unknown>).smallThumbnail)
-      : null,
-  );
+  const imageLinks = typeof info.imageLinks === "object" && info.imageLinks
+    ? info.imageLinks as Record<string, unknown>
+    : null;
+  let coverSource: string | null = null;
+  let coverSize: string | null = null;
+  if (imageLinks) {
+    for (const size of ["extraLarge", "large", "medium", "small", "thumbnail", "smallThumbnail"]) {
+      const maybeUrl = cleanText(imageLinks[size]);
+      if (maybeUrl) {
+        coverSource = maybeUrl;
+        coverSize = size;
+        break;
+      }
+    }
+  }
+  const coverUrl = normalizeCoverUrl(coverSource);
 
   return {
     source: "google_books",
@@ -334,6 +503,7 @@ function normalizeGoogleCandidate(item: Record<string, unknown>): CandidateEditi
     format: cleanText(info.printType),
     cover_url: coverUrl,
     info_url: cleanText(item.selfLink),
+    cover_quality: estimateGoogleCoverQuality(coverSize),
   };
 }
 
@@ -359,14 +529,24 @@ function normalizeOpenLibraryCandidate(raw: Record<string, unknown>, sourceId: s
   const isbn10 = Array.isArray(identifiers.isbn_10)
     ? normalizeIsbn((identifiers.isbn_10 as unknown[])[0], 10)
     : normalizeIsbn(Array.isArray(raw.isbn) ? (raw.isbn as unknown[]).find((entry) => normalizeIsbn(entry, 10)) : null, 10);
-  const cover =
-    raw.cover && typeof raw.cover === "object"
-      ? cleanText((raw.cover as Record<string, unknown>).large) ||
-        cleanText((raw.cover as Record<string, unknown>).medium) ||
-        cleanText((raw.cover as Record<string, unknown>).small)
-      : typeof raw.cover_i === "number"
-      ? `https://covers.openlibrary.org/b/id/${raw.cover_i}-L.jpg`
-      : null;
+  let cover: string | null = null;
+  let coverSize: "large" | "medium" | "small" | "generated" | null = null;
+  if (raw.cover && typeof raw.cover === "object") {
+    const coverObject = raw.cover as Record<string, unknown>;
+    cover = cleanText(coverObject.large);
+    if (cover) coverSize = "large";
+    if (!cover) {
+      cover = cleanText(coverObject.medium);
+      if (cover) coverSize = "medium";
+    }
+    if (!cover) {
+      cover = cleanText(coverObject.small);
+      if (cover) coverSize = "small";
+    }
+  } else if (typeof raw.cover_i === "number") {
+    cover = `https://covers.openlibrary.org/b/id/${raw.cover_i}-L.jpg`;
+    coverSize = "generated";
+  }
 
   return {
     source: "open_library",
@@ -385,6 +565,7 @@ function normalizeOpenLibraryCandidate(raw: Record<string, unknown>, sourceId: s
     format: cleanText(raw.physical_format),
     cover_url: normalizeCoverUrl(cover),
     info_url: typeof raw.url === "string" ? raw.url : null,
+    cover_quality: estimateOpenLibraryCoverQuality(coverSize),
   };
 }
 
@@ -433,8 +614,7 @@ async function fetchOpenLibraryByMetadata(signals: EditionSignals): Promise<Cand
 }
 
 function dedupeCandidates(candidates: CandidateEdition[]): CandidateEdition[] {
-  const seen = new Set<string>();
-  const deduped: CandidateEdition[] = [];
+  const deduped = new Map<string, CandidateEdition>();
   for (const candidate of candidates) {
     const key =
       candidate.isbn_13
@@ -442,11 +622,12 @@ function dedupeCandidates(candidates: CandidateEdition[]): CandidateEdition[] {
         : candidate.isbn_10
         ? `isbn10:${candidate.isbn_10}`
         : candidate.source_id;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    deduped.push(candidate);
+    const existing = deduped.get(key);
+    if (!existing || candidateCompletenessScore(candidate) > candidateCompletenessScore(existing)) {
+      deduped.set(key, candidate);
+    }
   }
-  return deduped;
+  return [...deduped.values()];
 }
 
 function scoreCandidate(candidate: CandidateEdition, signals: EditionSignals): number {
@@ -656,7 +837,16 @@ Deno.serve(async (req) => {
       back: backImage ? { data: backImage, mediaType: "image/jpeg" } : null,
     };
 
-    const extracted = await extractEditionSignals(images);
+    let extracted = await extractEditionSignals(images);
+    if (
+      extracted.missing_fields.includes("publisher") ||
+      extracted.missing_fields.includes("isbn_13") ||
+      !extracted.published_year
+    ) {
+      const finePrintSignals = await extractFinePrintSignals(images);
+      extracted = mergeSignalsPreferExisting(extracted, finePrintSignals);
+    }
+    extracted = applyManualOverrides(extracted, body.manual_overrides);
     const candidates = dedupeCandidates([
       ...(extracted.isbn_13 ? await fetchGoogleBooksByIsbn(extracted.isbn_13) : []),
       ...(extracted.isbn_10 ? await fetchGoogleBooksByIsbn(extracted.isbn_10) : []),
@@ -670,10 +860,12 @@ Deno.serve(async (req) => {
     })).sort((a, b) => (b.score || 0) - (a.score || 0));
 
     const topCandidates = candidates.slice(0, 5);
-    const exactIsbnCandidate = topCandidates.find((candidate) =>
+    const exactIsbnCandidate = topCandidates
+      .filter((candidate) =>
       (extracted.isbn_13 && candidate.isbn_13 === extracted.isbn_13) ||
       (extracted.isbn_10 && candidate.isbn_10 === extracted.isbn_10)
-    ) || null;
+      )
+      .sort((a, b) => ((b.score || 0) + b.cover_quality) - ((a.score || 0) + a.cover_quality))[0] || null;
 
     let matchStatus: "exact_match" | "needs_confirmation" | "manual_required" = "manual_required";
     let matchedCandidate: CandidateEdition | null = null;

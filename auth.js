@@ -449,6 +449,7 @@ const addRetakeBtn = document.getElementById('add-retake-btn');
 const addConfirmBtn = document.getElementById('add-confirm-btn');
 const addSpinePhotoBtn = document.getElementById('add-spine-photo-btn');
 const addBackPhotoBtn = document.getElementById('add-back-photo-btn');
+const addIsbnScanBtn = document.getElementById('add-isbn-scan-btn');
 const addDetailToggle = document.getElementById('add-detail-toggle');
 const addAdvancedFields = document.getElementById('add-advanced-fields');
 const addUploadSpinner = document.getElementById('add-upload-spinner');
@@ -476,6 +477,7 @@ let addModalOpenFrame = null;
 let addModalCloseTimeout = null;
 let addModalHaloTimeout = null;
 let addLaunchTrigger = addBtn;
+let isbnRefreshTimeout = null;
 
 const addFieldRefs = {
     title: document.getElementById('add-field-title'),
@@ -683,6 +685,18 @@ function readEditionFields() {
         language: addFieldRefs.language?.value.trim() || null,
         translator: addFieldRefs.translator?.value.trim() || null,
         format: addFieldRefs.format?.value.trim() || null
+    };
+}
+
+function buildManualOverrides() {
+    const edition = readEditionFields();
+    return {
+        title: edition.title || null,
+        author: edition.author || null,
+        publisher: edition.publisher || null,
+        published_year: edition.published_year || null,
+        isbn_13: edition.isbn_13 || null,
+        isbn_10: edition.isbn_10 || null
     };
 }
 
@@ -1020,8 +1034,27 @@ async function attachEvidenceFile(kind, file) {
     revokePreviewUrl(kind);
     addState.files[kind] = normalizedFile;
     addState.previewUrls[kind] = URL.createObjectURL(normalizedFile);
-    addState.base64[kind] = await resizeAndEncode(normalizedFile, 1024);
+    addState.base64[kind] = await resizeAndEncode(normalizedFile, kind === 'cover' ? 1600 : 1400);
     renderEvidencePreviews();
+}
+
+function queueIsbnRefresh() {
+    if (isbnRefreshTimeout) {
+        clearTimeout(isbnRefreshTimeout);
+        isbnRefreshTimeout = null;
+    }
+
+    if (!addState.base64.cover) return;
+
+    const edition = readEditionFields();
+    const typedIsbn = edition.isbn_13 || edition.isbn_10;
+    const analyzedIsbn = addState.analysis?.isbn_13 || addState.analysis?.isbn_10;
+    if (!typedIsbn || typedIsbn === analyzedIsbn) return;
+
+    isbnRefreshTimeout = setTimeout(() => {
+        analyzeEditionEvidence('Checking ISBN and edition details');
+        isbnRefreshTimeout = null;
+    }, 250);
 }
 
 function showAnalyzingState(message) {
@@ -1034,6 +1067,7 @@ async function analyzeEditionEvidence(message = 'Checking the exact edition') {
     if (!addState.base64.cover) return;
 
     showAnalyzingState(message);
+    const currentFields = readEditionFields();
 
     try {
         const resp = await fetch(`${SUPABASE_URL}/functions/v1/analyze-book`, {
@@ -1045,7 +1079,8 @@ async function analyzeEditionEvidence(message = 'Checking the exact edition') {
             body: JSON.stringify({
                 cover_image: addState.base64.cover,
                 spine_image: addState.base64.spine,
-                back_image: addState.base64.back
+                back_image: addState.base64.back,
+                manual_overrides: buildManualOverrides()
             })
         });
 
@@ -1063,7 +1098,7 @@ async function analyzeEditionEvidence(message = 'Checking the exact edition') {
             || addState.analysis.missing_fields.length > 0
             || !addState.analysis.publisher
             || !(addState.analysis.isbn_13 || addState.analysis.isbn_10);
-        fillEditionFields(addState.analysis);
+        fillEditionFields(mergeEditionData(addState.analysis, currentFields));
     } catch (err) {
         console.error('Analyze error:', err);
         addState.analysis = createEmptyAnalysis('manual_required');
@@ -1149,6 +1184,11 @@ Object.values(addFieldRefs).forEach((input) => {
     });
 });
 
+if (addFieldRefs.isbn_13) {
+    addFieldRefs.isbn_13.addEventListener('change', queueIsbnRefresh);
+    addFieldRefs.isbn_13.addEventListener('blur', queueIsbnRefresh);
+}
+
 coverInput.addEventListener('change', (event) => handleEvidenceInput('cover', event, { showSpinner: true }));
 spineInput.addEventListener('change', (event) => handleEvidenceInput('spine', event));
 backInput.addEventListener('change', (event) => handleEvidenceInput('back', event));
@@ -1159,6 +1199,10 @@ if (addSpinePhotoBtn) {
 
 if (addBackPhotoBtn) {
     addBackPhotoBtn.addEventListener('click', () => backInput.click());
+}
+
+if (addIsbnScanBtn) {
+    addIsbnScanBtn.addEventListener('click', () => backInput.click());
 }
 
 if (addRetakeBtn) {
@@ -1305,7 +1349,7 @@ function resizeAndEncode(file, maxSize) {
                 canvas.width = w;
                 canvas.height = h;
                 canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
                 resolve(dataUrl.split(',')[1]); // strip data:image/jpeg;base64,
             };
             img.src = e.target.result;
