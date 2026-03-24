@@ -526,9 +526,25 @@
         opacity 0.16s ease;
 }
 
+.add-book-btn svg line {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition:
+        transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.16s ease;
+}
+
 .add-book-btn:hover svg {
-    transform: rotate(10deg);
+    transform: rotate(6deg);
     opacity: 1;
+}
+
+.add-book-btn:hover svg line:first-of-type {
+    transform: translateX(-0.9px) scaleY(0.92);
+}
+
+.add-book-btn:hover svg line:last-of-type {
+    transform: translateY(0.9px) scaleX(0.9);
 }
 
 .add-book-btn:active svg {
@@ -536,10 +552,18 @@
     opacity: 1;
 }
 
+.add-book-btn:active svg line {
+    transform: none;
+}
+
 .add-book-btn.active svg {
     transform: rotate(45deg);
     opacity: 1;
     transition-duration: 0.24s;
+}
+
+.add-book-btn.active svg line {
+    transform: none;
 }
 
 .add-book-btn.active:hover svg {
