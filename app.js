@@ -8,17 +8,189 @@ let bookObjects = [];
 let pulledOutBook = null;
 let mousePosition = { x: 0, y: 0 };
 let currentView = 'shelf'; // 'shelf' | 'grid'
-let coverCache = {}; // title → coverUrl
+let coverCache = {}; // edition key -> coverUrl
 
 const container = document.getElementById('library-3d-container');
+const detailPanel = document.getElementById('book-detail-panel');
+const detailBadge = document.getElementById('book-detail-badge');
+const detailTitle = document.getElementById('book-detail-title');
+const detailAuthor = document.getElementById('book-detail-author');
+const detailSummary = document.getElementById('book-detail-summary');
+const detailGrid = document.getElementById('book-detail-grid');
+let libraryConfigPromise = null;
+
+function getPublicUsernameFromPath() {
+    const match = window.location.pathname.match(/^\/@([a-zA-Z0-9_]+)/);
+    return match ? match[1].toLowerCase() : null;
+}
+
+function escapeHtml(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function normalizeKeyPart(value) {
+    return String(value || '').trim().toLowerCase();
+}
+
+async function getLibraryConfig() {
+    if (!libraryConfigPromise) {
+        libraryConfigPromise = fetch('library-config.json')
+            .then(r => r.ok ? r.json() : {})
+            .catch(() => ({}));
+    }
+    return libraryConfigPromise;
+}
+
+function normalizeIsbnToken(value) {
+    return String(value || '').toUpperCase().replace(/[^0-9X]/g, '');
+}
+
+function getBookIdentityKey(bookData) {
+    const isbn13 = normalizeIsbnToken(bookData?.isbn_13);
+    const isbn10 = normalizeIsbnToken(bookData?.isbn_10);
+    if (isbn13) return `isbn13:${isbn13}`;
+    if (isbn10) return `isbn10:${isbn10}`;
+
+    const title = normalizeKeyPart(bookData?.title);
+    const author = normalizeKeyPart(bookData?.author);
+    const publisher = normalizeKeyPart(bookData?.publisher);
+    const edition = normalizeKeyPart(bookData?.edition);
+    const year = normalizeKeyPart(bookData?.published_year);
+    const format = normalizeKeyPart(bookData?.format);
+    return `meta:${title}|${author}|${publisher}|${edition}|${year}|${format}`;
+}
+
+function getCoverCacheKey(bookData) {
+    return `edition:${getBookIdentityKey(bookData)}`;
+}
+
+function getVisibleCoverUrl(bookData) {
+    const cacheKey = getCoverCacheKey(bookData);
+    if (bookData?.digital_cover_url) return bookData.digital_cover_url;
+    if (bookData?.match_status && bookData.match_status !== 'exact_match') {
+        return bookData?.cover || null;
+    }
+    return coverCache[cacheKey] || bookData?.cover || null;
+}
+
+function normalizeSearchValue(value) {
+    return String(value || '').toLowerCase();
+}
+
+function matchesBookQuery(bookData, query) {
+    const normalizedQuery = normalizeSearchValue(query).trim();
+    if (!normalizedQuery) return true;
+
+    const isbnQuery = normalizeIsbnToken(query);
+    const values = [
+        bookData?.title,
+        bookData?.author,
+        bookData?.publisher,
+        bookData?.edition,
+        bookData?.language,
+        bookData?.isbn_13,
+        bookData?.isbn_10
+    ];
+
+    return values.some((value) => {
+        if (!value) return false;
+        const normalizedValue = normalizeSearchValue(value);
+        if (normalizedValue.includes(normalizedQuery)) return true;
+        if (isbnQuery && normalizeIsbnToken(value).includes(isbnQuery)) return true;
+        return false;
+    });
+}
+
+function getMatchTone(status) {
+    if (status === 'exact_match') return { label: 'Exact edition', tone: 'is-exact' };
+    if (status === 'needs_confirmation') return { label: 'Needs review', tone: 'is-review' };
+    return { label: 'Manual edition', tone: 'is-manual' };
+}
+
+function renderBookDetail(bookData) {
+    if (!detailPanel || !detailBadge || !detailTitle || !detailAuthor || !detailSummary || !detailGrid) return;
+    const matchUi = getMatchTone(bookData?.match_status);
+    detailBadge.className = `book-detail-badge ${matchUi.tone}`;
+    detailBadge.textContent = matchUi.label;
+    detailTitle.textContent = bookData?.title || 'Untitled book';
+    detailAuthor.textContent = bookData?.author || 'Unknown author';
+
+    const summaryParts = [
+        bookData?.publisher,
+        bookData?.published_year,
+        bookData?.format
+    ].filter(Boolean);
+    detailSummary.textContent = summaryParts.length
+        ? summaryParts.join(' · ')
+        : 'Edition details appear here when available.';
+
+    const detailItems = [
+        ['Publisher', bookData?.publisher],
+        ['Edition', bookData?.edition],
+        ['Published', bookData?.published_year],
+        ['Language', bookData?.language],
+        ['Translator', bookData?.translator],
+        ['Format', bookData?.format],
+        ['ISBN-13', bookData?.isbn_13],
+        ['ISBN-10', bookData?.isbn_10],
+        ['Pages', bookData?.pages]
+    ].filter(([, value]) => value);
+
+    detailGrid.innerHTML = detailItems.map(([label, value]) => `
+        <div>
+            <div class="book-detail-item-label">${label}</div>
+            <div class="book-detail-item-value">${value}</div>
+        </div>
+    `).join('');
+
+    detailPanel.hidden = false;
+}
+
+function hideBookDetail() {
+    if (!detailPanel) return;
+    detailPanel.hidden = true;
+}
+
+function findBookObjectById(bookId) {
+    return bookObjects.find((book) => String(book.userData.bookId) === String(bookId)) || null;
+}
+
+function isLegacyCoverLookupAllowed(bookData) {
+    const hasEditionSignals = Boolean(
+        bookData?.match_status ||
+        normalizeIsbnToken(bookData?.isbn_13) ||
+        normalizeIsbnToken(bookData?.isbn_10) ||
+        bookData?.publisher ||
+        bookData?.edition ||
+        bookData?.digital_cover_url ||
+        bookData?.cover
+    );
+
+    return !hasEditionSignals;
+}
 
 // ─── Load books: books.json base + Supabase user books merged ───
 async function loadBooksData(username, isPublic) {
-    // Always load books.json as the base library
-    const baseBooks = await fetch('books.json').then(r => r.json()).catch(() => []);
+    const [baseBooks, libraryConfig] = await Promise.all([
+        fetch('books.json').then(r => r.json()).catch(() => []),
+        getLibraryConfig()
+    ]);
+
+    const seedLibraryOwner = String(libraryConfig.seedLibraryOwner || '').trim().toLowerCase();
+    const activeUsername = String(
+        isPublic
+            ? (username || '')
+            : (window.shelvdAuth?.currentProfile?.username || username || '')
+    ).trim().toLowerCase();
+    const includeSeedLibrary = Boolean(seedLibraryOwner) && activeUsername === seedLibraryOwner;
+    const seedBooks = includeSeedLibrary ? baseBooks : [];
 
     const sb = window.shelvdAuth?.supabase;
-    if (!sb) return baseBooks;
+    if (!sb) return isPublic ? [] : seedBooks;
 
     try {
         let query;
@@ -29,11 +201,14 @@ async function loadBooksData(username, isPublic) {
                 .eq('username', username)
                 .maybeSingle();
 
-            if (!profile) return baseBooks;
+            if (!profile) {
+                console.warn('[Shelvd] Public profile not found for username:', username);
+                return [];
+            }
             query = sb.from('books').select('*').eq('user_id', profile.id);
         } else {
             const { data: { session } } = await sb.auth.getSession();
-            if (!session) return baseBooks;
+            if (!session) return seedBooks;
             query = sb.from('books').select('*').eq('user_id', session.user.id);
         }
 
@@ -41,21 +216,35 @@ async function loadBooksData(username, isPublic) {
 
         if (error || !userBooks) {
             console.error('[Shelvd] Error loading user books:', error);
-            return baseBooks;
+            return isPublic ? [] : seedBooks;
         }
 
-        // Public view: return only user's books (no merge with demo data)
+        // Public view: for the configured seed owner, merge the base library
+        // with Supabase-only additions so the shared shelf matches the private one.
         if (isPublic) {
             const publicBooks = userBooks.map(b => ({ ...b, id: `sb-${b.id}` }));
-            publicBooks.sort((a, b) => a.title.localeCompare(b.title, 'es', { sensitivity: 'base' }));
-            return publicBooks;
+            if (!includeSeedLibrary) {
+                publicBooks.sort((a, b) => a.title.localeCompare(b.title, 'es', { sensitivity: 'base' }));
+                return publicBooks;
+            }
+
+            const seen = new Set(seedBooks.map(b => getBookIdentityKey(b)));
+            const uniquePublicBooks = publicBooks.filter(b => {
+                const key = getBookIdentityKey(b);
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+            const mergedPublicBooks = [...seedBooks, ...uniquePublicBooks];
+            mergedPublicBooks.sort((a, b) => a.title.localeCompare(b.title, 'es', { sensitivity: 'base' }));
+            return mergedPublicBooks;
         }
 
-        // Private view: merge base books + user books (deduplicate by title+author)
-        const seen = new Set(baseBooks.map(b => `${b.title.toLowerCase()}|${b.author.toLowerCase()}`));
+        // Private view: merge configured seed books + user books (deduplicate by title+author)
+        const seen = new Set(seedBooks.map(b => getBookIdentityKey(b)));
         const uniqueUserBooks = userBooks
             .filter(b => {
-                const key = `${b.title.toLowerCase()}|${b.author.toLowerCase()}`;
+                const key = getBookIdentityKey(b);
                 if (seen.has(key)) return false;
                 seen.add(key);
                 return true;
@@ -63,12 +252,12 @@ async function loadBooksData(username, isPublic) {
             .map(b => ({ ...b, id: `sb-${b.id}` })); // prefix to avoid ID collision with books.json
 
         // Sort all books alphabetically by title
-        const all = [...baseBooks, ...uniqueUserBooks];
+        const all = [...seedBooks, ...uniqueUserBooks];
         all.sort((a, b) => a.title.localeCompare(b.title, 'es', { sensitivity: 'base' }));
         return all;
     } catch (err) {
         console.error('[Shelvd] Error loading books:', err);
-        return baseBooks;
+        return isPublic ? [] : seedBooks;
     }
 }
 
@@ -82,11 +271,9 @@ async function init(username, isPublic) {
     try {
     let booksData = await loadBooksData(username, isPublic);
 
-    // ── Point 2: In public view, show ONLY user's actual books (no demo data) ──
+    // Public view uses the exact dataset returned by loadBooksData().
+    // For the configured seed owner that includes the base shelf + Supabase additions.
     if (isPublic) {
-        booksData = booksData.filter(b => String(b.id).startsWith('sb-'));
-
-        // ── Point 1: Handle non-existent profile or empty library ──
         if (booksData.length === 0) {
             document.getElementById('library-loading').innerHTML =
                 `<div style="color:rgba(255,255,255,0.5);font-size:15px;text-align:center;padding:20px;">
@@ -220,6 +407,7 @@ async function init(username, isPublic) {
     // Expose for import/export module
     window.shelvdBookObjects = bookObjects;
     window.shelvdCoverCache = coverCache;
+    window.shelvdGetCoverCacheKey = getCoverCacheKey;
 
     // Update book count
     document.getElementById('header-book-count').textContent = booksData.length + ' books';
@@ -674,8 +862,7 @@ function arrangeBooksInStack() {
 
 // ─── Cover Loading ───
 async function loadCoversProgressively(booksData) {
-    // Load from localStorage cache (v9 = alphabetical order + sb-prefix IDs)
-    const CACHE_VERSION = 'v9';
+    const CACHE_VERSION = 'v11-cover-lock';
     try {
         const ver = localStorage.getItem('book-covers-version');
         if (ver === CACHE_VERSION) {
@@ -690,17 +877,26 @@ async function loadCoversProgressively(booksData) {
     // First pass: apply cached/persisted covers, queue rest for fetch
     const uncached = [];
     for (const bookData of booksData) {
-        const cacheKey = `${bookData.title}|${bookData.author}`;
-        // Check DB-persisted cover first (works cross-device)
+        const cacheKey = getCoverCacheKey(bookData);
+        if (bookData?.match_status && bookData.match_status !== 'exact_match' && bookData?.cover) {
+            delete coverCache[cacheKey];
+        }
         if (bookData.digital_cover_url) {
             coverCache[cacheKey] = bookData.digital_cover_url;
-            applyCoverToBook(bookData.id, bookData.digital_cover_url);
-        } else if (coverCache[cacheKey]) {
-            applyCoverToBook(bookData.id, coverCache[cacheKey]);
-        } else {
+        }
+
+        const visibleCover = getVisibleCoverUrl(bookData);
+        if (visibleCover) {
+            applyCoverToBook(bookData.id, visibleCover);
+        } else if (normalizeIsbnToken(bookData?.isbn_13) || normalizeIsbnToken(bookData?.isbn_10) || isLegacyCoverLookupAllowed(bookData)) {
             uncached.push(bookData);
         }
     }
+
+    try {
+        localStorage.setItem('book-covers-cache', JSON.stringify(coverCache));
+    } catch (e) { /* ignore */ }
+    window.shelvdCoverCache = coverCache;
 
     // Second pass: fetch uncached in parallel batches (smaller on mobile)
     const isMobileCover = window.innerWidth <= 768;
@@ -708,19 +904,23 @@ async function loadCoversProgressively(booksData) {
     for (let i = 0; i < uncached.length; i += BATCH_SIZE) {
         const batch = uncached.slice(i, i + BATCH_SIZE);
         const results = await Promise.all(
-            batch.map(bookData => fetchCoverWithFallbacks(bookData.title, bookData.author))
+            batch.map(bookData => fetchEditionCover(bookData))
         );
 
-        results.forEach((coverUrl, idx) => {
+        results.forEach((result, idx) => {
             const bookData = batch[idx];
-            const cacheKey = `${bookData.title}|${bookData.author}`;
+            const cacheKey = getCoverCacheKey(bookData);
+            const coverUrl = result?.coverUrl || null;
             console.log(`[Shelvd] Cover fetch for "${bookData.title}":`, coverUrl ? 'found' : 'not found', coverUrl);
             if (coverUrl) {
                 coverCache[cacheKey] = coverUrl;
+                if (result?.isVerified) {
+                    bookData.digital_cover_url = coverUrl;
+                }
                 applyCoverToBook(bookData.id, coverUrl);
 
-                // Persist to DB so it works cross-device (only for user books)
-                if (String(bookData.id).startsWith('sb-')) {
+                // Persist verified covers only, so edition-exact matches travel across devices.
+                if (result?.isVerified && String(bookData.id).startsWith('sb-')) {
                     const realId = bookData.id.replace('sb-', '');
                     const sb = window.shelvdAuth?.supabase;
                     if (sb) {
@@ -735,6 +935,7 @@ async function loadCoversProgressively(booksData) {
         try {
             localStorage.setItem('book-covers-cache', JSON.stringify(coverCache));
         } catch (e) { /* ignore */ }
+        window.shelvdCoverCache = coverCache;
     }
 }
 
@@ -746,19 +947,71 @@ function fetchWithTimeout(url, ms = 5000) {
     ]);
 }
 
-async function fetchCoverWithFallbacks(title, author) {
-    // 1: Open Library first (supports CORS — works in 3D WebGL)
-    const olCover = await fetchOpenLibraryCover(title, author);
-    if (olCover) return olCover;
+async function fetchEditionCover(bookData) {
+    const isbn = normalizeIsbnToken(bookData?.isbn_13) || normalizeIsbnToken(bookData?.isbn_10);
 
-    // 2: Open Library title only (broader match)
-    const olTitleOnly = await fetchOpenLibraryCover(title, null);
-    if (olTitleOnly) return olTitleOnly;
+    if (isbn) {
+        const openLibraryCover = await fetchOpenLibraryCoverByIsbn(isbn);
+        if (openLibraryCover) {
+            return { coverUrl: openLibraryCover, isVerified: true };
+        }
 
-    // 3: Google Books fallback (no CORS — works in grid only)
-    const gbCover = await fetchGoogleBooksCover(title, author);
-    if (gbCover) return gbCover;
+        const googleBooksCover = await fetchGoogleBooksCoverByIsbn(isbn);
+        if (googleBooksCover) {
+            return { coverUrl: googleBooksCover, isVerified: true };
+        }
+    }
 
+    if (isLegacyCoverLookupAllowed(bookData)) {
+        const legacyCover = await fetchLegacyCoverApproximation(bookData?.title, bookData?.author);
+        if (legacyCover) {
+            return { coverUrl: legacyCover, isVerified: false };
+        }
+    }
+
+    return { coverUrl: null, isVerified: false };
+}
+
+async function fetchLegacyCoverApproximation(title, author) {
+    const openLibraryCover = await fetchOpenLibraryCover(title, author);
+    if (openLibraryCover) return openLibraryCover;
+
+    const openLibraryTitleOnly = await fetchOpenLibraryCover(title, null);
+    if (openLibraryTitleOnly) return openLibraryTitleOnly;
+
+    const googleBooksCover = await fetchGoogleBooksCover(title, author);
+    if (googleBooksCover) return googleBooksCover;
+
+    return null;
+}
+
+async function fetchOpenLibraryCoverByIsbn(isbn) {
+    try {
+        const coverUrl = `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg?default=false`;
+        const resp = await fetchWithTimeout(coverUrl);
+        if (resp.ok) return coverUrl;
+    } catch (e) { /* skip */ }
+    return null;
+}
+
+async function fetchGoogleBooksCoverByIsbn(isbn) {
+    try {
+        const query = encodeURIComponent(`isbn:${isbn}`);
+        const resp = await fetchWithTimeout(`https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1`);
+        const data = await resp.json();
+        if (data.items && data.items[0]) {
+            const info = data.items[0].volumeInfo;
+            if (info.imageLinks) {
+                const url = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail;
+                if (url) {
+                    return url
+                        .replace('http://', 'https://')
+                        .replace('zoom=1', 'zoom=2')
+                        .replace('&edge=curl', '');
+                }
+            }
+        }
+    } catch (e) { /* skip */ }
     return null;
 }
 
@@ -937,6 +1190,7 @@ function pullOutBookFromStack(book) {
     // Show arrow, hide toggle
     document.getElementById('library-book-arrow').classList.add('visible');
     document.getElementById('view-toggle-pill').classList.add('hidden');
+    renderBookDetail(book.userData.bookData);
 }
 
 function returnBookToStack(book) {
@@ -975,6 +1229,7 @@ function returnBookToStack(book) {
 
     document.getElementById('library-book-arrow').classList.remove('visible');
     document.getElementById('view-toggle-pill').classList.remove('hidden');
+    hideBookDetail();
 }
 
 // ─── Event Handlers ───
@@ -1129,6 +1384,8 @@ function switchView(view) {
     const scrollbar = document.getElementById('stack-scrollbar');
 
     if (view === 'grid') {
+        if (pulledOutBook) returnBookToStack(pulledOutBook);
+        hideBookDetail();
         containerEl.style.display = 'none';
         scrollbar.classList.remove('visible');
         gridEl.style.display = 'block';
@@ -1146,17 +1403,21 @@ function renderGridView() {
     const books = bookObjects.map(b => b.userData.bookData);
 
     gridEl.innerHTML = `<div class="grid-container">${books.map((b, i) => {
-        const cacheKey = `${b.title}|${b.author}`;
-        const coverUrl = coverCache[cacheKey] || b.cover;
+        const coverUrl = getVisibleCoverUrl(b);
+        const metaParts = [b.publisher, b.published_year, b.isbn_13 || b.isbn_10].filter(Boolean);
+        const metaHtml = metaParts.length
+            ? `<div class="grid-book-meta">${escapeHtml(metaParts.join(' · '))}</div>`
+            : '';
         const coverHtml = coverUrl
-            ? `<img src="${coverUrl}" alt="${b.title}" loading="lazy">`
-            : `<div class="placeholder">${b.title}</div>`;
+            ? `<img src="${escapeHtml(coverUrl)}" alt="${escapeHtml(b.title)}" loading="lazy">`
+            : `<div class="placeholder">${escapeHtml(b.title)}</div>`;
         return `
             <div class="grid-book" style="animation-delay: ${i * 20}ms" data-book-id="${b.id}">
                 <div class="grid-book-cover">${coverHtml}</div>
                 <div class="grid-book-info">
-                    <div class="grid-book-title">${b.title}</div>
-                    <div class="grid-book-author">${b.author}</div>
+                    <div class="grid-book-title">${escapeHtml(b.title)}</div>
+                    <div class="grid-book-author">${escapeHtml(b.author || 'Unknown author')}</div>
+                    ${metaHtml}
                 </div>
             </div>`;
     }).join('')}</div>`;
@@ -1164,12 +1425,10 @@ function renderGridView() {
     // Click handler for grid books
     gridEl.querySelectorAll('.grid-book').forEach(el => {
         el.addEventListener('click', () => {
-            const rawId = el.dataset.bookId;
-            const bookId = rawId.startsWith('sb-') ? rawId : (/^\d+$/.test(rawId) ? parseInt(rawId) : rawId);
             // Switch to shelf and pull out
             document.querySelector('.view-toggle input[value="shelf"]').checked = true;
             switchView('shelf');
-            const book = bookObjects.find(b => b.userData.bookId === bookId);
+            const book = findBookObjectById(el.dataset.bookId);
             if (book) {
                 // Scroll to book position
                 camera.position.y = book.userData.stackPosition.y;
@@ -1235,12 +1494,9 @@ function setupSearch() {
     // Enter key in shelf mode → pull out first match
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && currentView === 'shelf') {
-            const q = input.value.trim().toLowerCase();
+            const q = input.value.trim();
             if (!q) return;
-            const match = bookObjects.find(b => {
-                const bd = b.userData.bookData;
-                return bd.title.toLowerCase().includes(q) || bd.author.toLowerCase().includes(q);
-            });
+            const match = bookObjects.find(b => matchesBookQuery(b.userData.bookData, q));
             if (match) {
                 camera.position.y = match.userData.stackPosition.y;
                 controls.target.y = match.userData.stackPosition.y;
@@ -1258,14 +1514,11 @@ function performSearch(query) {
         return;
     }
 
-    const q = query.toLowerCase();
-
     if (currentView === 'grid') {
         // Filter grid items
         document.querySelectorAll('.grid-book').forEach(el => {
-            const title = el.querySelector('.grid-book-title')?.textContent.toLowerCase() || '';
-            const author = el.querySelector('.grid-book-author')?.textContent.toLowerCase() || '';
-            if (title.includes(q) || author.includes(q)) {
+            const bookData = findBookObjectById(el.dataset.bookId)?.userData?.bookData;
+            if (bookData && matchesBookQuery(bookData, query)) {
                 el.classList.remove('search-hidden');
             } else {
                 el.classList.add('search-hidden');
@@ -1276,10 +1529,7 @@ function performSearch(query) {
         updateSearchCount();
     } else {
         // Shelf mode: scroll to first match
-        const match = bookObjects.find(b => {
-            const bd = b.userData.bookData;
-            return bd.title.toLowerCase().includes(q) || bd.author.toLowerCase().includes(q);
-        });
+        const match = bookObjects.find(b => matchesBookQuery(b.userData.bookData, query));
         if (match && match.userData.stackPosition) {
             camera.position.y = match.userData.stackPosition.y;
             controls.target.y = match.userData.stackPosition.y;
@@ -1552,21 +1802,32 @@ window.addEventListener('shelvd:authenticated', (e) => {
 // Also start if no auth screen (direct access / dev)
 if (!document.getElementById('auth-screen') ||
     document.getElementById('auth-screen').style.display === 'none') {
-    init();
+    const publicUsername = getPublicUsernameFromPath();
+    init(publicUsername, Boolean(publicUsername));
 }
 
 // Listen for new books added via photo
 window.addEventListener('shelvd:book-added', async (e) => {
-    const { book, coverUrl } = e.detail;
+    const { book, coverUrl, digitalCoverUrl } = e.detail;
 
     // Prefix Supabase ID to avoid collision with books.json IDs
     const safeId = `sb-${book.id}`;
     const bookData = {
         id: safeId,
         title: book.title,
-        author: book.author,
+        author: book.author || 'Unknown author',
         pages: book.pages || 250,
-        cover: coverUrl
+        cover: coverUrl || null,
+        digital_cover_url: digitalCoverUrl || book.digital_cover_url || null,
+        isbn_13: book.isbn_13 || null,
+        isbn_10: book.isbn_10 || null,
+        publisher: book.publisher || null,
+        published_year: book.published_year || null,
+        edition: book.edition || null,
+        language: book.language || null,
+        translator: book.translator || null,
+        format: book.format || null,
+        match_status: book.match_status || null
     };
 
     createBook(bookData, bookObjects.length);
@@ -1574,19 +1835,20 @@ window.addEventListener('shelvd:book-added', async (e) => {
 
     // Expose updated bookObjects for import-export
     window.shelvdBookObjects = bookObjects;
+    window.shelvdGetCoverCacheKey = getCoverCacheKey;
+    document.getElementById('header-book-count').textContent = bookObjects.length + ' books';
 
-    // Find a clean digital cover (Open Library → Google Books)
-    let digitalCover = await fetchCoverWithFallbacks(book.title, book.author);
-    const finalCover = digitalCover || null; // never use raw photo in shelf
-
-    if (finalCover) {
-        const cacheKey = `${book.title}|${book.author}`;
-        coverCache[cacheKey] = finalCover;
-        window.shelvdCoverCache = coverCache;
-        try {
-            localStorage.setItem('book-covers-cache', JSON.stringify(coverCache));
-        } catch (err) { /* ignore */ }
-
-        applyCoverToBook(safeId, finalCover);
+    const finalCover = bookData.digital_cover_url || bookData.cover || null;
+    if (bookData.digital_cover_url) {
+        const cacheKey = getCoverCacheKey(bookData);
+        coverCache[cacheKey] = bookData.digital_cover_url;
     }
+
+    window.shelvdCoverCache = coverCache;
+    try {
+        localStorage.setItem('book-covers-cache', JSON.stringify(coverCache));
+        localStorage.setItem('book-covers-version', 'v11-cover-lock');
+    } catch (err) { /* ignore */ }
+
+    if (finalCover) applyCoverToBook(safeId, finalCover);
 });

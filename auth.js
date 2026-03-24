@@ -435,20 +435,94 @@ const addBackdrop = document.getElementById('add-book-backdrop');
 const addCard = addModal.querySelector('.add-book-card');
 const ioBtn = document.getElementById('io-btn');
 const logoutBtn = document.getElementById('logout-btn');
+const stepChoose = document.getElementById('add-step-choose');
 const captureZone = document.getElementById('add-capture-zone');
-const fileInput = document.getElementById('add-book-input');
+const coverInput = document.getElementById('add-cover-input');
+const spineInput = document.getElementById('add-spine-input');
+const backInput = document.getElementById('add-back-input');
 const stepCapture = document.getElementById('add-step-capture');
 const stepAnalyzing = document.getElementById('add-step-analyzing');
 const stepConfirm = document.getElementById('add-step-confirm');
+const addStepBackBtn = document.getElementById('add-back-btn');
+const addChooseManualBtn = document.getElementById('add-choose-manual');
+const addRetakeBtn = document.getElementById('add-retake-btn');
+const addConfirmBtn = document.getElementById('add-confirm-btn');
+const addSpinePhotoBtn = document.getElementById('add-spine-photo-btn');
+const addBackPhotoBtn = document.getElementById('add-back-photo-btn');
+const addDetailToggle = document.getElementById('add-detail-toggle');
+const addAdvancedFields = document.getElementById('add-advanced-fields');
+const addUploadSpinner = document.getElementById('add-upload-spinner');
+const addPreviewAnalyzing = document.getElementById('add-preview-analyzing');
+const addPreviewConfirm = document.getElementById('add-preview-confirm');
+const addMatchPreview = document.getElementById('add-match-preview');
+const addMatchCover = document.getElementById('add-match-cover');
+const addMatchBadge = document.getElementById('add-match-badge');
+const addMatchCopy = document.getElementById('add-match-copy');
+const addAnalyzingText = document.getElementById('add-analyzing-text');
+const addCandidateSection = document.getElementById('add-candidate-section');
+const addCandidateList = document.getElementById('add-candidate-list');
+const addRescueActions = document.getElementById('add-rescue-actions');
+const evidenceCover = document.getElementById('add-evidence-cover');
+const evidenceSpine = document.getElementById('add-evidence-spine');
+const evidenceBack = document.getElementById('add-evidence-back');
+const addSummaryCover = document.getElementById('add-summary-cover');
+const addSummaryPublisher = document.getElementById('add-summary-publisher');
+const addSummaryIsbn = document.getElementById('add-summary-isbn');
+const addSummaryYear = document.getElementById('add-summary-year');
 
-let currentImageBase64 = null;
-let currentImageBlob = null;
 const ADD_MODAL_TRANSITION_MS = 340;
 const ADD_BUTTON_HALO_MS = 480;
 let addModalOpenFrame = null;
 let addModalCloseTimeout = null;
 let addModalHaloTimeout = null;
 let addLaunchTrigger = addBtn;
+
+const addFieldRefs = {
+    title: document.getElementById('add-field-title'),
+    author: document.getElementById('add-field-author'),
+    pages: document.getElementById('add-field-pages'),
+    publisher: document.getElementById('add-field-publisher'),
+    published_year: document.getElementById('add-field-published-year'),
+    isbn_13: document.getElementById('add-field-isbn13'),
+    isbn_10: document.getElementById('add-field-isbn10'),
+    edition: document.getElementById('add-field-edition'),
+    language: document.getElementById('add-field-language'),
+    translator: document.getElementById('add-field-translator'),
+    format: document.getElementById('add-field-format')
+};
+
+function createEmptyAnalysis(matchStatus = 'manual_required') {
+    return {
+        title: null,
+        author: null,
+        pages: null,
+        isbn_13: null,
+        isbn_10: null,
+        publisher: null,
+        published_year: null,
+        edition: null,
+        language: null,
+        translator: null,
+        format: null,
+        confidence: 0,
+        match_status: matchStatus,
+        matched_cover_url: null,
+        recommended_candidate_source_id: null,
+        candidate_editions: [],
+        missing_fields: [],
+        rationale: null
+    };
+}
+
+const addState = {
+    mode: 'photo',
+    files: { cover: null, spine: null, back: null },
+    base64: { cover: null, spine: null, back: null },
+    previewUrls: { cover: null, spine: null, back: null },
+    analysis: createEmptyAnalysis(),
+    selectedCandidateSourceId: null,
+    advancedOpen: false
+};
 
 function clearAddModalTimers() {
     if (addModalOpenFrame) {
@@ -486,16 +560,335 @@ function setAddModalLaunchVector() {
     addModal.style.setProperty('--add-origin-y', `${originY}%`);
 }
 
-function resetAddModalContent() {
-    const stepChoose = document.getElementById('add-step-choose');
-    if (stepChoose) {
-        stepChoose.style.display = '';
-        stepCapture.style.display = 'none';
-    } else {
-        stepCapture.style.display = '';
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function normalizeIsbn(value) {
+    return String(value || '').toUpperCase().replace(/[^0-9X]/g, '');
+}
+
+function revokePreviewUrl(kind) {
+    if (addState.previewUrls[kind]) {
+        URL.revokeObjectURL(addState.previewUrls[kind]);
+        addState.previewUrls[kind] = null;
     }
-    stepAnalyzing.style.display = 'none';
-    stepConfirm.style.display = 'none';
+}
+
+function resetEditionFields() {
+    Object.values(addFieldRefs).forEach((input) => {
+        if (!input) return;
+        input.value = '';
+    });
+    if (addFieldRefs.pages) addFieldRefs.pages.value = '250';
+}
+
+function resetAddState() {
+    ['cover', 'spine', 'back'].forEach((kind) => revokePreviewUrl(kind));
+    addState.mode = 'photo';
+    addState.files = { cover: null, spine: null, back: null };
+    addState.base64 = { cover: null, spine: null, back: null };
+    addState.analysis = createEmptyAnalysis();
+    addState.selectedCandidateSourceId = null;
+    addState.advancedOpen = false;
+    resetEditionFields();
+    renderEvidencePreviews();
+    renderCandidateListUI();
+    renderMatchedCoverPreview();
+    syncAdvancedFields();
+    if (addMatchBadge) {
+        addMatchBadge.textContent = 'Manual review';
+        addMatchBadge.className = 'add-match-badge is-manual';
+    }
+    if (addMatchCopy) {
+        addMatchCopy.textContent = 'Review this book before adding it to your shelf.';
+    }
+    if (addPreviewConfirm) {
+        addPreviewConfirm.innerHTML = '<div class="add-evidence-preview">No front cover yet</div>';
+    }
+    renderEditionSummary();
+}
+
+function showAddStep(stepName) {
+    if (stepChoose) stepChoose.style.display = stepName === 'choose' ? '' : 'none';
+    stepCapture.style.display = stepName === 'capture' ? '' : 'none';
+    stepAnalyzing.style.display = stepName === 'analyzing' ? '' : 'none';
+    stepConfirm.style.display = stepName === 'confirm' ? '' : 'none';
+}
+
+function renderPreviewBox(container, url, alt, placeholder) {
+    if (!container) return;
+    if (url) {
+        container.innerHTML = `<img src="${url}" alt="${escapeHtml(alt)}">`;
+    } else {
+        container.textContent = placeholder;
+    }
+}
+
+function renderEvidencePreviews() {
+    renderPreviewBox(evidenceCover, addState.previewUrls.cover, 'Front cover', 'Front cover');
+    renderPreviewBox(evidenceSpine, addState.previewUrls.spine, 'Spine', 'Not added');
+    renderPreviewBox(evidenceBack, addState.previewUrls.back, 'Barcode or back cover', 'Not added');
+}
+
+function getSelectedCandidate() {
+    return (addState.analysis.candidate_editions || []).find(
+        (candidate) => candidate.source_id === addState.selectedCandidateSourceId
+    ) || null;
+}
+
+function setFieldValue(field, value) {
+    const input = addFieldRefs[field];
+    if (!input) return;
+    input.value = value == null ? '' : String(value);
+}
+
+function fillEditionFields(source = {}) {
+    setFieldValue('title', source.title || '');
+    setFieldValue('author', source.author || '');
+    setFieldValue('pages', source.pages || 250);
+    setFieldValue('publisher', source.publisher || '');
+    setFieldValue('published_year', source.published_year || '');
+    setFieldValue('isbn_13', source.isbn_13 || '');
+    setFieldValue('isbn_10', source.isbn_10 || '');
+    setFieldValue('edition', source.edition || '');
+    setFieldValue('language', source.language || '');
+    setFieldValue('translator', source.translator || '');
+    setFieldValue('format', source.format || '');
+}
+
+function readEditionFields() {
+    const pages = parseInt(addFieldRefs.pages.value, 10);
+    const publishedYear = parseInt(addFieldRefs.published_year.value, 10);
+
+    return {
+        title: addFieldRefs.title.value.trim(),
+        author: addFieldRefs.author.value.trim(),
+        pages: Number.isFinite(pages) && pages > 0 ? pages : 250,
+        publisher: addFieldRefs.publisher.value.trim() || null,
+        published_year: Number.isFinite(publishedYear) && publishedYear > 0 ? publishedYear : null,
+        isbn_13: normalizeIsbn(addFieldRefs.isbn_13.value) || null,
+        isbn_10: normalizeIsbn(addFieldRefs.isbn_10.value) || null,
+        edition: addFieldRefs.edition.value.trim() || null,
+        language: addFieldRefs.language.value.trim() || null,
+        translator: addFieldRefs.translator.value.trim() || null,
+        format: addFieldRefs.format.value.trim() || null
+    };
+}
+
+function getFinalCoverMode() {
+    const effectiveStatus = addState.analysis?.match_status || 'manual_required';
+    const selectedCandidate = getSelectedCandidate();
+    if (effectiveStatus === 'exact_match') return 'exact_online';
+    if (selectedCandidate) return 'selected_online';
+    if (addState.mode === 'photo' && addState.previewUrls.cover) return 'user_photo';
+    return 'manual_entry';
+}
+
+function renderEditionSummary() {
+    const edition = readEditionFields();
+    const finalCoverMode = getFinalCoverMode();
+
+    if (addSummaryCover) {
+        addSummaryCover.textContent =
+            finalCoverMode === 'exact_online'
+                ? 'Exact online edition'
+                : finalCoverMode === 'selected_online'
+                    ? 'Selected online edition'
+                    : finalCoverMode === 'user_photo'
+                        ? 'Your uploaded photo'
+                        : 'Manual entry';
+    }
+
+    if (addSummaryPublisher) {
+        addSummaryPublisher.textContent = edition.publisher || 'Not found yet';
+    }
+
+    if (addSummaryIsbn) {
+        addSummaryIsbn.textContent = edition.isbn_13 || edition.isbn_10 || 'Not found yet';
+    }
+
+    if (addSummaryYear) {
+        addSummaryYear.textContent = edition.published_year || edition.edition || 'Not found yet';
+    }
+}
+
+function getMatchUi(status) {
+    if (status === 'exact_match') {
+        return {
+            label: 'Exact edition',
+            tone: 'is-exact',
+            copy: 'Shelvd found a matching online edition cover and metadata for this exact book.'
+        };
+    }
+    if (status === 'needs_confirmation') {
+        return {
+            label: 'Review candidates',
+            tone: 'is-review',
+            copy: 'Shelvd found likely editions. Confirm the exact one or save this book manually after review.'
+        };
+    }
+    return {
+        label: 'Manual review',
+        tone: 'is-manual',
+        copy: 'Shelvd could not verify an exact online edition. Review the fields and save manually.'
+    };
+}
+
+function renderMatchedCoverPreview() {
+    if (!addMatchPreview || !addMatchCover) return;
+    const selectedCandidate = getSelectedCandidate();
+    const shouldShowVerified = addState.analysis.match_status === 'exact_match' || Boolean(selectedCandidate);
+    const coverUrl = selectedCandidate?.cover_url || (shouldShowVerified ? addState.analysis.matched_cover_url : null);
+    if (coverUrl) {
+        addMatchPreview.style.display = '';
+        addMatchCover.innerHTML = `<img src="${coverUrl}" alt="Matched online cover">`;
+    } else {
+        addMatchPreview.style.display = 'none';
+        addMatchCover.innerHTML = '';
+    }
+}
+
+function candidateMetaParts(candidate) {
+    return [
+        candidate.publisher,
+        candidate.published_year,
+        candidate.isbn_13 || candidate.isbn_10,
+        candidate.format
+    ].filter(Boolean);
+}
+
+function renderCandidateListUI() {
+    if (!addCandidateSection || !addCandidateList) return;
+    const candidates = addState.analysis.candidate_editions || [];
+    if (!candidates.length) {
+        addCandidateSection.style.display = 'none';
+        addCandidateList.innerHTML = '';
+        return;
+    }
+
+    addCandidateSection.style.display = '';
+    addCandidateList.innerHTML = candidates.map((candidate) => {
+        const active = candidate.source_id === addState.selectedCandidateSourceId ? ' is-selected' : '';
+        const coverHtml = candidate.cover_url
+            ? `<div class="add-candidate-cover"><img src="${escapeHtml(candidate.cover_url)}" alt="${escapeHtml(candidate.title || 'Candidate cover')}"></div>`
+            : `<div class="add-candidate-cover"><div class="add-candidate-cover-placeholder">No online cover</div></div>`;
+        return `
+            <button type="button" class="add-candidate-card${active}" data-source-id="${escapeHtml(candidate.source_id)}">
+                ${coverHtml}
+                <div>
+                    <div class="add-candidate-title">${escapeHtml(candidate.title || 'Unknown title')}</div>
+                    <div class="add-candidate-meta">${escapeHtml(candidate.author || 'Unknown author')}</div>
+                    <div class="add-candidate-meta">${escapeHtml(candidateMetaParts(candidate).join(' · ') || 'Review details')}</div>
+                </div>
+            </button>
+        `;
+    }).join('');
+
+    addCandidateList.querySelectorAll('.add-candidate-card').forEach((button) => {
+        button.addEventListener('click', () => {
+            if (addState.selectedCandidateSourceId === button.dataset.sourceId) {
+                addState.selectedCandidateSourceId = null;
+                fillEditionFields(addState.analysis);
+                renderCandidateListUI();
+                renderMatchedCoverPreview();
+                syncConfirmState();
+                return;
+            }
+
+            addState.selectedCandidateSourceId = button.dataset.sourceId;
+            const selectedCandidate = getSelectedCandidate();
+            if (selectedCandidate) {
+                fillEditionFields({
+                    ...addState.analysis,
+                    ...selectedCandidate
+                });
+            }
+            renderCandidateListUI();
+            renderMatchedCoverPreview();
+            syncConfirmState();
+        });
+    });
+}
+
+function syncAdvancedFields() {
+    if (!addAdvancedFields || !addDetailToggle) return;
+    addAdvancedFields.style.display = addState.advancedOpen ? '' : 'none';
+    addDetailToggle.setAttribute('aria-expanded', addState.advancedOpen ? 'true' : 'false');
+    addDetailToggle.textContent = addState.advancedOpen ? 'Hide edition details' : 'Edition details';
+}
+
+function syncConfirmState() {
+    const selectedCandidate = getSelectedCandidate();
+    const effectiveStatus = addState.analysis.match_status;
+    const ui = getMatchUi(effectiveStatus);
+    if (addMatchBadge) {
+        addMatchBadge.textContent = selectedCandidate && effectiveStatus !== 'exact_match'
+            ? 'Confirmed edition'
+            : ui.label;
+        addMatchBadge.className = `add-match-badge ${selectedCandidate && effectiveStatus !== 'exact_match' ? 'is-exact' : ui.tone}`;
+    }
+    if (addMatchCopy) {
+        addMatchCopy.textContent = selectedCandidate && effectiveStatus !== 'exact_match'
+            ? 'You selected a specific online edition. Shelvd will use that exact cover after you save.'
+            : effectiveStatus === 'exact_match'
+                ? ui.copy
+                : 'Shelvd has not verified an exact online edition yet. It will keep your own photo unless you explicitly pick an online edition.';
+    }
+    if (addRescueActions) {
+        addRescueActions.style.display = addState.mode === 'photo' && effectiveStatus !== 'exact_match' ? '' : 'none';
+    }
+    if (addConfirmBtn) {
+        if (effectiveStatus === 'exact_match') {
+            addConfirmBtn.textContent = 'Add exact edition';
+        } else if (selectedCandidate) {
+            addConfirmBtn.textContent = 'Use selected edition';
+        } else if (addState.mode === 'manual') {
+            addConfirmBtn.textContent = 'Add manually';
+        } else {
+            addConfirmBtn.textContent = 'Save with my photo';
+        }
+    }
+    renderEditionSummary();
+}
+
+function renderConfirmStep() {
+    showAddStep('confirm');
+    renderPreviewBox(
+        addPreviewConfirm,
+        addState.previewUrls.cover,
+        'Uploaded front cover',
+        addState.mode === 'manual' ? 'Manual entry' : 'No front cover'
+    );
+    renderEvidencePreviews();
+    renderMatchedCoverPreview();
+    renderCandidateListUI();
+    syncAdvancedFields();
+    syncConfirmState();
+}
+
+function normalizeAnalysisResponse(data) {
+    const normalized = {
+        ...createEmptyAnalysis(
+            ['exact_match', 'needs_confirmation', 'manual_required'].includes(data?.match_status)
+                ? data.match_status
+                : 'manual_required'
+        ),
+        ...data
+    };
+    normalized.candidate_editions = Array.isArray(data?.candidate_editions) ? data.candidate_editions : [];
+    normalized.missing_fields = Array.isArray(data?.missing_fields) ? data.missing_fields : [];
+    return normalized;
+}
+
+function resetAddModalContent() {
+    resetAddState();
+    showAddStep(stepChoose ? 'choose' : 'capture');
 }
 
 function openAddModal() {
@@ -521,7 +914,7 @@ function openAddModal() {
     }, ADD_BUTTON_HALO_MS);
 }
 
-[addBtn, ioBtn, logoutBtn].forEach((button) => {
+    [addBtn, ioBtn, logoutBtn].forEach((button) => {
     if (!button) return;
     button.addEventListener('click', () => {
         if (isMobileLibraryUI()) closeUtilityMenu();
@@ -561,15 +954,13 @@ function closeAddModal() {
     if (addModal.style.display !== 'flex') {
         addBtn.classList.remove('active');
         addBtn.classList.remove('launching');
-        currentImageBase64 = null;
-        currentImageBlob = null;
+        resetAddState();
         return;
     }
 
     setAddModalLaunchVector();
     addModal.classList.remove('is-open');
-    currentImageBase64 = null;
-    currentImageBlob = null;
+    resetAddState();
 
     addModalCloseTimeout = setTimeout(() => {
         addModal.style.display = 'none';
@@ -585,44 +976,65 @@ addBackdrop.addEventListener('click', closeAddModal);
 document.getElementById('add-close-btn').addEventListener('click', closeAddModal);
 document.getElementById('add-confirm-close').addEventListener('click', closeAddModal);
 
-captureZone.addEventListener('click', () => fileInput.click());
+function mergeEditionData(base, override) {
+    return {
+        title: override?.title || base?.title || null,
+        author: override?.author || base?.author || null,
+        pages: override?.pages || base?.pages || null,
+        publisher: override?.publisher || base?.publisher || null,
+        published_year: override?.published_year || base?.published_year || null,
+        isbn_13: override?.isbn_13 || base?.isbn_13 || null,
+        isbn_10: override?.isbn_10 || base?.isbn_10 || null,
+        edition: override?.edition || base?.edition || null,
+        language: override?.language || base?.language || null,
+        translator: override?.translator || base?.translator || null,
+        format: override?.format || base?.format || null
+    };
+}
 
-fileInput.addEventListener('change', async (e) => {
-    let file = e.target.files[0];
-    if (!file) return;
+function openManualAddFlow() {
+    addState.mode = 'manual';
+    addState.analysis = createEmptyAnalysis('manual_required');
+    addState.selectedCandidateSourceId = null;
+    addState.advancedOpen = true;
+    fillEditionFields(createEmptyAnalysis('manual_required'));
+    renderConfirmStep();
+}
 
-    // Show upload spinner immediately
-    const uploadSpinner = document.getElementById('add-upload-spinner');
-    uploadSpinner.style.display = 'flex';
-
-    // Convert HEIC/HEIF to JPEG (Chrome doesn't support HEIC natively)
+async function normalizeUploadFile(file) {
+    let normalizedFile = file;
     const name = file.name.toLowerCase();
     if (name.endsWith('.heic') || name.endsWith('.heif') || file.type === 'image/heic' || file.type === 'image/heif') {
         try {
             const blob = await window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
-            file = new File([blob], file.name.replace(/\.heic|\.heif/i, '.jpg'), { type: 'image/jpeg' });
+            normalizedFile = new File([blob], file.name.replace(/\.heic|\.heif/i, '.jpg'), { type: 'image/jpeg' });
         } catch (err) {
             console.error('HEIC conversion failed:', err);
         }
     }
+    return normalizedFile;
+}
 
-    currentImageBlob = file;
+async function attachEvidenceFile(kind, file) {
+    const normalizedFile = await normalizeUploadFile(file);
+    revokePreviewUrl(kind);
+    addState.files[kind] = normalizedFile;
+    addState.previewUrls[kind] = URL.createObjectURL(normalizedFile);
+    addState.base64[kind] = await resizeAndEncode(normalizedFile, 1024);
+    renderEvidencePreviews();
+}
 
-    // Resize image for API (max 1024px) and convert to base64
-    const base64 = await resizeAndEncode(file, 1024);
-    currentImageBase64 = base64;
+function showAnalyzingState(message) {
+    if (addAnalyzingText) addAnalyzingText.textContent = message || 'Checking the exact edition';
+    renderPreviewBox(addPreviewAnalyzing, addState.previewUrls.cover, 'Front cover preview', 'Preparing front cover');
+    showAddStep('analyzing');
+}
 
-    // Hide upload spinner, show analyzing step
-    uploadSpinner.style.display = 'none';
-    stepCapture.style.display = 'none';
-    stepAnalyzing.style.display = '';
+async function analyzeEditionEvidence(message = 'Checking the exact edition') {
+    if (!addState.base64.cover) return;
 
-    // Show preview
-    const previewUrl = URL.createObjectURL(file);
-    document.getElementById('add-preview-analyzing').innerHTML =
-        `<img src="${previewUrl}" alt="preview">`;
+    showAnalyzingState(message);
 
-    // Call edge function
     try {
         const resp = await fetch(`${SUPABASE_URL}/functions/v1/analyze-book`, {
             method: 'POST',
@@ -630,116 +1042,220 @@ fileInput.addEventListener('change', async (e) => {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
             },
-            body: JSON.stringify({ image: base64 })
+            body: JSON.stringify({
+                cover_image: addState.base64.cover,
+                spine_image: addState.base64.spine,
+                back_image: addState.base64.back
+            })
         });
+
         const data = await resp.json();
-        console.log('Vision result:', data);
+        if (!resp.ok) {
+            throw new Error(data?.error || 'Analysis failed');
+        }
 
-        // Show confirm step
-        stepAnalyzing.style.display = 'none';
-        stepConfirm.style.display = '';
-
-        document.getElementById('add-preview-confirm').innerHTML =
-            `<img src="${previewUrl}" alt="cover">`;
-        document.getElementById('add-field-title').value = data.title || '';
-        document.getElementById('add-field-author').value = data.author || '';
-        document.getElementById('add-field-pages').value = data.pages || 250;
+        addState.analysis = normalizeAnalysisResponse(data);
+        addState.selectedCandidateSourceId = addState.analysis.match_status === 'exact_match'
+            ? addState.analysis.recommended_candidate_source_id
+            : null;
+        addState.advancedOpen = addState.mode === 'manual'
+            || addState.analysis.match_status !== 'exact_match'
+            || addState.analysis.missing_fields.length > 0
+            || !addState.analysis.publisher
+            || !(addState.analysis.isbn_13 || addState.analysis.isbn_10);
+        fillEditionFields(addState.analysis);
     } catch (err) {
         console.error('Analyze error:', err);
-        // Show confirm with empty fields
-        stepAnalyzing.style.display = 'none';
-        stepConfirm.style.display = '';
-        document.getElementById('add-preview-confirm').innerHTML =
-            `<img src="${previewUrl}" alt="cover">`;
+        addState.analysis = createEmptyAnalysis('manual_required');
+        addState.analysis.rationale = 'Shelvd could not verify an online edition from these photos.';
+        addState.selectedCandidateSourceId = null;
+        addState.advancedOpen = true;
+        if (!addFieldRefs.pages.value) addFieldRefs.pages.value = '250';
     }
 
-    fileInput.value = '';
+    renderConfirmStep();
+}
+
+async function handleEvidenceInput(kind, event, options = {}) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    if (options.showSpinner && addUploadSpinner) addUploadSpinner.style.display = 'flex';
+
+    try {
+        await attachEvidenceFile(kind, file);
+        addState.mode = 'photo';
+        if (kind === 'cover') {
+            await analyzeEditionEvidence('Checking the front cover');
+        } else if (kind === 'spine') {
+            await analyzeEditionEvidence('Checking the spine against online editions');
+        } else {
+            await analyzeEditionEvidence('Checking the barcode and back cover');
+        }
+    } finally {
+        if (options.showSpinner && addUploadSpinner) addUploadSpinner.style.display = 'none';
+    }
+}
+
+async function uploadEvidenceAssets(session, evidenceFiles) {
+    const urls = { cover: null, spine: null, back: null };
+    const timestamp = Date.now();
+
+    for (const [kind, file] of Object.entries(evidenceFiles)) {
+        if (!file) continue;
+        const compressedBlob = await compressForUpload(file, kind === 'cover' ? 800 : 1024);
+        const fileName = `${session.user.id}/${timestamp}-${kind}.jpg`;
+        const { error: uploadErr } = await sb.storage
+            .from('covers')
+            .upload(fileName, compressedBlob, {
+                contentType: 'image/jpeg',
+                upsert: false
+            });
+
+        if (!uploadErr) {
+            const { data: urlData } = sb.storage.from('covers').getPublicUrl(fileName);
+            urls[kind] = urlData.publicUrl;
+        }
+    }
+
+    return urls;
+}
+
+captureZone.addEventListener('click', () => coverInput.click());
+
+if (addStepBackBtn) {
+    addStepBackBtn.addEventListener('click', () => {
+        resetAddState();
+        showAddStep('choose');
+    });
+}
+
+if (addChooseManualBtn) {
+    addChooseManualBtn.addEventListener('click', openManualAddFlow);
+}
+
+if (addDetailToggle) {
+    addDetailToggle.addEventListener('click', () => {
+        addState.advancedOpen = !addState.advancedOpen;
+        syncAdvancedFields();
+    });
+}
+
+Object.values(addFieldRefs).forEach((input) => {
+    if (!input) return;
+    input.addEventListener('input', () => {
+        renderEditionSummary();
+    });
 });
 
-// Retake
-document.getElementById('add-retake-btn').addEventListener('click', () => {
-    stepConfirm.style.display = 'none';
-    stepCapture.style.display = '';
-});
+coverInput.addEventListener('change', (event) => handleEvidenceInput('cover', event, { showSpinner: true }));
+spineInput.addEventListener('change', (event) => handleEvidenceInput('spine', event));
+backInput.addEventListener('change', (event) => handleEvidenceInput('back', event));
 
-// Add to shelf
-document.getElementById('add-confirm-btn').addEventListener('click', async () => {
-    const title = document.getElementById('add-field-title').value.trim();
-    const author = document.getElementById('add-field-author').value.trim();
-    const pages = parseInt(document.getElementById('add-field-pages').value) || 250;
+if (addSpinePhotoBtn) {
+    addSpinePhotoBtn.addEventListener('click', () => spineInput.click());
+}
 
-    if (!title) return;
+if (addBackPhotoBtn) {
+    addBackPhotoBtn.addEventListener('click', () => backInput.click());
+}
 
-    const confirmBtn = document.getElementById('add-confirm-btn');
-    confirmBtn.disabled = true;
-    confirmBtn.textContent = 'Adding...';
+if (addRetakeBtn) {
+    addRetakeBtn.addEventListener('click', () => {
+        resetAddState();
+        addState.mode = 'photo';
+        showAddStep('capture');
+    });
+}
+
+addConfirmBtn.addEventListener('click', async () => {
+    const edition = readEditionFields();
+    if (!edition.title) return;
+
+    addConfirmBtn.disabled = true;
+    addConfirmBtn.textContent = 'Adding...';
 
     try {
         const { data: { session } } = await sb.auth.getSession();
         if (!session) {
-            confirmBtn.textContent = 'Session expired';
+            addConfirmBtn.textContent = 'Session expired';
             return;
         }
 
-        // Upload cover image to Supabase Storage (compressed)
-        let coverUrl = null;
-        if (currentImageBlob) {
-            const compressedBlob = await compressForUpload(currentImageBlob, 800);
-            const fileName = `${session.user.id}/${Date.now()}.jpg`;
-            const { error: uploadErr } = await sb.storage
-                .from('covers')
-                .upload(fileName, compressedBlob, {
-                    contentType: 'image/jpeg',
-                    upsert: false
-                });
+        const uploaded = await uploadEvidenceAssets(session, addState.files);
+        const selectedCandidate = getSelectedCandidate();
+        const analysis = addState.analysis || createEmptyAnalysis('manual_required');
+        const hasVerifiedEdition = analysis.match_status === 'exact_match' || Boolean(selectedCandidate);
+        const finalMatchStatus = analysis.match_status === 'exact_match'
+            ? 'exact_match'
+            : selectedCandidate
+                ? 'needs_confirmation'
+                : 'manual_required';
+        const mergedEdition = mergeEditionData(analysis, edition);
+        const digitalCoverUrl = hasVerifiedEdition
+            ? (selectedCandidate?.cover_url || analysis.matched_cover_url || null)
+            : null;
 
-            if (!uploadErr) {
-                const { data: urlData } = sb.storage
-                    .from('covers')
-                    .getPublicUrl(fileName);
-                coverUrl = urlData.publicUrl;
-            }
-        }
-
-        // Insert book into database
         const { data: book, error: insertErr } = await sb
             .from('books')
             .insert({
                 user_id: session.user.id,
-                title,
-                author,
-                pages,
-                cover: coverUrl
+                title: mergedEdition.title,
+                author: mergedEdition.author || 'Unknown',
+                pages: mergedEdition.pages || 250,
+                cover: uploaded.cover,
+                digital_cover_url: digitalCoverUrl,
+                isbn_13: mergedEdition.isbn_13,
+                isbn_10: mergedEdition.isbn_10,
+                publisher: mergedEdition.publisher,
+                published_year: mergedEdition.published_year,
+                edition: mergedEdition.edition,
+                language: mergedEdition.language,
+                translator: mergedEdition.translator,
+                format: mergedEdition.format,
+                spine_photo_url: uploaded.spine,
+                back_photo_url: uploaded.back,
+                match_status: finalMatchStatus
             })
             .select()
             .single();
 
         if (insertErr) {
             console.error('Insert error:', insertErr);
-            confirmBtn.textContent = 'Error — try again';
-            confirmBtn.disabled = false;
+            addConfirmBtn.textContent = 'Error — try again';
+            addConfirmBtn.disabled = false;
             return;
         }
 
-        if (window.shelvdTrack) shelvdTrack('book_added', { title, author });
+        if (window.shelvdTrack) {
+            shelvdTrack('book_added', {
+                title: mergedEdition.title,
+                author: mergedEdition.author || 'Unknown',
+                method: addState.mode,
+                match_status: finalMatchStatus
+            });
+        }
 
-        // Dispatch event so app.js can add the book to the 3D scene
         window.dispatchEvent(new CustomEvent('shelvd:book-added', {
-            detail: { book, coverUrl }
+            detail: {
+                book,
+                coverUrl: uploaded.cover,
+                digitalCoverUrl: digitalCoverUrl
+            }
         }));
 
-        // Update book count
         const countEl = document.getElementById('header-book-count');
-        const currentCount = parseInt(countEl.textContent) || 0;
-        countEl.textContent = (currentCount + 1) + ' books';
+        const currentCount = parseInt(countEl.textContent, 10) || 0;
+        countEl.textContent = `${currentCount + 1} books`;
 
         closeAddModal();
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = 'Add to shelf';
+        addConfirmBtn.disabled = false;
+        syncConfirmState();
     } catch (err) {
         console.error('Add book error:', err);
-        confirmBtn.textContent = 'Error — try again';
-        confirmBtn.disabled = false;
+        addConfirmBtn.textContent = 'Error — try again';
+        addConfirmBtn.disabled = false;
     }
 });
 

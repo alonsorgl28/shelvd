@@ -1,6 +1,628 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
+const ANTHROPIC_MODEL = "claude-haiku-4-5-20251001";
+const DEFAULT_HEADERS = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Origin": "*",
+};
+
+type ImageInput = {
+  data: string;
+  mediaType: string;
+};
+
+type EditionSignals = {
+  title: string | null;
+  author: string | null;
+  pages: number | null;
+  isbn_13: string | null;
+  isbn_10: string | null;
+  publisher: string | null;
+  published_year: number | null;
+  edition: string | null;
+  language: string | null;
+  translator: string | null;
+  format: string | null;
+  confidence: number;
+  missing_fields: string[];
+  notes: string | null;
+};
+
+type CandidateEdition = {
+  source: "google_books" | "open_library";
+  source_id: string;
+  title: string | null;
+  author: string | null;
+  pages: number | null;
+  isbn_13: string | null;
+  isbn_10: string | null;
+  publisher: string | null;
+  published_year: number | null;
+  edition: string | null;
+  language: string | null;
+  format: string | null;
+  cover_url: string | null;
+  info_url: string | null;
+  score?: number;
+};
+
+type MatchDecision = {
+  selected_source_id: string | null;
+  confidence: number;
+  rationale: string | null;
+};
+
+function jsonResponse(payload: unknown, status = 200) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: DEFAULT_HEADERS,
+  });
+}
+
+function cleanText(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const cleaned = value.trim();
+  return cleaned ? cleaned : null;
+}
+
+function parsePositiveInt(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return Math.round(value);
+  }
+  if (typeof value === "string") {
+    const parsed = parseInt(value, 10);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return null;
+}
+
+function parseYear(value: unknown): number | null {
+  const cleaned = cleanText(value);
+  if (!cleaned) return null;
+  const match = cleaned.match(/\b(1[5-9]\d{2}|20\d{2}|2100)\b/);
+  return match ? parseInt(match[1], 10) : null;
+}
+
+function clampConfidence(value: unknown): number {
+  if (typeof value !== "number" || Number.isNaN(value)) return 0;
+  return Math.max(0, Math.min(1, value));
+}
+
+function normalizeIsbn(value: unknown, length?: 10 | 13): string | null {
+  if (value == null) return null;
+  const raw = String(value).toUpperCase().replace(/[^0-9X]/g, "");
+  if (!raw) return null;
+  if (length) {
+    if (raw.length !== length) return null;
+    if (length === 10 && !/^\d{9}[\dX]$/.test(raw)) return null;
+    if (length === 13 && !/^\d{13}$/.test(raw)) return null;
+    return raw;
+  }
+  if (/^\d{13}$/.test(raw)) return raw;
+  if (/^\d{9}[\dX]$/.test(raw)) return raw;
+  return null;
+}
+
+function normalizeLanguage(value: unknown): string | null {
+  const cleaned = cleanText(value);
+  if (!cleaned) return null;
+  if (cleaned.length <= 5) return cleaned.toLowerCase();
+  return cleaned;
+}
+
+function normalizeMissingFields(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((entry) => cleanText(entry))
+    .filter((entry): entry is string => Boolean(entry))
+    .filter((entry, index, arr) => arr.indexOf(entry) === index);
+}
+
+function normalizeEditionSignals(raw: Record<string, unknown>): EditionSignals {
+  const normalized: EditionSignals = {
+    title: cleanText(raw.title),
+    author: cleanText(raw.author),
+    pages: parsePositiveInt(raw.pages),
+    isbn_13: normalizeIsbn(raw.isbn_13, 13),
+    isbn_10: normalizeIsbn(raw.isbn_10, 10),
+    publisher: cleanText(raw.publisher),
+    published_year: parseYear(raw.published_year),
+    edition: cleanText(raw.edition),
+    language: normalizeLanguage(raw.language),
+    translator: cleanText(raw.translator),
+    format: cleanText(raw.format),
+    confidence: clampConfidence(raw.confidence),
+    missing_fields: normalizeMissingFields(raw.missing_fields),
+    notes: cleanText(raw.notes),
+  };
+
+  if (!normalized.missing_fields.length) {
+    const inferredMissing = [];
+    if (!normalized.title) inferredMissing.push("title");
+    if (!normalized.author) inferredMissing.push("author");
+    if (!normalized.isbn_13 && !normalized.isbn_10) inferredMissing.push("isbn_13");
+    if (!normalized.publisher) inferredMissing.push("publisher");
+    normalized.missing_fields = inferredMissing;
+  }
+
+  return normalized;
+}
+
+async function callAnthropicJson<T>(
+  content: Array<Record<string, unknown>>,
+  maxTokens = 600,
+): Promise<T> {
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: ANTHROPIC_MODEL,
+      max_tokens: maxTokens,
+      messages: [{ role: "user", content }],
+    }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(`Vision API error: ${JSON.stringify(data)}`);
+  }
+
+  const text = data.content?.[0]?.text || "";
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error("Could not parse JSON from vision response");
+    return JSON.parse(match[0]) as T;
+  }
+}
+
+async function extractEditionSignals(images: {
+  cover: ImageInput;
+  spine?: ImageInput | null;
+  back?: ImageInput | null;
+}): Promise<EditionSignals> {
+  const content: Array<Record<string, unknown>> = [
+    { type: "text", text: "Front cover photo" },
+    {
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: images.cover.mediaType,
+        data: images.cover.data,
+      },
+    },
+  ];
+
+  if (images.spine) {
+    content.push({ type: "text", text: "Optional spine photo" });
+    content.push({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: images.spine.mediaType,
+        data: images.spine.data,
+      },
+    });
+  }
+
+  if (images.back) {
+    content.push({ type: "text", text: "Optional barcode / back cover photo" });
+    content.push({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: images.back.mediaType,
+        data: images.back.data,
+      },
+    });
+  }
+
+  content.push({
+    type: "text",
+    text:
+      `You are identifying a specific printed edition of a book from user photos.
+
+Extract only what is strongly supported by the images. Prefer null over guessing.
+Return ONLY valid JSON:
+{
+  "title": string|null,
+  "author": string|null,
+  "pages": number|null,
+  "isbn_13": string|null,
+  "isbn_10": string|null,
+  "publisher": string|null,
+  "published_year": number|null,
+  "edition": string|null,
+  "language": string|null,
+  "translator": string|null,
+  "format": string|null,
+  "confidence": number,
+  "missing_fields": string[],
+  "notes": string|null
+}
+
+Rules:
+- confidence is 0..1 and should reflect how reliable the extracted edition signals are.
+- missing_fields may only include: title, author, isbn_13, publisher.
+- If a barcode or ISBN is visible, extract it exactly.
+- edition should be a human-readable label only if explicitly shown.
+- format can be values like hardcover, paperback, mass market paperback, unknown; otherwise null.
+- pages can be null if not visible and not strongly inferable.
+- notes should briefly mention what remains ambiguous, or null.`,
+  });
+
+  const raw = await callAnthropicJson<Record<string, unknown>>(content, 500);
+  return normalizeEditionSignals(raw);
+}
+
+function normalizeTitle(value: string | null): string {
+  return (value || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function normalizePublisher(value: string | null): string {
+  return normalizeTitle(value);
+}
+
+function normalizeAuthor(value: string | null): string {
+  return normalizeTitle(value);
+}
+
+function normalizeCoverUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return url
+    .replace(/^http:\/\//i, "https://")
+    .replace("&edge=curl", "")
+    .replace("zoom=1", "zoom=2");
+}
+
+async function fetchJson(url: string): Promise<unknown> {
+  const response = await fetch(url, { headers: { "User-Agent": "Shelvd/1.0" } });
+  if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
+  return await response.json();
+}
+
+function googleIdentifiersToIsbns(identifiers: Array<{ type?: string; identifier?: string }> | undefined) {
+  const isbn13 = identifiers?.find((entry) => entry.type === "ISBN_13")?.identifier;
+  const isbn10 = identifiers?.find((entry) => entry.type === "ISBN_10")?.identifier;
+  return {
+    isbn_13: normalizeIsbn(isbn13, 13),
+    isbn_10: normalizeIsbn(isbn10, 10),
+  };
+}
+
+function normalizeGoogleCandidate(item: Record<string, unknown>): CandidateEdition | null {
+  const id = cleanText(item.id);
+  const info = (item.volumeInfo && typeof item.volumeInfo === "object")
+    ? item.volumeInfo as Record<string, unknown>
+    : {};
+  if (!id || !info) return null;
+  const identifiers = Array.isArray(info.industryIdentifiers)
+    ? info.industryIdentifiers as Array<{ type?: string; identifier?: string }>
+    : [];
+  const isbns = googleIdentifiersToIsbns(identifiers);
+  const authors = Array.isArray(info.authors) ? info.authors.filter(Boolean).join(", ") : null;
+  const coverUrl = normalizeCoverUrl(
+    typeof info.imageLinks === "object" && info.imageLinks
+      ? cleanText((info.imageLinks as Record<string, unknown>).thumbnail) ||
+        cleanText((info.imageLinks as Record<string, unknown>).smallThumbnail)
+      : null,
+  );
+
+  return {
+    source: "google_books",
+    source_id: `google_books:${id}`,
+    title: cleanText(info.title),
+    author: cleanText(authors),
+    pages: parsePositiveInt(info.pageCount),
+    isbn_13: isbns.isbn_13,
+    isbn_10: isbns.isbn_10,
+    publisher: cleanText(info.publisher),
+    published_year: parseYear(info.publishedDate),
+    edition: cleanText(info.subtitle),
+    language: normalizeLanguage(info.language),
+    format: cleanText(info.printType),
+    cover_url: coverUrl,
+    info_url: cleanText(item.selfLink),
+  };
+}
+
+function normalizeOpenLibraryCandidate(raw: Record<string, unknown>, sourceId: string): CandidateEdition | null {
+  const title = cleanText(raw.title);
+  if (!title) return null;
+  const authors = Array.isArray(raw.authors)
+    ? raw.authors.map((entry) => cleanText((entry as Record<string, unknown>).name)).filter(Boolean).join(", ")
+    : Array.isArray(raw.author_name)
+    ? raw.author_name.filter(Boolean).join(", ")
+    : null;
+  const publishers = Array.isArray(raw.publishers)
+    ? raw.publishers.map((entry) => cleanText((entry as Record<string, unknown>).name)).filter(Boolean).join(", ")
+    : Array.isArray(raw.publisher)
+    ? raw.publisher.filter(Boolean).join(", ")
+    : null;
+  const identifiers = (raw.identifiers && typeof raw.identifiers === "object")
+    ? raw.identifiers as Record<string, unknown>
+    : {};
+  const isbn13 = Array.isArray(identifiers.isbn_13)
+    ? normalizeIsbn((identifiers.isbn_13 as unknown[])[0], 13)
+    : normalizeIsbn(Array.isArray(raw.isbn) ? (raw.isbn as unknown[]).find((entry) => String(entry).replace(/[^0-9]/g, "").length === 13) : null, 13);
+  const isbn10 = Array.isArray(identifiers.isbn_10)
+    ? normalizeIsbn((identifiers.isbn_10 as unknown[])[0], 10)
+    : normalizeIsbn(Array.isArray(raw.isbn) ? (raw.isbn as unknown[]).find((entry) => normalizeIsbn(entry, 10)) : null, 10);
+  const cover =
+    raw.cover && typeof raw.cover === "object"
+      ? cleanText((raw.cover as Record<string, unknown>).large) ||
+        cleanText((raw.cover as Record<string, unknown>).medium) ||
+        cleanText((raw.cover as Record<string, unknown>).small)
+      : typeof raw.cover_i === "number"
+      ? `https://covers.openlibrary.org/b/id/${raw.cover_i}-L.jpg`
+      : null;
+
+  return {
+    source: "open_library",
+    source_id: sourceId,
+    title,
+    author: cleanText(authors),
+    pages: parsePositiveInt(raw.number_of_pages),
+    isbn_13: isbn13,
+    isbn_10: isbn10,
+    publisher: cleanText(publishers),
+    published_year: parseYear(raw.publish_date ?? raw.first_publish_year),
+    edition: cleanText(raw.subtitle),
+    language: Array.isArray(raw.languages)
+      ? cleanText(((raw.languages[0] as Record<string, unknown>)?.key ?? raw.languages[0]))
+      : normalizeLanguage(Array.isArray(raw.language) ? raw.language[0] : null),
+    format: cleanText(raw.physical_format),
+    cover_url: normalizeCoverUrl(cover),
+    info_url: typeof raw.url === "string" ? raw.url : null,
+  };
+}
+
+async function fetchGoogleBooksByIsbn(isbn: string): Promise<CandidateEdition[]> {
+  const url = `https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}&maxResults=5`;
+  const data = await fetchJson(url) as Record<string, unknown>;
+  const items = Array.isArray(data.items) ? data.items as Array<Record<string, unknown>> : [];
+  return items.map(normalizeGoogleCandidate).filter((entry): entry is CandidateEdition => Boolean(entry));
+}
+
+async function fetchGoogleBooksByMetadata(signals: EditionSignals): Promise<CandidateEdition[]> {
+  if (!signals.title) return [];
+  const queryParts = [`intitle:${signals.title}`];
+  if (signals.author) queryParts.push(`inauthor:${signals.author}`);
+  if (signals.publisher) queryParts.push(`inpublisher:${signals.publisher}`);
+  const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(queryParts.join(" "))}&maxResults=5`;
+  const data = await fetchJson(url) as Record<string, unknown>;
+  const items = Array.isArray(data.items) ? data.items as Array<Record<string, unknown>> : [];
+  return items.map(normalizeGoogleCandidate).filter((entry): entry is CandidateEdition => Boolean(entry));
+}
+
+async function fetchOpenLibraryByIsbn(isbn: string): Promise<CandidateEdition[]> {
+  const url = `https://openlibrary.org/api/books?bibkeys=ISBN:${encodeURIComponent(isbn)}&format=json&jscmd=data`;
+  const data = await fetchJson(url) as Record<string, unknown>;
+  const key = `ISBN:${isbn}`;
+  const book = data[key];
+  if (!book || typeof book !== "object") return [];
+  const candidate = normalizeOpenLibraryCandidate(book as Record<string, unknown>, `open_library:isbn:${isbn}`);
+  return candidate ? [candidate] : [];
+}
+
+async function fetchOpenLibraryByMetadata(signals: EditionSignals): Promise<CandidateEdition[]> {
+  if (!signals.title) return [];
+  const params = new URLSearchParams({
+    title: signals.title,
+    limit: "5",
+    fields: "key,title,author_name,publisher,first_publish_year,isbn,cover_i,language",
+  });
+  if (signals.author) params.set("author", signals.author);
+  const url = `https://openlibrary.org/search.json?${params.toString()}`;
+  const data = await fetchJson(url) as Record<string, unknown>;
+  const docs = Array.isArray(data.docs) ? data.docs as Array<Record<string, unknown>> : [];
+  return docs
+    .map((doc) => normalizeOpenLibraryCandidate(doc, `open_library:${cleanText(doc.key) || crypto.randomUUID()}`))
+    .filter((entry): entry is CandidateEdition => Boolean(entry));
+}
+
+function dedupeCandidates(candidates: CandidateEdition[]): CandidateEdition[] {
+  const seen = new Set<string>();
+  const deduped: CandidateEdition[] = [];
+  for (const candidate of candidates) {
+    const key =
+      candidate.isbn_13
+        ? `isbn13:${candidate.isbn_13}`
+        : candidate.isbn_10
+        ? `isbn10:${candidate.isbn_10}`
+        : candidate.source_id;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(candidate);
+  }
+  return deduped;
+}
+
+function scoreCandidate(candidate: CandidateEdition, signals: EditionSignals): number {
+  let score = 0;
+  if (signals.isbn_13 && candidate.isbn_13 === signals.isbn_13) score += 30;
+  if (signals.isbn_10 && candidate.isbn_10 === signals.isbn_10) score += 24;
+
+  const titleA = normalizeTitle(signals.title);
+  const titleB = normalizeTitle(candidate.title);
+  if (titleA && titleB) {
+    if (titleA === titleB) score += 12;
+    else if (titleB.includes(titleA) || titleA.includes(titleB)) score += 7;
+  }
+
+  const authorA = normalizeAuthor(signals.author);
+  const authorB = normalizeAuthor(candidate.author);
+  if (authorA && authorB) {
+    if (authorA === authorB) score += 8;
+    else if (authorA.split(" ").some((part) => part && authorB.includes(part))) score += 4;
+  }
+
+  const publisherA = normalizePublisher(signals.publisher);
+  const publisherB = normalizePublisher(candidate.publisher);
+  if (publisherA && publisherB) {
+    if (publisherA === publisherB) score += 8;
+    else if (publisherA.includes(publisherB) || publisherB.includes(publisherA)) score += 4;
+  }
+
+  if (
+    signals.published_year &&
+    candidate.published_year &&
+    signals.published_year === candidate.published_year
+  ) {
+    score += 3;
+  }
+
+  if (candidate.cover_url) score += 2;
+  return score;
+}
+
+async function fetchImageAsBase64(url: string): Promise<ImageInput | null> {
+  try {
+    const response = await fetch(url, { headers: { "User-Agent": "Shelvd/1.0" } });
+    if (!response.ok) return null;
+    const buffer = new Uint8Array(await response.arrayBuffer());
+    let binary = "";
+    for (const byte of buffer) binary += String.fromCharCode(byte);
+    const mediaType = response.headers.get("content-type") || "image/jpeg";
+    return {
+      data: btoa(binary),
+      mediaType,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function compareCandidateCovers(
+  images: { cover: ImageInput; spine?: ImageInput | null; back?: ImageInput | null },
+  candidates: CandidateEdition[],
+): Promise<MatchDecision | null> {
+  const candidatesWithImages = [];
+  for (const candidate of candidates.slice(0, 4)) {
+    if (!candidate.cover_url) continue;
+    const image = await fetchImageAsBase64(candidate.cover_url);
+    if (!image) continue;
+    candidatesWithImages.push({ candidate, image });
+  }
+
+  if (!candidatesWithImages.length) return null;
+
+  const content: Array<Record<string, unknown>> = [
+    { type: "text", text: "User cover photo" },
+    {
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: images.cover.mediaType,
+        data: images.cover.data,
+      },
+    },
+  ];
+
+  if (images.spine) {
+    content.push({ type: "text", text: "User spine photo" });
+    content.push({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: images.spine.mediaType,
+        data: images.spine.data,
+      },
+    });
+  }
+
+  if (images.back) {
+    content.push({ type: "text", text: "User barcode / back photo" });
+    content.push({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: images.back.mediaType,
+        data: images.back.data,
+      },
+    });
+  }
+
+  for (const [index, entry] of candidatesWithImages.entries()) {
+    content.push({
+      type: "text",
+      text:
+        `Candidate ${index + 1}
+source_id: ${entry.candidate.source_id}
+title: ${entry.candidate.title ?? "unknown"}
+author: ${entry.candidate.author ?? "unknown"}
+publisher: ${entry.candidate.publisher ?? "unknown"}
+year: ${entry.candidate.published_year ?? "unknown"}
+isbn13: ${entry.candidate.isbn_13 ?? "unknown"}
+isbn10: ${entry.candidate.isbn_10 ?? "unknown"}`,
+    });
+    content.push({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: entry.image.mediaType,
+        data: entry.image.data,
+      },
+    });
+  }
+
+  content.push({
+    type: "text",
+    text:
+      `Choose whether any candidate is the exact same printed edition as the user's book.
+Return ONLY valid JSON:
+{
+  "selected_source_id": string|null,
+  "confidence": number,
+  "rationale": string|null
+}
+
+Rules:
+- selected_source_id must be one of the provided candidate source_ids or null.
+- Only select a candidate when the cover design appears to be the same edition, not just the same work.
+- Consider subtitle placement, publisher clues, typography, badges, and barcode/ISBN evidence.
+- If no candidate is clearly the same edition, return null.
+- confidence is 0..1.`,
+  });
+
+  const result = await callAnthropicJson<Record<string, unknown>>(content, 450);
+  return {
+    selected_source_id: cleanText(result.selected_source_id),
+    confidence: clampConfidence(result.confidence),
+    rationale: cleanText(result.rationale),
+  };
+}
+
+function mergeSignalsWithCandidate(
+  signals: EditionSignals,
+  candidate: CandidateEdition | null,
+): EditionSignals {
+  if (!candidate) return signals;
+  return {
+    ...signals,
+    title: signals.title || candidate.title,
+    author: signals.author || candidate.author,
+    pages: signals.pages || candidate.pages,
+    isbn_13: signals.isbn_13 || candidate.isbn_13,
+    isbn_10: signals.isbn_10 || candidate.isbn_10,
+    publisher: signals.publisher || candidate.publisher,
+    published_year: signals.published_year || candidate.published_year,
+    edition: signals.edition || candidate.edition,
+    language: signals.language || candidate.language,
+    format: signals.format || candidate.format,
+  };
+}
 
 Deno.serve(async (req) => {
   // CORS
@@ -15,95 +637,90 @@ Deno.serve(async (req) => {
   }
 
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-    });
+    return jsonResponse({ error: "Method not allowed" }, 405);
   }
 
   try {
-    const { image } = await req.json();
+    const body = await req.json();
+    const coverImage = cleanText(body.cover_image) || cleanText(body.image);
+    const spineImage = cleanText(body.spine_image);
+    const backImage = cleanText(body.back_image);
 
-    if (!image) {
-      return new Response(JSON.stringify({ error: "No image provided" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-      });
+    if (!coverImage) {
+      return jsonResponse({ error: "No cover image provided" }, 400);
     }
 
-    // Call Claude Vision to extract book info
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 256,
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "image",
-                source: {
-                  type: "base64",
-                  media_type: "image/jpeg",
-                  data: image,
-                },
-              },
-              {
-                type: "text",
-                text: `Analyze this book cover photo. Extract:
-1. The exact title of the book
-2. The author's name
-3. Estimated page count (if visible, otherwise estimate based on the book)
+    const images = {
+      cover: { data: coverImage, mediaType: "image/jpeg" },
+      spine: spineImage ? { data: spineImage, mediaType: "image/jpeg" } : null,
+      back: backImage ? { data: backImage, mediaType: "image/jpeg" } : null,
+    };
 
-Respond ONLY with valid JSON, no markdown:
-{"title": "...", "author": "...", "pages": 250}
+    const extracted = await extractEditionSignals(images);
+    const candidates = dedupeCandidates([
+      ...(extracted.isbn_13 ? await fetchGoogleBooksByIsbn(extracted.isbn_13) : []),
+      ...(extracted.isbn_10 ? await fetchGoogleBooksByIsbn(extracted.isbn_10) : []),
+      ...(extracted.isbn_13 ? await fetchOpenLibraryByIsbn(extracted.isbn_13) : []),
+      ...(extracted.isbn_10 ? await fetchOpenLibraryByIsbn(extracted.isbn_10) : []),
+      ...((extracted.title || extracted.author) ? await fetchGoogleBooksByMetadata(extracted) : []),
+      ...(extracted.title ? await fetchOpenLibraryByMetadata(extracted) : []),
+    ]).map((candidate) => ({
+      ...candidate,
+      score: scoreCandidate(candidate, extracted),
+    })).sort((a, b) => (b.score || 0) - (a.score || 0));
 
-If you cannot identify the book, respond:
-{"title": null, "author": null, "pages": null}`,
-              },
-            ],
-          },
-        ],
-      }),
-    });
+    const topCandidates = candidates.slice(0, 5);
+    const exactIsbnCandidate = topCandidates.find((candidate) =>
+      (extracted.isbn_13 && candidate.isbn_13 === extracted.isbn_13) ||
+      (extracted.isbn_10 && candidate.isbn_10 === extracted.isbn_10)
+    ) || null;
 
-    const data = await response.json();
+    let matchStatus: "exact_match" | "needs_confirmation" | "manual_required" = "manual_required";
+    let matchedCandidate: CandidateEdition | null = null;
+    let decision: MatchDecision | null = null;
 
-    if (!response.ok) {
-      return new Response(JSON.stringify({ error: "Vision API error", details: data }), {
-        status: 500,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-      });
-    }
-
-    // Parse Claude's response
-    const text = data.content?.[0]?.text || "";
-    let bookInfo;
-    try {
-      bookInfo = JSON.parse(text);
-    } catch {
-      // Try to extract JSON from the response
-      const match = text.match(/\{[\s\S]*\}/);
-      if (match) {
-        bookInfo = JSON.parse(match[0]);
+    if (exactIsbnCandidate && exactIsbnCandidate.cover_url) {
+      matchedCandidate = exactIsbnCandidate;
+      matchStatus = "exact_match";
+      decision = {
+        selected_source_id: exactIsbnCandidate.source_id,
+        confidence: 0.97,
+        rationale: "Matched by exact ISBN with an online edition cover.",
+      };
+    } else if (exactIsbnCandidate && !exactIsbnCandidate.cover_url) {
+      matchedCandidate = exactIsbnCandidate;
+      matchStatus = "manual_required";
+      decision = {
+        selected_source_id: exactIsbnCandidate.source_id,
+        confidence: 0.82,
+        rationale: "Exact ISBN found, but there is no verifiable online cover for this edition.",
+      };
+    } else if (topCandidates.length) {
+      decision = await compareCandidateCovers(images, topCandidates);
+      if (decision?.selected_source_id) {
+        matchedCandidate = topCandidates.find((candidate) => candidate.source_id === decision?.selected_source_id) || null;
+        matchStatus = "needs_confirmation";
       } else {
-        bookInfo = { title: null, author: null, pages: null };
+        matchStatus = "needs_confirmation";
       }
     }
 
-    return new Response(JSON.stringify(bookInfo), {
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    if (!topCandidates.length && extracted.title && extracted.author) {
+      matchStatus = "manual_required";
+    }
+
+    const verifiedCandidate = matchStatus === "exact_match" ? matchedCandidate : null;
+    const merged = mergeSignalsWithCandidate(extracted, verifiedCandidate);
+    return jsonResponse({
+      ...merged,
+      match_status: matchStatus,
+      confidence: Math.max(merged.confidence, decision?.confidence || 0),
+      matched_cover_url: verifiedCandidate?.cover_url || null,
+      recommended_candidate_source_id: verifiedCandidate?.source_id || null,
+      candidate_editions: topCandidates,
+      rationale: decision?.rationale || extracted.notes || null,
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-    });
+    return jsonResponse({ error: err instanceof Error ? err.message : String(err) }, 500);
   }
 });

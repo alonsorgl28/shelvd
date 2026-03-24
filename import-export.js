@@ -66,11 +66,23 @@ document.getElementById('io-export-excel').addEventListener('click', async () =>
         Title: b.title,
         Author: b.author,
         Pages: b.pages || '',
+        'ISBN-13': b.isbn_13 || '',
+        'ISBN-10': b.isbn_10 || '',
+        Publisher: b.publisher || '',
+        'Published Year': b.published_year || '',
+        Edition: b.edition || '',
+        Language: b.language || '',
+        Translator: b.translator || '',
+        Format: b.format || '',
+        'Match Status': b.match_status || '',
         'Cover URL': b.coverUrl || ''
     }));
 
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [{ wch: 40 }, { wch: 30 }, { wch: 8 }, { wch: 60 }];
+    ws['!cols'] = [
+        { wch: 40 }, { wch: 30 }, { wch: 8 }, { wch: 18 }, { wch: 14 }, { wch: 28 },
+        { wch: 14 }, { wch: 24 }, { wch: 14 }, { wch: 22 }, { wch: 18 }, { wch: 18 }, { wch: 60 }
+    ];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Library');
 
@@ -122,6 +134,7 @@ document.getElementById('io-export-word').addEventListener('click', async () => 
                 <div class="title">${escHtml(b.title)}</div>
                 <div class="author">${escHtml(b.author)}</div>
                 <div class="pages">${b.pages ? b.pages + ' pages' : ''}</div>
+                <div class="pages">${escHtml([b.publisher, b.published_year, b.isbn_13 || b.isbn_10].filter(Boolean).join(' · '))}</div>
             </td>
         </tr>`;
     }
@@ -165,6 +178,16 @@ ioImportInput.addEventListener('change', async (e) => {
     const titleKey = keys.find(k => /^(title|t[ií]tulo|libro|book|name|nombre)$/i.test(k));
     const authorKey = keys.find(k => /^(author|autor|writer|escritor)$/i.test(k));
     const pagesKey = keys.find(k => /^(pages|p[áa]ginas|pags?)$/i.test(k));
+    const isbn13Key = keys.find(k => /^(isbn[-_ ]?13)$/i.test(k));
+    const isbn10Key = keys.find(k => /^(isbn[-_ ]?10)$/i.test(k));
+    const publisherKey = keys.find(k => /^(publisher|editorial)$/i.test(k));
+    const yearKey = keys.find(k => /^(published year|year|a[ñn]o|published_year)$/i.test(k));
+    const editionKey = keys.find(k => /^(edition|edici[oó]n)$/i.test(k));
+    const languageKey = keys.find(k => /^(language|idioma)$/i.test(k));
+    const translatorKey = keys.find(k => /^(translator|traductor)$/i.test(k));
+    const formatKey = keys.find(k => /^(format|formato)$/i.test(k));
+    const matchStatusKey = keys.find(k => /^(match status|match_status)$/i.test(k));
+    const coverKey = keys.find(k => /^(cover url|cover|digital_cover_url)$/i.test(k));
 
     if (!titleKey) {
         showProgress('Could not find a "Title" column. Use headers: Title, Author, Pages', 100);
@@ -174,7 +197,17 @@ ioImportInput.addEventListener('change', async (e) => {
 
     // Deduplicate against existing library
     const existingBooks = getBookList();
-    const existingKeys = new Set(existingBooks.map(b => `${b.title.toLowerCase()}|${b.author.toLowerCase()}`));
+    const existingKeys = new Set(existingBooks.map((b) => {
+        const isbnKey = normalizeIsbnToken(b.isbn_13 || b.isbn_10);
+        return isbnKey || [
+            b.title,
+            b.author,
+            b.publisher,
+            b.edition,
+            b.published_year,
+            b.format
+        ].map((value) => String(value || '').trim().toLowerCase()).join('|');
+    }));
 
     const sb = window.shelvdAuth?.supabase;
     const session = sb ? (await sb.auth.getSession()).data.session : null;
@@ -187,10 +220,27 @@ ioImportInput.addEventListener('change', async (e) => {
         const title = String(row[titleKey] || '').trim();
         const author = authorKey ? String(row[authorKey] || '').trim() : 'Unknown';
         const pages = pagesKey ? (parseInt(row[pagesKey]) || 250) : 250;
+        const isbn13 = isbn13Key ? normalizeIsbnToken(row[isbn13Key]) : '';
+        const isbn10 = isbn10Key ? normalizeIsbnToken(row[isbn10Key]) : '';
+        const publisher = publisherKey ? String(row[publisherKey] || '').trim() : null;
+        const publishedYear = yearKey ? (parseInt(row[yearKey]) || null) : null;
+        const edition = editionKey ? String(row[editionKey] || '').trim() : null;
+        const language = languageKey ? String(row[languageKey] || '').trim() : null;
+        const translator = translatorKey ? String(row[translatorKey] || '').trim() : null;
+        const format = formatKey ? String(row[formatKey] || '').trim() : null;
+        const matchStatus = matchStatusKey ? String(row[matchStatusKey] || '').trim() : null;
+        const digitalCoverUrl = coverKey ? String(row[coverKey] || '').trim() : null;
 
         if (!title) { skipped++; continue; }
 
-        const key = `${title.toLowerCase()}|${author.toLowerCase()}`;
+        const key = isbn13 || isbn10 || [
+            title,
+            author,
+            publisher,
+            edition,
+            publishedYear,
+            format
+        ].map((value) => String(value || '').trim().toLowerCase()).join('|');
         if (existingKeys.has(key)) { skipped++; continue; }
         existingKeys.add(key);
 
@@ -199,13 +249,32 @@ ioImportInput.addEventListener('change', async (e) => {
         if (sb && session) {
             const { data: book, error } = await sb
                 .from('books')
-                .insert({ user_id: session.user.id, title, author, pages })
+                .insert({
+                    user_id: session.user.id,
+                    title,
+                    author,
+                    pages,
+                    isbn_13: isbn13 || null,
+                    isbn_10: isbn10 || null,
+                    publisher,
+                    published_year: publishedYear,
+                    edition,
+                    language,
+                    translator,
+                    format,
+                    match_status: matchStatus || (digitalCoverUrl ? 'needs_confirmation' : 'manual_required'),
+                    digital_cover_url: digitalCoverUrl || null
+                })
                 .select()
                 .single();
 
             if (!error && book) {
                 window.dispatchEvent(new CustomEvent('shelvd:book-added', {
-                    detail: { book, coverUrl: null }
+                    detail: {
+                        book,
+                        coverUrl: book.cover || null,
+                        digitalCoverUrl: book.digital_cover_url || digitalCoverUrl || null
+                    }
                 }));
                 added++;
             }
@@ -223,17 +292,42 @@ ioImportInput.addEventListener('change', async (e) => {
 function getBookList() {
     const bookObjs = window.shelvdBookObjects || [];
     const cache = window.shelvdCoverCache || {};
+    const getCoverCacheKey = window.shelvdGetCoverCacheKey || ((book) => {
+        const isbn = normalizeIsbnToken(book?.isbn_13 || book?.isbn_10);
+        if (isbn) return `edition:isbn:${isbn}`;
+        return `edition:${[
+            book?.title,
+            book?.author,
+            book?.publisher,
+            book?.edition,
+            book?.published_year,
+            book?.format
+        ].map((value) => String(value || '').trim().toLowerCase()).join('|')}`;
+    });
 
     return bookObjs.map(b => {
         const bd = b.userData?.bookData || b;
-        const cacheKey = `${bd.title}|${bd.author}`;
+        const cacheKey = getCoverCacheKey(bd);
         return {
             title: bd.title || '',
             author: bd.author || '',
             pages: bd.pages || 0,
-            coverUrl: cache[cacheKey] || ''
+            isbn_13: bd.isbn_13 || '',
+            isbn_10: bd.isbn_10 || '',
+            publisher: bd.publisher || '',
+            published_year: bd.published_year || '',
+            edition: bd.edition || '',
+            language: bd.language || '',
+            translator: bd.translator || '',
+            format: bd.format || '',
+            match_status: bd.match_status || '',
+            coverUrl: bd.digital_cover_url || cache[cacheKey] || bd.cover || ''
         };
     });
+}
+
+function normalizeIsbnToken(value) {
+    return String(value || '').toUpperCase().replace(/[^0-9X]/g, '');
 }
 
 function escHtml(s) {

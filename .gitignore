@@ -1,2 +1,6 @@
 .vercel
-supabase/
+supabase/*
+!supabase/functions/
+!supabase/functions/**
+!supabase/migrations/
+!supabase/migrations/**

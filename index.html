@@ -323,7 +323,17 @@
                         </svg>
                     </div>
                     <div class="add-choose-label">Photo</div>
-                    <div class="add-choose-desc">Snap or upload a cover photo</div>
+                    <div class="add-choose-desc">Match the exact printed edition from the real cover</div>
+                </button>
+                <button class="add-choose-option" id="add-choose-manual">
+                    <div class="add-choose-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 20h9"/>
+                            <path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4Z"/>
+                        </svg>
+                    </div>
+                    <div class="add-choose-label">Manual</div>
+                    <div class="add-choose-desc">Type the exact edition details yourself</div>
                 </button>
                 <button class="add-choose-option" id="add-choose-file">
                     <div class="add-choose-icon">
@@ -353,14 +363,16 @@
                         <circle cx="12" cy="13" r="4"/>
                     </svg>
                 </div>
-                <div class="add-capture-text">Take or upload a photo of your book cover</div>
-                <div class="add-capture-sub">We'll identify the book automatically</div>
+                <div class="add-capture-text">Take or upload a photo of your real front cover</div>
+                <div class="add-capture-sub">Shelvd will verify the exact edition before saving</div>
             </div>
-            <input type="file" id="add-book-input" accept="image/*" capture="environment" style="display:none;">
+            <input type="file" id="add-cover-input" accept="image/*" capture="environment" style="display:none;">
+            <input type="file" id="add-spine-input" accept="image/*" capture="environment" style="display:none;">
+            <input type="file" id="add-back-input" accept="image/*" capture="environment" style="display:none;">
             <!-- Upload spinner overlay -->
             <div class="add-upload-spinner" id="add-upload-spinner" style="display:none;">
                 <div class="loading-spinner"></div>
-                <div class="add-upload-spinner-text">Processing photo...</div>
+                <div class="add-upload-spinner-text">Processing cover...</div>
             </div>
         </div>
 
@@ -374,7 +386,7 @@
                 <div class="add-analyzing-bar">
                     <div class="add-analyzing-progress"></div>
                 </div>
-                <div class="add-analyzing-text">Reading the cover</div>
+                <div class="add-analyzing-text" id="add-analyzing-text">Checking the exact edition</div>
             </div>
         </div>
 
@@ -384,8 +396,36 @@
                 <div class="add-step-title">Confirm</div>
                 <button class="add-close-btn" id="add-confirm-close">&times;</button>
             </div>
+            <div class="add-match-status" id="add-match-status">
+                <div class="add-match-badge" id="add-match-badge">Manual review</div>
+                <div class="add-match-copy" id="add-match-copy">Review this book before adding it to your shelf.</div>
+            </div>
+            <div class="add-edition-summary" id="add-edition-summary">
+                <div class="add-edition-stat">
+                    <div class="add-edition-stat-label">Final cover</div>
+                    <div class="add-edition-stat-value" id="add-summary-cover">Your uploaded photo</div>
+                </div>
+                <div class="add-edition-stat">
+                    <div class="add-edition-stat-label">Publisher</div>
+                    <div class="add-edition-stat-value" id="add-summary-publisher">Not found yet</div>
+                </div>
+                <div class="add-edition-stat">
+                    <div class="add-edition-stat-label">ISBN</div>
+                    <div class="add-edition-stat-value" id="add-summary-isbn">Not found yet</div>
+                </div>
+                <div class="add-edition-stat">
+                    <div class="add-edition-stat-label">Published</div>
+                    <div class="add-edition-stat-value" id="add-summary-year">Not found yet</div>
+                </div>
+            </div>
             <div class="add-confirm-layout">
-                <div class="add-preview-img" id="add-preview-confirm"></div>
+                <div class="add-preview-column">
+                    <div class="add-preview-img" id="add-preview-confirm"></div>
+                    <div class="add-match-preview" id="add-match-preview" style="display:none;">
+                        <div class="add-mini-label">Matched online cover</div>
+                        <div class="add-mini-cover" id="add-match-cover"></div>
+                    </div>
+                </div>
                 <div class="add-confirm-fields">
                     <label class="add-field-label">Title</label>
                     <input type="text" class="add-field-input" id="add-field-title" placeholder="Book title">
@@ -395,8 +435,67 @@
                     <input type="number" class="add-field-input" id="add-field-pages" placeholder="250">
                 </div>
             </div>
-            <button class="add-confirm-btn" id="add-confirm-btn">Add to shelf</button>
-            <button class="add-retake-btn" id="add-retake-btn">Retake photo</button>
+            <div class="add-evidence-strip" id="add-evidence-strip">
+                <div class="add-evidence-card">
+                    <div class="add-evidence-label">Front cover</div>
+                    <div class="add-evidence-preview" id="add-evidence-cover"></div>
+                </div>
+                <div class="add-evidence-card">
+                    <div class="add-evidence-label">Spine</div>
+                    <div class="add-evidence-preview" id="add-evidence-spine"></div>
+                </div>
+                <div class="add-evidence-card">
+                    <div class="add-evidence-label">Barcode / back</div>
+                    <div class="add-evidence-preview" id="add-evidence-back"></div>
+                </div>
+            </div>
+            <div class="add-rescue-actions" id="add-rescue-actions">
+                <button type="button" class="add-secondary-btn" id="add-spine-photo-btn">Add spine photo</button>
+                <button type="button" class="add-secondary-btn" id="add-back-photo-btn">Add barcode / back cover</button>
+            </div>
+            <div class="add-candidate-section" id="add-candidate-section" style="display:none;">
+                <div class="add-mini-label">Possible exact editions</div>
+                <div class="add-candidate-list" id="add-candidate-list"></div>
+            </div>
+            <button type="button" class="add-detail-toggle" id="add-detail-toggle" aria-expanded="false">Edition details</button>
+            <div class="add-advanced-fields" id="add-advanced-fields" style="display:none;">
+                <div class="add-field-grid">
+                    <div>
+                        <label class="add-field-label">Publisher</label>
+                        <input type="text" class="add-field-input" id="add-field-publisher" placeholder="Publisher">
+                    </div>
+                    <div>
+                        <label class="add-field-label">Published year</label>
+                        <input type="number" class="add-field-input" id="add-field-published-year" placeholder="2021">
+                    </div>
+                    <div>
+                        <label class="add-field-label">ISBN-13</label>
+                        <input type="text" class="add-field-input" id="add-field-isbn13" placeholder="978...">
+                    </div>
+                    <div>
+                        <label class="add-field-label">ISBN-10</label>
+                        <input type="text" class="add-field-input" id="add-field-isbn10" placeholder="0...">
+                    </div>
+                    <div>
+                        <label class="add-field-label">Edition</label>
+                        <input type="text" class="add-field-input" id="add-field-edition" placeholder="First edition">
+                    </div>
+                    <div>
+                        <label class="add-field-label">Language</label>
+                        <input type="text" class="add-field-input" id="add-field-language" placeholder="en">
+                    </div>
+                    <div>
+                        <label class="add-field-label">Translator</label>
+                        <input type="text" class="add-field-input" id="add-field-translator" placeholder="Translator">
+                    </div>
+                    <div>
+                        <label class="add-field-label">Format</label>
+                        <input type="text" class="add-field-input" id="add-field-format" placeholder="Paperback">
+                    </div>
+                </div>
+            </div>
+            <button class="add-confirm-btn" id="add-confirm-btn">Save with my photo</button>
+            <button class="add-retake-btn" id="add-retake-btn">Retake front cover</button>
         </div>
     </div>
 </div>
@@ -478,6 +577,17 @@
     <div class="library-book-arrow-hint">Swipe up</div>
 </div>
 
+<!-- Book Detail Panel -->
+<div class="book-detail-panel" id="book-detail-panel" hidden>
+    <div class="book-detail-card">
+        <div class="book-detail-badge" id="book-detail-badge">Edition</div>
+        <div class="book-detail-title" id="book-detail-title"></div>
+        <div class="book-detail-author" id="book-detail-author"></div>
+        <div class="book-detail-summary" id="book-detail-summary"></div>
+        <div class="book-detail-grid" id="book-detail-grid"></div>
+    </div>
+</div>
+
 <!-- 3D Container -->
 <div class="library-3d-container" id="library-3d-container">
     <div class="library-loading" id="library-loading">
@@ -507,9 +617,9 @@
     }
 }
 </script>
-<script type="module" src="auth.js"></script>
-<script src="analytics.js"></script>
-<script type="module" src="app.js"></script>
+<script type="module" src="auth.js?v=20260324d"></script>
+<script src="analytics.js?v=20260324b"></script>
+<script type="module" src="app.js?v=20260324d"></script>
 <!-- PWA Install Banner -->
 <div class="pwa-install-banner" id="pwa-install-banner" style="display:none;">
     <div class="pwa-install-content">
@@ -551,10 +661,12 @@
 
 <script>
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    navigator.serviceWorker.register('/sw.js?v=20260324d', { updateViaCache: 'none' })
+        .then((registration) => registration.update())
+        .catch(() => {});
 }
 </script>
-<script type="module" src="pwa-install.js"></script>
-<script src="import-export.js" defer></script>
+<script type="module" src="pwa-install.js?v=20260324b"></script>
+<script src="import-export.js?v=20260324d" defer></script>
 </body>
 </html>
