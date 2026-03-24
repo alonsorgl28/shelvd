@@ -198,21 +198,6 @@
             transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
         }
 
-        .btn-primary::before {
-            content: "";
-            position: absolute;
-            inset: -35%;
-            background: linear-gradient(115deg, transparent 34%, rgba(255,255,255,0.12) 47%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0.12) 53%, transparent 66%);
-            opacity: 0;
-            pointer-events: none;
-            transform: translate3d(-130%, 0, 0) rotate(8deg);
-        }
-
-        .btn-primary.is-shimmering::before {
-            opacity: 1;
-            animation: btnShimmerSweep 2.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
-        }
-
         .btn-primary:hover {
             transform: scale(1.04);
             box-shadow: 0 0 24px rgba(20,26,46,0.4), 0 0 80px rgba(100,120,200,0.15);
@@ -231,24 +216,6 @@
         .btn-primary svg {
             position: relative;
             z-index: 1;
-        }
-
-        @keyframes btnShimmerSweep {
-            0% {
-                transform: translate3d(-130%, 0, 0) rotate(8deg);
-            }
-            50% {
-                transform: translate3d(10%, 0, 0) rotate(8deg);
-            }
-            100% {
-                transform: translate3d(150%, 0, 0) rotate(8deg);
-            }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .btn-primary::before {
-                display: none;
-            }
         }
 
         .btn-primary svg {
@@ -1142,7 +1109,7 @@
     <h1 class="hero-headline">Your books,<br>beautifully stacked.</h1>
     <p class="hero-desc">Snap a cover, catalog your collection. Build a 3D library that's uniquely yours and share it with the world.</p>
     <div class="hero-buttons">
-        <a href="/index.html" class="btn-primary is-shimmering" id="hero-btn-primary">
+        <a href="/index.html" class="btn-primary" id="hero-btn-primary">
             <canvas></canvas>
             <span>Start your shelf</span>
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
