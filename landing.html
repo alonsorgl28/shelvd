@@ -1038,6 +1038,256 @@
             letter-spacing: -0.01em;
         }
 
+        /* ── Contact ── */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .contact-section {
+            padding: 0 40px 120px;
+            max-width: 1200px;
+            margin: -36px auto 0;
+        }
+
+        .contact-card {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 40px 36px 44px;
+            border-radius: var(--radius);
+            background: linear-gradient(180deg, #151c32 0%, #101728 100%);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 24px 70px rgba(20,26,46,0.12), inset 0 1px 0 rgba(255,255,255,0.08);
+            position: relative;
+            overflow: visible;
+            opacity: 0;
+            transform: translateY(40px) scale(0.98);
+        }
+
+        .contact-card.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .contact-card::before {
+            content: '';
+            position: absolute;
+            inset: 1px;
+            border-radius: calc(var(--radius) - 1px);
+            background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent 32%);
+            pointer-events: none;
+        }
+
+        .contact-head {
+            position: relative;
+            z-index: 1;
+            max-width: 520px;
+            margin-bottom: 30px;
+        }
+
+        .contact-eyebrow {
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.38);
+            margin-bottom: 14px;
+        }
+
+        .contact-title {
+            font-size: clamp(30px, 4.2vw, 46px);
+            font-weight: 500;
+            letter-spacing: -0.04em;
+            line-height: 1.08;
+            margin-bottom: 14px;
+        }
+
+        .contact-desc {
+            font-size: 15px;
+            line-height: 1.6;
+            color: rgba(255,255,255,0.6);
+            letter-spacing: -0.01em;
+        }
+
+        .contact-meta {
+            margin-top: 14px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.42);
+        }
+
+        .contact-meta a {
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255,255,255,0.14);
+            transition: border-color 0.2s ease, color 0.2s ease;
+        }
+
+        .contact-meta a:hover {
+            color: #ffffff;
+            border-color: rgba(255,255,255,0.34);
+        }
+
+        .contact-form {
+            position: relative;
+            z-index: 1;
+        }
+
+        .contact-stack {
+            width: min(100%, 360px);
+            transform: skewY(-6deg);
+        }
+
+        .contact-surface,
+        .contact-send {
+            position: relative;
+            width: 100%;
+            min-height: 56px;
+            border-radius: 18px;
+            isolation: isolate;
+            transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .contact-surface {
+            margin-bottom: 26px;
+            background: linear-gradient(180deg, rgba(9, 14, 28, 0.98), rgba(13, 18, 34, 0.98));
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+        }
+
+        .contact-send {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: linear-gradient(180deg, #203053 0%, #172445 100%);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            cursor: pointer;
+            box-shadow: 0 18px 38px rgba(9,14,28,0.24);
+        }
+
+        .contact-surface::before,
+        .contact-send::before {
+            content: '';
+            position: absolute;
+            z-index: 0;
+            top: 0;
+            left: -18px;
+            width: 18px;
+            height: 100%;
+            border-radius: 16px 0 0 16px;
+            transform-origin: right;
+            transform: skewY(45deg);
+        }
+
+        .contact-surface::after,
+        .contact-send::after {
+            content: '';
+            position: absolute;
+            z-index: 0;
+            top: -18px;
+            left: 0;
+            width: 100%;
+            height: 18px;
+            border-radius: 16px 16px 0 0;
+            transform-origin: bottom;
+            transform: skewX(45deg);
+        }
+
+        .contact-surface::before {
+            background: rgba(55, 66, 100, 0.84);
+        }
+
+        .contact-surface::after {
+            background: rgba(42, 50, 82, 0.92);
+        }
+
+        .contact-send::before {
+            background: rgba(46, 61, 99, 0.92);
+        }
+
+        .contact-send::after {
+            background: rgba(55, 72, 116, 0.96);
+        }
+
+        .contact-surface:hover,
+        .contact-surface:focus-within,
+        .contact-send:hover,
+        .contact-send:focus-visible {
+            transform: translateX(-10px);
+        }
+
+        .contact-surface:focus-within {
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .contact-send:hover,
+        .contact-send:focus-visible {
+            background: linear-gradient(180deg, #263a65 0%, #1b2d54 100%);
+            border-color: rgba(255,255,255,0.18);
+        }
+
+        .contact-input {
+            width: 100%;
+            height: 56px;
+            padding: 0 18px;
+            border: 0;
+            outline: none;
+            background: transparent;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 15px;
+            letter-spacing: -0.01em;
+            position: relative;
+            z-index: 1;
+        }
+
+        .contact-input::placeholder {
+            color: rgba(255,255,255,0.32);
+        }
+
+        .contact-input:focus-visible,
+        .contact-send:focus-visible {
+            outline: 2px solid rgba(255,255,255,0.74);
+            outline-offset: 4px;
+        }
+
+        .contact-send svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
+        }
+
+        .contact-send span,
+        .contact-send svg {
+            position: relative;
+            z-index: 1;
+        }
+
+        .contact-help {
+            margin-top: 16px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.38);
+            letter-spacing: 0.01em;
+        }
+
         /* ── Footer ── */
         .footer {
             padding: 60px 40px;
@@ -1107,6 +1357,42 @@
             }
 
             .cta-section { padding: 100px 20px; }
+
+            .contact-section {
+                padding: 0 20px 80px;
+                margin-top: -8px;
+            }
+
+            .contact-card {
+                padding: 30px 24px 34px;
+            }
+
+            .contact-stack {
+                width: min(100%, 280px);
+                transform: skewY(-4deg);
+                margin-left: 16px;
+            }
+
+            .contact-surface,
+            .contact-send {
+                min-height: 52px;
+            }
+
+            .contact-input {
+                height: 52px;
+            }
+
+            .contact-surface::before,
+            .contact-send::before {
+                left: -14px;
+                width: 14px;
+            }
+
+            .contact-surface::after,
+            .contact-send::after {
+                top: -14px;
+                height: 14px;
+            }
 
             .footer {
                 flex-direction: column;
@@ -1411,6 +1697,40 @@
         <span>Get started</span>
         <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
+</section>
+
+<!-- ── Contact ── -->
+<section class="contact-section">
+    <div class="contact-card" data-reveal>
+        <div class="contact-head">
+            <div class="contact-eyebrow">Get in touch</div>
+            <h2 class="contact-title">Questions, feedback, partnerships.</h2>
+            <p class="contact-desc">If you want to talk to us about Shelvd, send a quick note. We kept this secondary and simple on purpose.</p>
+            <div class="contact-meta">Prefer direct email? <a href="mailto:hello@shelvd.app">hello@shelvd.app</a></div>
+        </div>
+        <form class="contact-form" id="contact-form">
+            <label class="sr-only" for="contact-message">What would you like to write to Shelvd?</label>
+            <div class="contact-stack">
+                <div class="contact-surface">
+                    <input
+                        type="text"
+                        id="contact-message"
+                        class="contact-input"
+                        placeholder="Questions, feedback, partnerships..."
+                        autocomplete="off"
+                    >
+                </div>
+                <button type="submit" class="contact-send">
+                    <span>Email us</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 6h16v12H4z"></path>
+                        <path d="M4 8l8 6 8-6"></path>
+                    </svg>
+                </button>
+            </div>
+            <p class="contact-help">We’ll open your email app with a draft to Shelvd.</p>
+        </form>
+    </div>
 </section>
 
 <!-- ── Footer ── -->
@@ -1831,6 +2151,23 @@
                 typeNextCharacter();
             }, startDelay);
         }
+    }
+
+    // ── Contact card: open email draft ──
+    const contactForm = document.getElementById('contact-form');
+    const contactMessage = document.getElementById('contact-message');
+    if (contactForm && contactMessage) {
+        contactForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const message = contactMessage.value.trim();
+            const subject = message ? 'Shelvd contact' : 'Shelvd inquiry';
+            const body = message
+                ? `${message}\n\nSent from the Shelvd landing page.`
+                : 'Hi Shelvd,';
+
+            window.location.href = `mailto:hello@shelvd.app?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        });
     }
 </script>
 
