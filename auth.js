@@ -325,22 +325,35 @@ const stepConfirm = document.getElementById('add-step-confirm');
 
 let currentImageBase64 = null;
 let currentImageBlob = null;
+const ADD_MODAL_OPEN_DELAY_MS = 280;
+let addModalOpenTimeout = null;
 
 function openAddModal() {
-    addModal.style.display = 'flex';
-    const stepChoose = document.getElementById('add-step-choose');
-    if (stepChoose) {
-        stepChoose.style.display = '';
-        stepCapture.style.display = 'none';
-    } else {
-        stepCapture.style.display = '';
-    }
-    stepAnalyzing.style.display = 'none';
-    stepConfirm.style.display = 'none';
+    if (addModalOpenTimeout || addModal.style.display === 'flex') return;
+
     addBtn.classList.add('active');
+
+    addModalOpenTimeout = setTimeout(() => {
+        addModal.style.display = 'flex';
+        const stepChoose = document.getElementById('add-step-choose');
+        if (stepChoose) {
+            stepChoose.style.display = '';
+            stepCapture.style.display = 'none';
+        } else {
+            stepCapture.style.display = '';
+        }
+        stepAnalyzing.style.display = 'none';
+        stepConfirm.style.display = 'none';
+        addModalOpenTimeout = null;
+    }, ADD_MODAL_OPEN_DELAY_MS);
 }
 
 function closeAddModal() {
+    if (addModalOpenTimeout) {
+        clearTimeout(addModalOpenTimeout);
+        addModalOpenTimeout = null;
+    }
+
     addModal.style.display = 'none';
     currentImageBase64 = null;
     currentImageBlob = null;
