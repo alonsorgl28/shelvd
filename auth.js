@@ -684,11 +684,23 @@ function clearAddStatus() {
 function openFilePicker(input, statusMessage = '') {
     if (!input) return;
     if (statusMessage) setAddStatus(statusMessage, 'info');
-    if (typeof input.showPicker === 'function') {
-        input.showPicker();
-        return;
+    try {
+        if (typeof input.showPicker === 'function') {
+            input.showPicker();
+            return;
+        }
+    } catch (err) {
+        console.warn('showPicker failed:', err);
     }
-    input.click();
+
+    requestAnimationFrame(() => {
+        try {
+            input.click();
+        } catch (err) {
+            console.warn('input.click() failed:', err);
+            setAddStatus('Could not open the photo picker on this device yet. Try tapping the field again or use the camera upload flow.', 'warning');
+        }
+    });
 }
 
 function fillEditionFields(source = {}) {

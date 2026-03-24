@@ -105,6 +105,33 @@ function normalizeIsbn(value: unknown, length?: 10 | 13): string | null {
   return null;
 }
 
+function isbn10To13(isbn10: string | null): string | null {
+  const normalized = normalizeIsbn(isbn10, 10);
+  if (!normalized) return null;
+  const core = `978${normalized.slice(0, 9)}`;
+  let sum = 0;
+  for (let index = 0; index < core.length; index += 1) {
+    const digit = parseInt(core[index], 10);
+    sum += digit * (index % 2 === 0 ? 1 : 3);
+  }
+  const checkDigit = (10 - (sum % 10)) % 10;
+  return `${core}${checkDigit}`;
+}
+
+function isbnVariants(value: string | null): string[] {
+  const normalized = normalizeIsbn(value);
+  if (!normalized) return [];
+  if (normalized.length === 13) return [normalized];
+  const isbn13 = isbn10To13(normalized);
+  return isbn13 ? [normalized, isbn13] : [normalized];
+}
+
+function isSameIsbn(left: string | null, right: string | null): boolean {
+  if (!left || !right) return false;
+  const leftVariants = new Set(isbnVariants(left));
+  return isbnVariants(right).some((variant) => leftVariants.has(variant));
+}
+
 function normalizeLanguage(value: unknown): string | null {
   const cleaned = cleanText(value);
   if (!cleaned) return null;
@@ -396,6 +423,70 @@ Rules:
   };
 }
 
+async function extractReadableCoverSignals(images: {
+  cover: ImageInput;
+  spine?: ImageInput | null;
+  back?: ImageInput | null;
+}): Promise<Partial<EditionSignals>> {
+  const content: Array<Record<string, unknown>> = [
+    {
+      type: "text",
+      text: "Read the obvious large text on this printed book cover. Focus on the main title, author, and publisher imprint only.",
+    },
+    {
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: images.cover.mediaType,
+        data: images.cover.data,
+      },
+    },
+  ];
+
+  if (images.spine) {
+    content.push({ type: "text", text: "Use the spine only as support for title, author, or publisher if it is clearer there." });
+    content.push({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: images.spine.mediaType,
+        data: images.spine.data,
+      },
+    });
+  }
+
+  content.push({
+    type: "text",
+    text:
+      `Return ONLY valid JSON:
+{
+  "title": string|null,
+  "author": string|null,
+  "publisher": string|null,
+  "published_year": number|null,
+  "confidence": number,
+  "notes": string|null
+}
+
+Rules:
+- Prefer null over guessing, but do extract the obvious front-cover title and author when they are clearly readable.
+- Ignore edition matching and online covers.
+- Ignore ISBN unless it is large and plainly readable.
+- publisher should only be filled if a publisher mark or imprint is visible.
+- confidence is 0..1.`,
+  });
+
+  const raw = await callAnthropicJson<Record<string, unknown>>(content, 220);
+  return {
+    title: cleanText(raw.title),
+    author: cleanText(raw.author),
+    publisher: cleanText(raw.publisher),
+    published_year: parseYear(raw.published_year),
+    confidence: clampConfidence(raw.confidence),
+    notes: cleanText(raw.notes),
+  };
+}
+
 function normalizeTitle(value: string | null): string {
   return (value || "")
     .toLowerCase()
@@ -636,12 +727,12 @@ async function fetchOpenLibraryByMetadata(signals: EditionSignals): Promise<Cand
 function dedupeCandidates(candidates: CandidateEdition[]): CandidateEdition[] {
   const deduped = new Map<string, CandidateEdition>();
   for (const candidate of candidates) {
-    const key =
-      candidate.isbn_13
-        ? `isbn13:${candidate.isbn_13}`
-        : candidate.isbn_10
-        ? `isbn10:${candidate.isbn_10}`
-        : candidate.source_id;
+    const canonicalIsbn = candidate.isbn_13 || isbn10To13(candidate.isbn_10);
+    const key = canonicalIsbn
+      ? `isbn:${canonicalIsbn}`
+      : candidate.isbn_10
+      ? `isbn10:${candidate.isbn_10}`
+      : candidate.source_id;
     const existing = deduped.get(key);
     if (!existing || candidateCompletenessScore(candidate) > candidateCompletenessScore(existing)) {
       deduped.set(key, candidate);
@@ -652,8 +743,8 @@ function dedupeCandidates(candidates: CandidateEdition[]): CandidateEdition[] {
 
 function scoreCandidate(candidate: CandidateEdition, signals: EditionSignals): number {
   let score = 0;
-  if (signals.isbn_13 && candidate.isbn_13 === signals.isbn_13) score += 30;
-  if (signals.isbn_10 && candidate.isbn_10 === signals.isbn_10) score += 24;
+  if (signals.isbn_13 && isSameIsbn(candidate.isbn_13 || candidate.isbn_10, signals.isbn_13)) score += 30;
+  if (signals.isbn_10 && isSameIsbn(candidate.isbn_13 || candidate.isbn_10, signals.isbn_10)) score += 24;
 
   const titleA = normalizeTitle(signals.title);
   const titleB = normalizeTitle(candidate.title);
@@ -895,6 +986,15 @@ Deno.serve(async (req) => {
           analysisIssue = analysisIssue || "Could not read the small-print metadata from these photos.";
         }
       }
+
+      if (!extracted.title || !extracted.author) {
+        try {
+          const readableSignals = await extractReadableCoverSignals(images);
+          extracted = mergeSignalsPreferExisting(extracted, readableSignals);
+        } catch (err) {
+          console.error("[analyze-book] readable cover fallback failed", err);
+        }
+      }
     }
 
     extracted = applyManualOverrides(extracted, manualOverrides);
@@ -917,8 +1017,8 @@ Deno.serve(async (req) => {
     const topCandidates = candidates.slice(0, 5);
     const exactIsbnCandidate = topCandidates
       .filter((candidate) =>
-      (extracted.isbn_13 && candidate.isbn_13 === extracted.isbn_13) ||
-      (extracted.isbn_10 && candidate.isbn_10 === extracted.isbn_10)
+      (extracted.isbn_13 && isSameIsbn(candidate.isbn_13 || candidate.isbn_10, extracted.isbn_13)) ||
+      (extracted.isbn_10 && isSameIsbn(candidate.isbn_13 || candidate.isbn_10, extracted.isbn_10))
       )
       .sort((a, b) => ((b.score || 0) + b.cover_quality) - ((a.score || 0) + a.cover_quality))[0] || null;
 
@@ -964,6 +1064,13 @@ Deno.serve(async (req) => {
 
     if (!topCandidates.length && (overrideIsbn13 || overrideIsbn10)) {
       lookupIssue = "Could not find metadata for that ISBN yet.";
+    }
+
+    if (
+      analysisIssue &&
+      (extracted.title || extracted.author || extracted.publisher || extracted.isbn_13 || extracted.isbn_10)
+    ) {
+      analysisIssue = null;
     }
 
     const metadataCandidate = exactIsbnCandidate || (matchStatus === "exact_match" ? matchedCandidate : null);

@@ -356,9 +356,9 @@
                 <div class="add-capture-text">Take or upload a photo of your book cover</div>
                 <div class="add-capture-sub">We'll identify the book automatically</div>
             </div>
-            <input type="file" id="add-cover-input" accept="image/*" capture="environment" style="display:none;">
-            <input type="file" id="add-spine-input" accept="image/*" capture="environment" style="display:none;">
-            <input type="file" id="add-back-input" accept="image/*" capture="environment" style="display:none;">
+            <input type="file" class="add-file-input" id="add-cover-input" accept="image/*" capture="environment">
+            <input type="file" class="add-file-input" id="add-spine-input" accept="image/*" capture="environment">
+            <input type="file" class="add-file-input" id="add-back-input" accept="image/*" capture="environment">
             <!-- Upload spinner overlay -->
             <div class="add-upload-spinner" id="add-upload-spinner" style="display:none;">
                 <div class="loading-spinner"></div>
@@ -542,9 +542,9 @@
     }
 }
 </script>
-<script type="module" src="auth.js?v=20260324j"></script>
+<script type="module" src="auth.js?v=20260324k"></script>
 <script src="analytics.js?v=20260324b"></script>
-<script type="module" src="app.js?v=20260324j"></script>
+<script type="module" src="app.js?v=20260324k"></script>
 <!-- PWA Install Banner -->
 <div class="pwa-install-banner" id="pwa-install-banner" style="display:none;">
     <div class="pwa-install-content">
@@ -586,7 +586,7 @@
 
 <script>
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js?v=20260324j', { updateViaCache: 'none' })
+    navigator.serviceWorker.register('/sw.js?v=20260324k', { updateViaCache: 'none' })
         .then((registration) => registration.update())
         .catch(() => {});
 }
