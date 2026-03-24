@@ -46,14 +46,12 @@
                 <div class="auth-divider">
                     <span>or</span>
                 </div>
+                <div class="auth-iso-header">
+                    <span class="auth-iso-header-title">Continue with email</span>
+                    <span class="auth-iso-header-badge">Magic link</span>
+                </div>
                 <form id="auth-magic-link-form" class="auth-iso-stack auth-iso-stack-email">
                     <label class="sr-only" for="auth-email">Email</label>
-                    <div class="auth-iso-item auth-iso-item-meta" style="--iso-index:3;">
-                        <div class="auth-iso-copy">
-                            <span class="auth-iso-title">Continue with email</span>
-                            <span class="auth-iso-caption">Magic link</span>
-                        </div>
-                    </div>
                     <div class="auth-iso-item auth-iso-item-field" style="--iso-index:2;">
                         <input type="email" id="auth-email" class="auth-input auth-input-iso" placeholder="you@email.com" required autocomplete="email">
                     </div>
@@ -72,13 +70,11 @@
             <!-- Step 3: Choose username (new users) -->
             <form id="auth-username-form" class="auth-step" style="display:none;">
                 <label class="sr-only" for="auth-username">Choose your username</label>
+                <div class="auth-iso-header auth-iso-header-claim">
+                    <span class="auth-iso-header-title">Claim your shelf</span>
+                    <span class="auth-iso-header-badge">Username</span>
+                </div>
                 <div class="auth-iso-stack auth-iso-stack-username">
-                    <div class="auth-iso-item auth-iso-item-meta auth-iso-item-meta-claim" style="--iso-index:4;">
-                        <div class="auth-iso-copy auth-iso-copy-claim">
-                            <span class="auth-iso-title">Claim your shelf</span>
-                            <span class="auth-iso-caption">Pick your handle</span>
-                        </div>
-                    </div>
                     <div class="auth-iso-item auth-iso-item-preview" style="--iso-index:3;">
                         <div class="auth-username-preview auth-username-preview-iso">shelvd.app/<strong id="username-preview-text">@</strong></div>
                     </div>
