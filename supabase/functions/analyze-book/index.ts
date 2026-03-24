@@ -150,6 +150,13 @@ function normalizeEditionSignals(raw: Record<string, unknown>): EditionSignals {
   return normalized;
 }
 
+function emptyEditionSignals(): EditionSignals {
+  return normalizeEditionSignals({
+    confidence: 0,
+    missing_fields: ["title", "author", "isbn_13", "publisher"],
+  });
+}
+
 function mergeSignalNotes(...notes: Array<string | null | undefined>) {
   const merged = notes
     .map((entry) => cleanText(entry))
@@ -451,6 +458,18 @@ async function fetchJson(url: string): Promise<unknown> {
   return await response.json();
 }
 
+async function safeCandidateFetch(
+  label: string,
+  fetcher: () => Promise<CandidateEdition[]>,
+): Promise<CandidateEdition[]> {
+  try {
+    return await fetcher();
+  } catch (err) {
+    console.error(`[analyze-book] ${label} failed`, err);
+    return [];
+  }
+}
+
 function googleIdentifiersToIsbns(identifiers: Array<{ type?: string; identifier?: string }> | undefined) {
   const isbn13 = identifiers?.find((entry) => entry.type === "ISBN_13")?.identifier;
   const isbn10 = identifiers?.find((entry) => entry.type === "ISBN_10")?.identifier;
@@ -577,10 +596,11 @@ async function fetchGoogleBooksByIsbn(isbn: string): Promise<CandidateEdition[]>
 }
 
 async function fetchGoogleBooksByMetadata(signals: EditionSignals): Promise<CandidateEdition[]> {
-  if (!signals.title) return [];
-  const queryParts = [`intitle:${signals.title}`];
+  const queryParts: string[] = [];
+  if (signals.title) queryParts.push(`intitle:${signals.title}`);
   if (signals.author) queryParts.push(`inauthor:${signals.author}`);
   if (signals.publisher) queryParts.push(`inpublisher:${signals.publisher}`);
+  if (!queryParts.length) return [];
   const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(queryParts.join(" "))}&maxResults=5`;
   const data = await fetchJson(url) as Record<string, unknown>;
   const items = Array.isArray(data.items) ? data.items as Array<Record<string, unknown>> : [];
@@ -598,13 +618,13 @@ async function fetchOpenLibraryByIsbn(isbn: string): Promise<CandidateEdition[]>
 }
 
 async function fetchOpenLibraryByMetadata(signals: EditionSignals): Promise<CandidateEdition[]> {
-  if (!signals.title) return [];
   const params = new URLSearchParams({
-    title: signals.title,
     limit: "5",
     fields: "key,title,author_name,publisher,first_publish_year,isbn,cover_i,language",
   });
+  if (signals.title) params.set("title", signals.title);
   if (signals.author) params.set("author", signals.author);
+  if (!signals.title && !signals.author) return [];
   const url = `https://openlibrary.org/search.json?${params.toString()}`;
   const data = await fetchJson(url) as Record<string, unknown>;
   const docs = Array.isArray(data.docs) ? data.docs as Array<Record<string, unknown>> : [];
@@ -826,36 +846,69 @@ Deno.serve(async (req) => {
     const coverImage = cleanText(body.cover_image) || cleanText(body.image);
     const spineImage = cleanText(body.spine_image);
     const backImage = cleanText(body.back_image);
+    const manualOverrides = body.manual_overrides && typeof body.manual_overrides === "object"
+      ? body.manual_overrides as Record<string, unknown>
+      : {};
+    const overrideIsbn13 = normalizeIsbn(manualOverrides.isbn_13, 13);
+    const overrideIsbn10 = normalizeIsbn(manualOverrides.isbn_10, 10);
+    const lookupOnly = Boolean(body.lookup_only) && Boolean(overrideIsbn13 || overrideIsbn10);
 
-    if (!coverImage) {
+    if (!coverImage && !lookupOnly) {
       return jsonResponse({ error: "No cover image provided" }, 400);
     }
 
-    const images = {
-      cover: { data: coverImage, mediaType: "image/jpeg" },
-      spine: spineImage ? { data: spineImage, mediaType: "image/jpeg" } : null,
-      back: backImage ? { data: backImage, mediaType: "image/jpeg" } : null,
-    };
+    const images = coverImage
+      ? {
+        cover: { data: coverImage, mediaType: "image/jpeg" },
+        spine: spineImage ? { data: spineImage, mediaType: "image/jpeg" } : null,
+        back: backImage ? { data: backImage, mediaType: "image/jpeg" } : null,
+      }
+      : null;
 
-    let extracted = await extractEditionSignals(images);
-    if (
-      extracted.missing_fields.includes("title") ||
-      extracted.missing_fields.includes("author") ||
-      extracted.missing_fields.includes("publisher") ||
-      extracted.missing_fields.includes("isbn_13") ||
-      !extracted.published_year
-    ) {
-      const finePrintSignals = await extractFinePrintSignals(images);
-      extracted = mergeSignalsPreferExisting(extracted, finePrintSignals);
+    let extracted = emptyEditionSignals();
+    let analysisIssue: string | null = null;
+    let lookupIssue: string | null = null;
+
+    if (lookupOnly) {
+      extracted = applyManualOverrides(extracted, manualOverrides);
+    } else if (images) {
+      try {
+        extracted = await extractEditionSignals(images);
+      } catch (err) {
+        console.error("[analyze-book] cover analysis failed", err);
+        analysisIssue = "Could not read the cover metadata from these photos.";
+        extracted = emptyEditionSignals();
+      }
+
+      if (
+        extracted.missing_fields.includes("title") ||
+        extracted.missing_fields.includes("author") ||
+        extracted.missing_fields.includes("publisher") ||
+        extracted.missing_fields.includes("isbn_13") ||
+        !extracted.published_year
+      ) {
+        try {
+          const finePrintSignals = await extractFinePrintSignals(images);
+          extracted = mergeSignalsPreferExisting(extracted, finePrintSignals);
+        } catch (err) {
+          console.error("[analyze-book] fine print analysis failed", err);
+          analysisIssue = analysisIssue || "Could not read the small-print metadata from these photos.";
+        }
+      }
     }
-    extracted = applyManualOverrides(extracted, body.manual_overrides);
+
+    extracted = applyManualOverrides(extracted, manualOverrides);
     const candidates = dedupeCandidates([
-      ...(extracted.isbn_13 ? await fetchGoogleBooksByIsbn(extracted.isbn_13) : []),
-      ...(extracted.isbn_10 ? await fetchGoogleBooksByIsbn(extracted.isbn_10) : []),
-      ...(extracted.isbn_13 ? await fetchOpenLibraryByIsbn(extracted.isbn_13) : []),
-      ...(extracted.isbn_10 ? await fetchOpenLibraryByIsbn(extracted.isbn_10) : []),
-      ...((extracted.title || extracted.author) ? await fetchGoogleBooksByMetadata(extracted) : []),
-      ...(extracted.title ? await fetchOpenLibraryByMetadata(extracted) : []),
+      ...(extracted.isbn_13 ? await safeCandidateFetch("google-isbn13", () => fetchGoogleBooksByIsbn(extracted.isbn_13!)) : []),
+      ...(extracted.isbn_10 ? await safeCandidateFetch("google-isbn10", () => fetchGoogleBooksByIsbn(extracted.isbn_10!)) : []),
+      ...(extracted.isbn_13 ? await safeCandidateFetch("openlibrary-isbn13", () => fetchOpenLibraryByIsbn(extracted.isbn_13!)) : []),
+      ...(extracted.isbn_10 ? await safeCandidateFetch("openlibrary-isbn10", () => fetchOpenLibraryByIsbn(extracted.isbn_10!)) : []),
+      ...((extracted.title || extracted.author || extracted.publisher)
+        ? await safeCandidateFetch("google-metadata", () => fetchGoogleBooksByMetadata(extracted))
+        : []),
+      ...((extracted.title || extracted.author)
+        ? await safeCandidateFetch("openlibrary-metadata", () => fetchOpenLibraryByMetadata(extracted))
+        : []),
     ]).map((candidate) => ({
       ...candidate,
       score: scoreCandidate(candidate, extracted),
@@ -889,7 +942,7 @@ Deno.serve(async (req) => {
         confidence: 0.82,
         rationale: "Exact ISBN found, but there is no verifiable online cover for this edition.",
       };
-    } else if (topCandidates.length) {
+    } else if (topCandidates.length && images && !lookupOnly) {
       decision = await compareCandidateCovers(images, topCandidates);
       if (decision?.selected_source_id) {
         matchedCandidate = topCandidates.find((candidate) => candidate.source_id === decision?.selected_source_id) || null;
@@ -903,6 +956,10 @@ Deno.serve(async (req) => {
       matchStatus = "manual_required";
     }
 
+    if (!topCandidates.length && (overrideIsbn13 || overrideIsbn10)) {
+      lookupIssue = "Could not find metadata for that ISBN yet.";
+    }
+
     const metadataCandidate = exactIsbnCandidate || (matchStatus === "exact_match" ? matchedCandidate : null);
     const verifiedCandidate = matchStatus === "exact_match" ? matchedCandidate : null;
     const merged = mergeSignalsWithCandidate(extracted, metadataCandidate);
@@ -913,7 +970,9 @@ Deno.serve(async (req) => {
       matched_cover_url: verifiedCandidate?.cover_url || null,
       recommended_candidate_source_id: verifiedCandidate?.source_id || null,
       candidate_editions: topCandidates,
-      rationale: decision?.rationale || extracted.notes || null,
+      rationale: decision?.rationale || lookupIssue || analysisIssue || extracted.notes || null,
+      analysis_issue: analysisIssue,
+      lookup_issue: lookupIssue,
     });
   } catch (err) {
     return jsonResponse({ error: err instanceof Error ? err.message : String(err) }, 500);

@@ -1,16 +1,16 @@
-const CACHE_NAME = 'shelvd-v18';
+const CACHE_NAME = 'shelvd-v19';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
     '/style.css',
     '/auth.js',
-    '/auth.js?v=20260324g',
+    '/auth.js?v=20260324h',
     '/app.js',
-    '/app.js?v=20260324g',
+    '/app.js?v=20260324h',
     '/pwa-install.js',
     '/pwa-install.js?v=20260324b',
     '/import-export.js',
-    '/import-export.js?v=20260324g',
+    '/import-export.js?v=20260324h',
     '/analytics.js',
     '/analytics.js?v=20260324b',
     '/books.json',
@@ -25,6 +25,7 @@ const CDN_ASSETS = [
     'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js',
     'https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js',
     'https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js',
+    'https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js',
     'https://unpkg.com/three@0.169.0/build/three.module.js',
     'https://unpkg.com/three@0.169.0/examples/jsm/controls/OrbitControls.js'
 ];

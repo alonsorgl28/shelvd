@@ -421,6 +421,7 @@
                     </div>
                 </div>
             </div>
+            <div class="add-status-message" id="add-status-message" hidden></div>
             <div class="add-rescue-actions" id="add-rescue-actions">
                 <button type="button" class="add-secondary-btn" id="add-spine-photo-btn">Add spine photo</button>
                 <button type="button" class="add-secondary-btn" id="add-back-photo-btn">Add barcode / back cover</button>
@@ -553,9 +554,9 @@
     }
 }
 </script>
-<script type="module" src="auth.js?v=20260324g"></script>
+<script type="module" src="auth.js?v=20260324h"></script>
 <script src="analytics.js?v=20260324b"></script>
-<script type="module" src="app.js?v=20260324g"></script>
+<script type="module" src="app.js?v=20260324h"></script>
 <!-- PWA Install Banner -->
 <div class="pwa-install-banner" id="pwa-install-banner" style="display:none;">
     <div class="pwa-install-content">
@@ -597,12 +598,12 @@
 
 <script>
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js?v=20260324g', { updateViaCache: 'none' })
+    navigator.serviceWorker.register('/sw.js?v=20260324h', { updateViaCache: 'none' })
         .then((registration) => registration.update())
         .catch(() => {});
 }
 </script>
 <script type="module" src="pwa-install.js?v=20260324b"></script>
-<script src="import-export.js?v=20260324g" defer></script>
+<script src="import-export.js?v=20260324h" defer></script>
 </body>
 </html>

@@ -463,6 +463,7 @@ const addAnalyzingText = document.getElementById('add-analyzing-text');
 const addCandidateSection = document.getElementById('add-candidate-section');
 const addCandidateList = document.getElementById('add-candidate-list');
 const addRescueActions = document.getElementById('add-rescue-actions');
+const addStatusMessage = document.getElementById('add-status-message');
 const evidenceCover = document.getElementById('add-evidence-cover');
 const evidenceSpine = document.getElementById('add-evidence-spine');
 const evidenceBack = document.getElementById('add-evidence-back');
@@ -478,6 +479,7 @@ let addModalCloseTimeout = null;
 let addModalHaloTimeout = null;
 let addLaunchTrigger = addBtn;
 let isbnRefreshTimeout = null;
+let barcodeLibraryPromise = null;
 
 const addFieldRefs = {
     title: document.getElementById('add-field-title'),
@@ -512,7 +514,9 @@ function createEmptyAnalysis(matchStatus = 'manual_required') {
         recommended_candidate_source_id: null,
         candidate_editions: [],
         missing_fields: [],
-        rationale: null
+        rationale: null,
+        analysis_issue: null,
+        lookup_issue: null
     };
 }
 
@@ -523,7 +527,8 @@ const addState = {
     previewUrls: { cover: null, spine: null, back: null },
     analysis: createEmptyAnalysis(),
     selectedCandidateSourceId: null,
-    advancedOpen: false
+    advancedOpen: false,
+    status: { message: '', tone: 'info' }
 };
 
 function clearAddModalTimers() {
@@ -613,6 +618,7 @@ function resetAddState() {
     if (addPreviewConfirm) {
         addPreviewConfirm.innerHTML = '<div class="add-evidence-preview">No front cover yet</div>';
     }
+    clearAddStatus();
     renderEditionSummary();
 }
 
@@ -648,6 +654,31 @@ function setFieldValue(field, value) {
     const input = addFieldRefs[field];
     if (!input) return;
     input.value = value == null ? '' : String(value);
+}
+
+function renderAddStatus() {
+    if (!addStatusMessage) return;
+    const message = addState.status?.message || '';
+    if (!message) {
+        addStatusMessage.hidden = true;
+        addStatusMessage.textContent = '';
+        addStatusMessage.className = 'add-status-message';
+        return;
+    }
+
+    addStatusMessage.hidden = false;
+    addStatusMessage.textContent = message;
+    addStatusMessage.className = `add-status-message is-${addState.status?.tone || 'info'}`;
+}
+
+function setAddStatus(message, tone = 'info') {
+    addState.status = { message: message || '', tone };
+    renderAddStatus();
+}
+
+function clearAddStatus() {
+    addState.status = { message: '', tone: 'info' };
+    renderAddStatus();
 }
 
 function fillEditionFields(source = {}) {
@@ -847,7 +878,7 @@ function syncConfirmState() {
     const effectiveStatus = addState.analysis.match_status;
     const ui = getMatchUi(effectiveStatus);
     const edition = readEditionFields();
-    const needsMoreEvidence = !edition.publisher || !(edition.isbn_13 || edition.isbn_10);
+    const needsMoreEvidence = !edition.title || !edition.author || !edition.publisher || !(edition.isbn_13 || edition.isbn_10);
 
     if (addMatchBadge) {
         addMatchBadge.textContent = selectedCandidate && effectiveStatus !== 'exact_match'
@@ -883,6 +914,7 @@ function renderConfirmStep() {
     renderMatchedCoverPreview();
     renderCandidateListUI();
     syncAdvancedFields();
+    renderAddStatus();
     syncConfirmState();
 }
 
@@ -1036,6 +1068,192 @@ async function attachEvidenceFile(kind, file) {
     addState.previewUrls[kind] = URL.createObjectURL(normalizedFile);
     addState.base64[kind] = await resizeAndEncode(normalizedFile, kind === 'cover' ? 1600 : 1400);
     renderEvidencePreviews();
+    return normalizedFile;
+}
+
+function buildIsbnOverride(isbn) {
+    const normalized = normalizeIsbn(isbn);
+    return {
+        isbn_13: normalized && normalized.length === 13 ? normalized : null,
+        isbn_10: normalized && normalized.length === 10 ? normalized : null
+    };
+}
+
+function applyAnalysisResult(data, currentFields, fallbackStatus = '') {
+    addState.analysis = normalizeAnalysisResponse(data);
+    addState.selectedCandidateSourceId = addState.analysis.match_status === 'exact_match'
+        ? addState.analysis.recommended_candidate_source_id
+        : null;
+    addState.advancedOpen = addState.mode === 'manual'
+        || addState.analysis.match_status !== 'exact_match'
+        || addState.analysis.missing_fields.length > 0
+        || !addState.analysis.publisher
+        || !(addState.analysis.isbn_13 || addState.analysis.isbn_10);
+
+    const mergedFields = mergeEditionData(addState.analysis, currentFields);
+    fillEditionFields(mergedFields);
+
+    if (addState.analysis.lookup_issue) {
+        setAddStatus(addState.analysis.lookup_issue, 'warning');
+    } else if (addState.analysis.analysis_issue) {
+        setAddStatus(addState.analysis.analysis_issue, 'warning');
+    } else if (!mergedFields.title && !mergedFields.author) {
+        setAddStatus(
+            fallbackStatus || 'We could not read the cover yet. Try the spine, the barcode, or type the ISBN manually.',
+            'warning'
+        );
+    } else if ((mergedFields.isbn_13 || mergedFields.isbn_10) && mergedFields.title && mergedFields.author) {
+        setAddStatus('Metadata updated. Review the edition details before saving.', 'success');
+    } else {
+        setAddStatus('Cover read partially. Scan or type the ISBN to complete the edition.', 'info');
+    }
+}
+
+async function invokeEditionAnalysis(body) {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session?.access_token) {
+        throw new Error('Session expired');
+    }
+
+    const { data, error } = await sb.functions.invoke('analyze-book', {
+        headers: {
+            Authorization: `Bearer ${session.access_token}`
+        },
+        body
+    });
+
+    if (error) {
+        throw new Error(error.message || 'Analysis failed');
+    }
+
+    return data;
+}
+
+function loadBarcodeScanner() {
+    if (window.Quagga) return Promise.resolve(window.Quagga);
+    if (barcodeLibraryPromise) return barcodeLibraryPromise;
+
+    barcodeLibraryPromise = new Promise((resolve, reject) => {
+        const existing = document.querySelector('script[data-shelvd-quagga]');
+        if (existing) {
+            existing.addEventListener('load', () => resolve(window.Quagga));
+            existing.addEventListener('error', () => reject(new Error('Could not load the barcode scanner')));
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js';
+        script.async = true;
+        script.dataset.shelvdQuagga = 'true';
+        script.onload = () => window.Quagga ? resolve(window.Quagga) : reject(new Error('Barcode scanner unavailable'));
+        script.onerror = () => reject(new Error('Could not load the barcode scanner'));
+        document.head.appendChild(script);
+    });
+
+    return barcodeLibraryPromise;
+}
+
+async function detectIsbnWithBarcodeDetector(file) {
+    if (!('BarcodeDetector' in window) || !window.createImageBitmap) return null;
+
+    const detector = new window.BarcodeDetector({
+        formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e']
+    });
+    const bitmap = await createImageBitmap(file);
+
+    try {
+        const results = await detector.detect(bitmap);
+        for (const result of results || []) {
+            const isbn = normalizeIsbn(result?.rawValue);
+            if (isbn && (isbn.startsWith('978') || isbn.startsWith('979') || isbn.length === 10)) {
+                return isbn;
+            }
+        }
+        return null;
+    } finally {
+        if (typeof bitmap.close === 'function') bitmap.close();
+    }
+}
+
+async function detectIsbnWithQuagga(file) {
+    const quagga = await loadBarcodeScanner();
+    const objectUrl = URL.createObjectURL(file);
+
+    try {
+        const result = await new Promise((resolve) => {
+            quagga.decodeSingle({
+                src: objectUrl,
+                numOfWorkers: 0,
+                locate: true,
+                inputStream: {
+                    size: 1200
+                },
+                decoder: {
+                    readers: ['ean_reader', 'ean_8_reader', 'upc_reader', 'upc_e_reader']
+                }
+            }, (decoded) => resolve(decoded || null));
+        });
+
+        const rawCode = result?.codeResult?.code || null;
+        const isbn = normalizeIsbn(rawCode);
+        if (isbn && (isbn.startsWith('978') || isbn.startsWith('979') || isbn.length === 10)) {
+            return isbn;
+        }
+        return null;
+    } finally {
+        URL.revokeObjectURL(objectUrl);
+    }
+}
+
+async function detectIsbnFromFile(file) {
+    try {
+        const nativeIsbn = await detectIsbnWithBarcodeDetector(file);
+        if (nativeIsbn) return nativeIsbn;
+    } catch (err) {
+        console.warn('BarcodeDetector failed:', err);
+    }
+
+    try {
+        return await detectIsbnWithQuagga(file);
+    } catch (err) {
+        console.warn('Quagga decode failed:', err);
+        return null;
+    }
+}
+
+async function lookupEditionByIsbn(isbn, message = 'Checking ISBN details') {
+    const normalized = normalizeIsbn(isbn);
+    if (!normalized) return false;
+
+    showAnalyzingState(message);
+    const currentFields = readEditionFields();
+
+    try {
+        const data = await invokeEditionAnalysis({
+            cover_image: addState.base64.cover,
+            manual_overrides: {
+                ...buildManualOverrides(),
+                ...buildIsbnOverride(normalized)
+            },
+            lookup_only: true
+        });
+
+        applyAnalysisResult(
+            data,
+            {
+                ...currentFields,
+                ...buildIsbnOverride(normalized)
+            },
+            'We found the ISBN but could not complete the metadata yet.'
+        );
+        renderConfirmStep();
+        return Boolean(readEditionFields().title || readEditionFields().author || readEditionFields().publisher);
+    } catch (err) {
+        console.error('ISBN lookup error:', err);
+        setAddStatus('Could not look up metadata from that ISBN yet. You can keep editing the fields manually.', 'error');
+        renderConfirmStep();
+        return false;
+    }
 }
 
 function queueIsbnRefresh() {
@@ -1052,7 +1270,7 @@ function queueIsbnRefresh() {
     if (!typedIsbn || (typedIsbn.length !== 10 && typedIsbn.length !== 13) || typedIsbn === analyzedIsbn) return;
 
     isbnRefreshTimeout = setTimeout(() => {
-        analyzeEditionEvidence('Checking ISBN and edition details');
+        lookupEditionByIsbn(typedIsbn, 'Checking ISBN details');
         isbnRefreshTimeout = null;
     }, 250);
 }
@@ -1066,40 +1284,19 @@ function showAnalyzingState(message) {
 async function analyzeEditionEvidence(message = 'Checking the exact edition') {
     if (!addState.base64.cover) return;
 
+    clearAddStatus();
     showAnalyzingState(message);
     const currentFields = readEditionFields();
 
     try {
-        const { data: { session } } = await sb.auth.getSession();
-        if (!session?.access_token) {
-            throw new Error('Session expired');
-        }
-
-        const { data, error } = await sb.functions.invoke('analyze-book', {
-            headers: {
-                Authorization: `Bearer ${session.access_token}`
-            },
-            body: {
-                cover_image: addState.base64.cover,
-                spine_image: addState.base64.spine,
-                back_image: addState.base64.back,
-                manual_overrides: buildManualOverrides()
-            }
+        const data = await invokeEditionAnalysis({
+            cover_image: addState.base64.cover,
+            spine_image: addState.base64.spine,
+            back_image: addState.base64.back,
+            manual_overrides: buildManualOverrides()
         });
-        if (error) {
-            throw new Error(error.message || 'Analysis failed');
-        }
 
-        addState.analysis = normalizeAnalysisResponse(data);
-        addState.selectedCandidateSourceId = addState.analysis.match_status === 'exact_match'
-            ? addState.analysis.recommended_candidate_source_id
-            : null;
-        addState.advancedOpen = addState.mode === 'manual'
-            || addState.analysis.match_status !== 'exact_match'
-            || addState.analysis.missing_fields.length > 0
-            || !addState.analysis.publisher
-            || !(addState.analysis.isbn_13 || addState.analysis.isbn_10);
-        fillEditionFields(mergeEditionData(addState.analysis, currentFields));
+        applyAnalysisResult(data, currentFields);
     } catch (err) {
         console.error('Analyze error:', err);
         addState.analysis = createEmptyAnalysis('manual_required');
@@ -1107,6 +1304,7 @@ async function analyzeEditionEvidence(message = 'Checking the exact edition') {
         addState.selectedCandidateSourceId = null;
         addState.advancedOpen = true;
         if (!addFieldRefs.pages.value) addFieldRefs.pages.value = '250';
+        setAddStatus('Could not analyze this photo yet. Try another cover photo or type/scan the ISBN.', 'error');
     }
 
     renderConfirmStep();
@@ -1120,14 +1318,22 @@ async function handleEvidenceInput(kind, event, options = {}) {
     if (options.showSpinner && addUploadSpinner) addUploadSpinner.style.display = 'flex';
 
     try {
-        await attachEvidenceFile(kind, file);
+        const normalizedFile = await attachEvidenceFile(kind, file);
         addState.mode = 'photo';
         if (kind === 'cover') {
             await analyzeEditionEvidence('Checking the front cover');
         } else if (kind === 'spine') {
             await analyzeEditionEvidence('Checking the spine against online editions');
         } else {
-            await analyzeEditionEvidence('Checking the barcode and back cover');
+            const detectedIsbn = await detectIsbnFromFile(normalizedFile);
+            if (detectedIsbn) {
+                setFieldValue('isbn_13', detectedIsbn);
+                setAddStatus('ISBN detected from the barcode. Checking edition details.', 'success');
+                await lookupEditionByIsbn(detectedIsbn, 'Reading the barcode and checking ISBN details');
+            } else {
+                setAddStatus('We could not read a barcode from that photo. Try centering the ISBN/barcode or type it manually.', 'warning');
+                await analyzeEditionEvidence('Checking the barcode and back cover');
+            }
         }
     } finally {
         if (options.showSpinner && addUploadSpinner) addUploadSpinner.style.display = 'none';
