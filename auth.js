@@ -654,7 +654,7 @@ function fillEditionFields(source = {}) {
     setFieldValue('pages', source.pages || 250);
     setFieldValue('publisher', source.publisher || '');
     setFieldValue('published_year', source.published_year || '');
-    setFieldValue('isbn_13', source.isbn_13 || '');
+    setFieldValue('isbn_13', source.isbn_13 || source.isbn_10 || '');
     setFieldValue('isbn_10', source.isbn_10 || '');
     setFieldValue('edition', source.edition || '');
     setFieldValue('language', source.language || '');
@@ -663,21 +663,26 @@ function fillEditionFields(source = {}) {
 }
 
 function readEditionFields() {
-    const pages = parseInt(addFieldRefs.pages.value, 10);
-    const publishedYear = parseInt(addFieldRefs.published_year.value, 10);
+    const pages = parseInt(addFieldRefs.pages?.value || '', 10);
+    const publishedYear = parseInt(addFieldRefs.published_year?.value || '', 10);
+    const normalizedIsbn = normalizeIsbn(addFieldRefs.isbn_13?.value || '');
+    const derivedIsbn13 = normalizedIsbn.length === 13 ? normalizedIsbn : null;
+    const derivedIsbn10 = normalizedIsbn.length === 10
+        ? normalizedIsbn
+        : normalizeIsbn(addFieldRefs.isbn_10?.value || '') || null;
 
     return {
-        title: addFieldRefs.title.value.trim(),
-        author: addFieldRefs.author.value.trim(),
+        title: addFieldRefs.title?.value.trim() || '',
+        author: addFieldRefs.author?.value.trim() || '',
         pages: Number.isFinite(pages) && pages > 0 ? pages : 250,
-        publisher: addFieldRefs.publisher.value.trim() || null,
+        publisher: addFieldRefs.publisher?.value.trim() || null,
         published_year: Number.isFinite(publishedYear) && publishedYear > 0 ? publishedYear : null,
-        isbn_13: normalizeIsbn(addFieldRefs.isbn_13.value) || null,
-        isbn_10: normalizeIsbn(addFieldRefs.isbn_10.value) || null,
-        edition: addFieldRefs.edition.value.trim() || null,
-        language: addFieldRefs.language.value.trim() || null,
-        translator: addFieldRefs.translator.value.trim() || null,
-        format: addFieldRefs.format.value.trim() || null
+        isbn_13: derivedIsbn13,
+        isbn_10: derivedIsbn10,
+        edition: addFieldRefs.edition?.value.trim() || null,
+        language: addFieldRefs.language?.value.trim() || null,
+        translator: addFieldRefs.translator?.value.trim() || null,
+        format: addFieldRefs.format?.value.trim() || null
     };
 }
 
@@ -827,6 +832,9 @@ function syncConfirmState() {
     const selectedCandidate = getSelectedCandidate();
     const effectiveStatus = addState.analysis.match_status;
     const ui = getMatchUi(effectiveStatus);
+    const edition = readEditionFields();
+    const needsMoreEvidence = !edition.publisher || !(edition.isbn_13 || edition.isbn_10);
+
     if (addMatchBadge) {
         addMatchBadge.textContent = selectedCandidate && effectiveStatus !== 'exact_match'
             ? 'Confirmed edition'
@@ -841,18 +849,10 @@ function syncConfirmState() {
                 : 'Shelvd has not verified an exact online edition yet. It will keep your own photo unless you explicitly pick an online edition.';
     }
     if (addRescueActions) {
-        addRescueActions.style.display = addState.mode === 'photo' && effectiveStatus !== 'exact_match' ? '' : 'none';
+        addRescueActions.style.display = addState.mode === 'photo' && needsMoreEvidence ? '' : 'none';
     }
     if (addConfirmBtn) {
-        if (effectiveStatus === 'exact_match') {
-            addConfirmBtn.textContent = 'Add exact edition';
-        } else if (selectedCandidate) {
-            addConfirmBtn.textContent = 'Use selected edition';
-        } else if (addState.mode === 'manual') {
-            addConfirmBtn.textContent = 'Add manually';
-        } else {
-            addConfirmBtn.textContent = 'Save with my photo';
-        }
+        addConfirmBtn.textContent = 'Add to shelf';
     }
     renderEditionSummary();
 }
