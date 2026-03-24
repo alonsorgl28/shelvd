@@ -1127,6 +1127,10 @@
         }
 
         .contact-iso-form {
+            display: block;
+        }
+
+        .contact-iso .form {
             display: inline-block;
         }
 
@@ -1138,7 +1142,7 @@
         }
 
         .contact-iso .wrapper li,
-        .contact-iso .contact-submit {
+        .contact-iso .wrapper button {
             position: relative;
             list-style: none;
             width: 200px;
@@ -1148,7 +1152,7 @@
         }
 
         .contact-iso .input,
-        .contact-iso .contact-submit {
+        .contact-iso .wrapper button {
             width: 100%;
             height: 40px;
             position: relative;
@@ -1157,16 +1161,14 @@
             font-family: inherit;
         }
 
-        .contact-iso .contact-submit {
+        .contact-iso .wrapper button {
             background: #7d5942;
             border: none;
             cursor: pointer;
-            display: block;
-            margin-top: 34px;
         }
 
         .contact-iso .wrapper li::before,
-        .contact-iso .contact-submit::before {
+        .contact-iso .wrapper button::before {
             position: absolute;
             content: '';
             top: 0;
@@ -1179,7 +1181,7 @@
         }
 
         .contact-iso .wrapper li::after,
-        .contact-iso .contact-submit::after {
+        .contact-iso .wrapper button::after {
             position: absolute;
             content: '';
             width: 200px;
@@ -1256,22 +1258,22 @@
         }
 
         .contact-iso .wrapper li:hover,
-        .contact-iso .contact-submit:hover {
+        .contact-iso .wrapper button:hover {
             transform: translateX(-20px);
         }
 
-        .contact-iso .contact-submit::before,
-        .contact-iso .contact-submit::after {
+        .contact-iso .wrapper button::before,
+        .contact-iso .wrapper button::after {
             background: #7d5942;
         }
 
-        .contact-iso .contact-submit:hover,
-        .contact-iso .contact-submit:hover::before,
-        .contact-iso .contact-submit:hover::after {
+        .contact-iso .wrapper button:hover,
+        .contact-iso .wrapper button:hover::before,
+        .contact-iso .wrapper button:hover::after {
             background: #5f4330;
         }
 
-        .contact-iso .contact-submit:active {
+        .contact-iso .wrapper button:active {
             transform: translateX(0px);
         }
 
@@ -1675,22 +1677,22 @@
         <div class="contact-meta">Prefer direct email? <a href="mailto:hello@shelvd.app">hello@shelvd.app</a></div>
     </div>
     <div class="contact-iso" data-reveal>
-        <form class="contact-iso-form" id="contact-form">
+        <form class="form contact-iso-form" id="contact-form">
             <label class="sr-only" for="contact-name">Your name</label>
             <label class="sr-only" for="contact-phone">Phone number</label>
             <label class="sr-only" for="contact-email">Your email</label>
             <ul class="wrapper">
-                <li style="--i: 3;">
+                <li style="--i:4;">
                     <input type="text" id="contact-name" class="input" placeholder="Name" autocomplete="name">
                 </li>
-                <li style="--i: 2;">
+                <li style="--i:3;">
                     <input type="tel" id="contact-phone" class="input" placeholder="Phone number" autocomplete="tel">
                 </li>
-                <li style="--i: 1;">
+                <li style="--i:2;">
                     <input type="email" id="contact-email" class="input" placeholder="E-mail" autocomplete="email">
                 </li>
+                <button type="submit" style="--i:1;">Submit</button>
             </ul>
-            <button type="submit" class="contact-submit">Submit</button>
             <p class="contact-help">We’ll open your email app with a draft to Shelvd.</p>
         </form>
     </div>
