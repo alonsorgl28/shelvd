@@ -295,47 +295,21 @@ document.getElementById('share-btn').addEventListener('click', function () {
         document.body.removeChild(ta);
     });
 
-    // Stamp animation
+    // Subtle acknowledgement pulse
     btn.classList.add('stamping');
-
-    // Burst particles
-    const container = document.getElementById('share-particles');
-    container.innerHTML = '';
-    const colors = ['rgba(255,228,196,0.8)', 'rgba(255,214,165,0.7)', 'rgba(200,184,160,0.6)'];
-    for (let i = 0; i < 10; i++) {
-        const p = document.createElement('div');
-        p.className = 'share-particle';
-        const angle = (i / 10) * Math.PI * 2;
-        const dist = 20 + Math.random() * 25;
-        const tx = Math.cos(angle) * dist;
-        const ty = Math.sin(angle) * dist;
-        p.style.background = colors[i % colors.length];
-        p.style.animation = `particleBurst 0.6s ease-out forwards`;
-        p.style.setProperty('--tx', tx + 'px');
-        p.style.setProperty('--ty', ty + 'px');
-        p.style.left = '0px';
-        p.style.top = '0px';
-        container.appendChild(p);
-        // Set final position via inline keyframe
-        p.animate([
-            { transform: 'translate(0,0) scale(1)', opacity: 1 },
-            { transform: `translate(${tx}px, ${ty}px) scale(0.3)`, opacity: 0 }
-        ], { duration: 600, easing: 'ease-out', fill: 'forwards' });
-    }
 
     // Switch to check icon
     setTimeout(() => {
         btn.classList.remove('stamping');
         btn.classList.add('copied');
         btn.querySelector('.share-label').textContent = 'Copied';
-    }, 300);
+    }, 220);
 
     // Reset after 2s
     setTimeout(() => {
         btn.classList.remove('copied');
         btn.querySelector('.share-label').textContent = 'Share';
-        container.innerHTML = '';
-    }, 2500);
+    }, 2200);
 });
 
 // ─── Add Book Modal ───

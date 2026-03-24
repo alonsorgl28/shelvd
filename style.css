@@ -577,82 +577,87 @@
 /* ── Share Button ── */
 .share-btn {
     padding: 9px 16px;
-    transition: background 0.2s, border-color 0.2s, color 0.2s;
+    min-width: 108px;
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease,
+        transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .share-btn-inner {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     position: relative;
     z-index: 1;
 }
 
 .share-icon,
 .share-check {
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition:
+        transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.16s ease,
+        color 0.16s ease;
 }
 
 .share-check {
     position: absolute;
     left: 0;
     opacity: 0;
-    transform: scale(0.5);
+    transform: translateY(3px) scale(0.92);
+}
+
+.share-label {
+    transition:
+        transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.16s ease,
+        color 0.16s ease;
+}
+
+.share-btn:hover {
+    transform: translateY(-1px);
+}
+
+.share-btn:hover .share-icon {
+    transform: translateY(-1px);
+}
+
+.share-btn:hover .share-label {
+    transform: translateX(1px);
 }
 
 .share-btn.copied .share-icon {
     opacity: 0;
-    transform: scale(0.5) rotate(-15deg);
+    transform: translateY(-4px) scale(0.92);
 }
 
 .share-btn.copied .share-check {
     opacity: 1;
-    transform: scale(1);
-    color: rgba(100, 200, 130, 0.9);
+    transform: translateY(0) scale(1);
+    color: rgba(214, 224, 198, 0.92);
 }
 
 .share-btn.copied .share-label {
-    color: rgba(100, 200, 130, 0.9);
+    transform: translateX(2px);
+    color: rgba(214, 224, 198, 0.92);
 }
 
 .share-btn.copied {
-    border-color: rgba(100, 200, 130, 0.2);
+    border-color: rgba(214, 224, 198, 0.18);
+    background: rgba(18, 24, 18, 0.46);
 }
 
-/* Stamp animation */
+/* Share acknowledgement */
 .share-btn.stamping {
-    animation: stampPress 0.35s cubic-bezier(0.36, 0, 0.66, -0.56) forwards;
+    animation: sharePulse 0.34s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-@keyframes stampPress {
+@keyframes sharePulse {
     0% { transform: scale(1); }
-    40% { transform: scale(0.85); }
-    60% { transform: scale(1.05); }
+    40% { transform: scale(0.97); }
+    72% { transform: scale(1.01); }
     100% { transform: scale(1); }
-}
-
-/* Particles */
-.share-particles {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    pointer-events: none;
-}
-
-.share-particle {
-    position: absolute;
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: rgba(255, 228, 196, 0.7);
-    animation: particleBurst 0.7s ease-out forwards;
-}
-
-@keyframes particleBurst {
-    0% { transform: translate(0, 0) scale(1); opacity: 1; }
-    100% { opacity: 0; }
 }
 
 /* ── Add Book Modal ── */
