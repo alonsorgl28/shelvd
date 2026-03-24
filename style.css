@@ -1679,94 +1679,6 @@ body {
     letter-spacing: 0.5px;
 }
 
-.book-detail-panel {
-    position: fixed;
-    left: 24px;
-    bottom: 96px;
-    z-index: 45;
-    width: min(340px, calc(100vw - 48px));
-}
-
-.book-detail-card {
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 18px;
-    padding: 16px;
-    background: rgba(10, 15, 26, 0.84);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    box-shadow: 0 18px 40px rgba(0,0,0,0.28);
-}
-
-.book-detail-badge {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    padding: 5px 10px;
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    font-weight: 600;
-    color: rgba(255,255,255,0.82);
-    background: rgba(255,255,255,0.1);
-    margin-bottom: 12px;
-}
-
-.book-detail-badge.is-exact {
-    color: rgba(214, 241, 222, 0.95);
-    background: rgba(32, 74, 47, 0.62);
-}
-
-.book-detail-badge.is-review {
-    color: rgba(255, 231, 184, 0.95);
-    background: rgba(94, 70, 23, 0.68);
-}
-
-.book-detail-badge.is-manual {
-    color: rgba(214, 223, 255, 0.95);
-    background: rgba(43, 57, 93, 0.74);
-}
-
-.book-detail-title {
-    font-size: 22px;
-    line-height: 1.08;
-    letter-spacing: -0.04em;
-    color: rgba(255,255,255,0.94);
-}
-
-.book-detail-author {
-    font-size: 14px;
-    color: rgba(255,255,255,0.58);
-    margin-top: 4px;
-}
-
-.book-detail-summary {
-    font-size: 12px;
-    line-height: 1.5;
-    color: rgba(255,255,255,0.42);
-    margin-top: 10px;
-}
-
-.book-detail-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px 14px;
-    margin-top: 14px;
-}
-
-.book-detail-item-label {
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.3);
-    margin-bottom: 3px;
-}
-
-.book-detail-item-value {
-    font-size: 12px;
-    line-height: 1.45;
-    color: rgba(255,255,255,0.82);
-}
-
 @keyframes arrowBounce {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-6px); }
@@ -2220,17 +2132,6 @@ body {
 
 @media (max-width: 768px) {
     .add-choose-options {
-        grid-template-columns: 1fr;
-    }
-
-    .book-detail-panel {
-        left: 12px;
-        right: 12px;
-        width: auto;
-        bottom: 84px;
-    }
-
-    .book-detail-grid {
         grid-template-columns: 1fr;
     }
 }
