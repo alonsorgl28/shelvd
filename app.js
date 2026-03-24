@@ -357,12 +357,12 @@ async function init(username, isPublic) {
 
     controls.update();
 
-    // Lighting — warm desk lamp feel
-    const ambient = new THREE.AmbientLight(0xc8b8a0, 1.0); // warm ambient, bright
+    // Lighting — warm desk lamp feel, with a touch more lift for spine legibility
+    const ambient = new THREE.AmbientLight(0xd8c7ad, 1.12);
     scene.add(ambient);
 
-    const dirLight = new THREE.DirectionalLight(0xffe4c4, 1.3); // warm peach key light, stronger
-    dirLight.position.set(8, 12, 5);
+    const dirLight = new THREE.DirectionalLight(0xffe7c8, 1.5);
+    dirLight.position.set(7.5, 13, 6.5);
     dirLight.castShadow = !isMobile;
     dirLight.shadow.mapSize.width = 4096;
     dirLight.shadow.mapSize.height = 4096;
@@ -377,14 +377,19 @@ async function init(username, isPublic) {
     dirLight.shadow.radius = 2;
     scene.add(dirLight);
 
-    const pointLight = new THREE.PointLight(0xffd6a5, 0.4); // warm fill from opposite side
-    pointLight.position.set(-10, 10, -10);
+    const pointLight = new THREE.PointLight(0xffddb3, 0.58);
+    pointLight.position.set(-9, 9.5, -9);
     scene.add(pointLight);
 
     // Top-down reading lamp highlight
-    const topLight = new THREE.PointLight(0xffffff, 0.5);
-    topLight.position.set(0, 15, 2);
+    const topLight = new THREE.PointLight(0xfffaf1, 0.72);
+    topLight.position.set(0, 15.5, 3.5);
     scene.add(topLight);
+
+    // Subtle cool rim keeps book edges separated without flattening the night scene
+    const rimLight = new THREE.DirectionalLight(0xc6d4ff, 0.28);
+    rimLight.position.set(-6, 8, -7);
+    scene.add(rimLight);
 
     // Dust particles (skip on mobile for performance)
     if (!isMobile) createDustParticles();
@@ -534,7 +539,7 @@ function createSpineTexture(title, author, pages, bookHeight, bookSpineWidth, bg
         ? '#' + bgColor.toString(16).padStart(6, '0')
         : (bgColor || '#2a2a2a');
     const bgRgb = hexToRgb(bgHex);
-    const darkerBg = `rgb(${Math.max(0, bgRgb.r - 25)},${Math.max(0, bgRgb.g - 25)},${Math.max(0, bgRgb.b - 25)})`;
+    const darkerBg = `rgb(${Math.max(0, bgRgb.r - 18)},${Math.max(0, bgRgb.g - 18)},${Math.max(0, bgRgb.b - 18)})`;
 
     const grad = ctx.createLinearGradient(0, 0, 0, canvasHeight);
     grad.addColorStop(0, bgHex);
@@ -544,20 +549,20 @@ function createSpineTexture(title, author, pages, bookHeight, bookSpineWidth, bg
 
     // ── Bottom band (8% height) ──
     const bandHeight = Math.round(canvasHeight * 0.08);
-    const bandColor = `rgb(${Math.max(0, bgRgb.r - 45)},${Math.max(0, bgRgb.g - 45)},${Math.max(0, bgRgb.b - 45)})`;
+    const bandColor = `rgb(${Math.max(0, bgRgb.r - 34)},${Math.max(0, bgRgb.g - 34)},${Math.max(0, bgRgb.b - 34)})`;
     ctx.fillStyle = bandColor;
     ctx.fillRect(0, canvasHeight - bandHeight, canvasWidth, bandHeight);
 
     // ── Top accent line (2px) ──
-    ctx.fillStyle = `rgba(255,255,255,0.12)`;
+    ctx.fillStyle = `rgba(255,255,255,0.17)`;
     ctx.fillRect(0, 0, canvasWidth, 2);
 
     // ── Auto-contrast: light text on dark bg, dark text on light bg ──
     const luminance = (bgRgb.r * 0.299 + bgRgb.g * 0.587 + bgRgb.b * 0.114) / 255;
     const textColor = luminance > 0.45 ? '#000000' : '#ffffff';
-    const textAlpha = luminance > 0.45 ? 0.85 : 0.92;
-    const subtextAlpha = luminance > 0.45 ? 0.5 : 0.55;
-    const lineAlpha = luminance > 0.45 ? 0.15 : 0.2;
+    const textAlpha = luminance > 0.45 ? 0.88 : 0.95;
+    const subtextAlpha = luminance > 0.45 ? 0.54 : 0.6;
+    const lineAlpha = luminance > 0.45 ? 0.18 : 0.24;
 
     // All text is drawn rotated -90° (spine reads bottom-to-top)
     ctx.save();
