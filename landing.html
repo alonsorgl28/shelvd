@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="page-title">Shelvd — Your Personal Library</title>
-    <meta id="page-description" name="description" content="Snap a cover, build your shelf, share your library. Shelvd turns your books into a beautiful 3D collection.">
-    <meta id="og-title" property="og:title" content="Shelvd — Your Personal Library">
-    <meta id="og-description" property="og:description" content="Snap a cover, build your shelf, share your library.">
+    <title>Shelvd — Your Personal Library</title>
+    <meta name="description" content="Snap a cover, build your shelf, share your library. Shelvd turns your books into a beautiful 3D collection.">
+    <meta property="og:title" content="Shelvd — Your Personal Library">
+    <meta property="og:description" content="Snap a cover, build your shelf, share your library.">
     <meta name="theme-color" content="#ffffff">
     <link rel="icon" href="/icon-192.png">
     <style>
@@ -46,12 +46,6 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-        }
-
-        .nav-actions {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
         }
 
         .nav-logo {
@@ -164,48 +158,6 @@
 
         .nav-btn:hover .nav-btn-icon {
             transform: translateY(-1px) scale(1.05);
-        }
-
-        .lang-toggle {
-            display: inline-flex;
-            align-items: center;
-            gap: 2px;
-            padding: 4px;
-            border-radius: 999px;
-            background: rgba(255,255,255,0.78);
-            border: 1px solid rgba(0,0,0,0.08);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.05);
-        }
-
-        .lang-toggle-btn {
-            appearance: none;
-            -webkit-appearance: none;
-            border: 0;
-            background: transparent;
-            border-radius: 999px;
-            padding: 8px 11px;
-            font: inherit;
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: rgba(0,0,0,0.36);
-            cursor: pointer;
-            transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
-        }
-
-        .lang-toggle-btn:hover {
-            color: rgba(0,0,0,0.62);
-        }
-
-        .lang-toggle-btn.is-active {
-            background: #111111;
-            color: #ffffff;
-        }
-
-        .lang-toggle-btn:focus-visible {
-            outline: 2px solid rgba(43,78,255,0.45);
-            outline-offset: 2px;
         }
 
         /* ── Hero ── */
@@ -1187,7 +1139,6 @@
         /* ── Mobile ── */
         @media (max-width: 768px) {
             .nav { padding: 20px 20px; }
-            .nav-actions { gap: 8px; }
             .hero { padding: 120px 24px 80px; }
             .brand-section { padding: 60px 24px 100px; }
             .section { padding: 80px 20px; }
@@ -1212,15 +1163,6 @@
             }
 
             .cta-section { padding: 100px 20px; }
-
-            .lang-toggle {
-                padding: 3px;
-            }
-
-            .lang-toggle-btn {
-                font-size: 10px;
-                padding: 7px 9px;
-            }
 
             .contact-section {
                 padding: 0 20px 80px;
@@ -1254,21 +1196,15 @@
         </span>
         Shelvd
     </a>
-    <div class="nav-actions">
-        <div class="lang-toggle" role="group" aria-label="Language selector" data-i18n-aria-label="languageToggle">
-            <button type="button" class="lang-toggle-btn is-active" data-lang-switch="en" aria-pressed="true">EN</button>
-            <button type="button" class="lang-toggle-btn" data-lang-switch="es" aria-pressed="false">ES</button>
-        </div>
-        <a href="/index.html" class="nav-btn" aria-label="Open library" data-i18n-aria-label="openLibrary" data-star-count="16" data-star-brightness="1.2" data-star-drift="1.02" data-star-glow="1.26">
-            <canvas></canvas>
-            <span class="nav-btn-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"/>
-                    <line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-            </span>
-        </a>
-    </div>
+    <a href="/index.html" class="nav-btn" aria-label="Open Library" data-star-count="16" data-star-brightness="1.2" data-star-drift="1.02" data-star-glow="1.26">
+        <canvas></canvas>
+        <span class="nav-btn-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+        </span>
+    </a>
 </nav>
 
 <!-- ── Hero ── -->
@@ -1277,16 +1213,16 @@
         <span class="hero-eyebrow-text" id="hero-eyebrow-text" aria-label="Your Personal Library"></span>
         <span class="hero-eyebrow-cursor" aria-hidden="true"></span>
     </p>
-    <h1 class="hero-headline" data-i18n-html="heroHeadline">Your books,<br>beautifully stacked.</h1>
-    <p class="hero-desc" data-i18n="heroDesc">Snap a cover, catalog your collection. Build a 3D library that's uniquely yours and share it with the world.</p>
+    <h1 class="hero-headline">Your books,<br>beautifully stacked.</h1>
+    <p class="hero-desc">Snap a cover, catalog your collection. Build a 3D library that's uniquely yours and share it with the world.</p>
     <div class="hero-buttons">
         <a href="/index.html" class="btn-primary" id="hero-btn-primary" data-star-count="22" data-star-brightness="1.18" data-star-drift="1.08" data-star-glow="1.24">
             <canvas></canvas>
-            <span data-i18n="heroPrimaryCta">Start your shelf</span>
+            <span>Start your shelf</span>
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
         </a>
         <a href="#features" class="btn-secondary">
-            <span data-i18n="heroSecondaryCta">See how it works</span>
+            See how it works
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="8 12 12 16 16 12"/></svg>
         </a>
     </div>
@@ -1330,7 +1266,7 @@
 
     <div class="brand-name" id="brand-name">
         <div class="brand-name-text">Shelvd</div>
-        <div class="brand-name-sub" data-i18n="brandSub">Personal Library</div>
+        <div class="brand-name-sub">Personal Library</div>
     </div>
 </section>
 
@@ -1338,8 +1274,8 @@
 
 <!-- ── Features ── -->
 <section class="section" id="features">
-    <div class="section-eyebrow" data-i18n="featuresEyebrow">How it works</div>
-    <h2 class="section-title" data-i18n-html="featuresTitle">Three steps to<br>your library</h2>
+    <div class="section-eyebrow">How it works</div>
+    <h2 class="section-title">Three steps to<br>your library</h2>
 
     <div class="features-grid">
         <div class="feature-card" data-reveal>
@@ -1349,8 +1285,8 @@
                     <circle cx="12" cy="13" r="4"/>
                 </svg>
             </div>
-            <h3 class="feature-card-title" data-i18n="featureOneTitle">Snap a cover</h3>
-            <p class="feature-card-desc" data-i18n="featureOneDesc">Take a photo of any book cover. The title, author, and details appear instantly. No typing, no searching.</p>
+            <h3 class="feature-card-title">Snap a cover</h3>
+            <p class="feature-card-desc">Take a photo of any book cover. Our AI reads the title, author, and details instantly. No typing, no searching.</p>
             <div class="feature-visual">
                 <div class="snap-demo" id="snap-demo">
                     <div class="snap-viewfinder">
@@ -1391,8 +1327,8 @@
                     <rect x="4" y="18.25" width="16" height="1.5" rx="0.75"/>
                 </svg>
             </div>
-            <h3 class="feature-card-title" data-i18n="featureTwoTitle">Build your shelf</h3>
-            <p class="feature-card-desc" data-i18n="featureTwoDesc">Watch your books stack into a 3D shelf. Browse by scrolling through your collection — every spine, every cover.</p>
+            <h3 class="feature-card-title">Build your shelf</h3>
+            <p class="feature-card-desc">Watch your books stack into a 3D shelf. Browse by scrolling through your collection — every spine, every cover.</p>
             <div class="feature-visual">
                 <div class="shelf-demo" id="shelf-demo">
                     <div class="shelf-spine" style="height:18px;background:linear-gradient(90deg,#8b7355,#a0845c);"><span class="shelf-spine-title">Dune</span><span class="shelf-spine-author">Herbert</span></div>
@@ -1415,8 +1351,8 @@
                     <line x1="12" y1="2" x2="12" y2="15"/>
                 </svg>
             </div>
-            <h3 class="feature-card-title" data-i18n="featureThreeTitle">Share your library</h3>
-            <p class="feature-card-desc" data-i18n="featureThreeDesc">Get a unique link to your shelf. Anyone can browse your collection — no account needed. Your reading identity, public.</p>
+            <h3 class="feature-card-title">Share your library</h3>
+            <p class="feature-card-desc">Get a unique link to your shelf. Anyone can browse your collection — no account needed. Your reading identity, public.</p>
             <div class="feature-visual" style="position:relative;">
                 <div class="share-demo" id="share-demo">
                     <div class="share-browser">
@@ -1436,14 +1372,14 @@
                                 <div class="share-mini-spine" style="width:75%;height:8px;background:#6b7ba3;"></div>
                             </div>
                             <div class="share-profile">
-                                <div class="share-profile-name" data-i18n="shareProfileName">@yourname</div>
-                                <div class="share-profile-count" data-i18n="shareProfileCount">24 books</div>
+                                <div class="share-profile-name">@yourname</div>
+                                <div class="share-profile-count">24 books</div>
                             </div>
                         </div>
                     </div>
                     <div class="share-toast">
                         <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                        <span data-i18n="shareToast">Link copied</span>
+                        Link copied
                     </div>
                 </div>
             </div>
@@ -1509,7 +1445,7 @@
                     <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#d85a5a,#e86a6a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">The Subtle Art</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Manson</span></div>
                 </div>
             </div>
-            <div class="showcase-label" data-i18n="showcaseLabel">Your shelf, in 3D</div>
+            <div class="showcase-label">Your shelf, in 3D</div>
         </div>
     </div>
 </div>
@@ -1518,25 +1454,25 @@
 <div class="stats">
     <div class="stat" data-reveal>
         <div class="stat-number">2s</div>
-        <div class="stat-label" data-i18n="statOneLabel">To add a book</div>
+        <div class="stat-label">To add a book</div>
     </div>
     <div class="stat" data-reveal>
         <div class="stat-number">3D</div>
-        <div class="stat-label" data-i18n="statTwoLabel">Interactive shelf</div>
+        <div class="stat-label">Interactive shelf</div>
     </div>
     <div class="stat" data-reveal>
         <div class="stat-number">&infin;</div>
-        <div class="stat-label" data-i18n="statThreeLabel">Books on your shelf</div>
+        <div class="stat-label">Books on your shelf</div>
     </div>
 </div>
 
 <!-- ── CTA ── -->
 <section class="cta-section">
-    <h2 class="cta-title" data-i18n="ctaTitle">Claim your shelf</h2>
-    <p class="cta-sub" data-i18n="ctaSub">Free forever. No ads. Just your books.</p>
+    <h2 class="cta-title">Claim your shelf</h2>
+    <p class="cta-sub">Free forever. No ads. Just your books.</p>
     <a href="/index.html" class="btn-primary" id="cta-btn-primary" data-star-count="22" data-star-brightness="1.18" data-star-drift="1.08" data-star-glow="1.24">
         <canvas></canvas>
-        <span data-i18n="ctaButton">Get started</span>
+        <span>Get started</span>
         <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
 </section>
@@ -1544,9 +1480,9 @@
 <!-- ── Contact ── -->
 <section class="contact-section">
     <div class="contact-block" data-reveal>
-        <div class="contact-eyebrow" data-i18n="contactEyebrow">Get in touch</div>
-        <h2 class="contact-title" data-i18n-html="contactTitle">Questions, feedback,<br>partnerships.</h2>
-        <p class="contact-line" data-i18n-html="contactLine">Contact us at <a href="mailto:hello@shelvd.studio">hello@shelvd.studio</a></p>
+        <div class="contact-eyebrow">Get in touch</div>
+        <h2 class="contact-title">Questions, feedback,<br>partnerships.</h2>
+        <p class="contact-line">Contact us at <a href="mailto:hello@shelvd.studio">hello@shelvd.studio</a></p>
     </div>
 </section>
 
@@ -1554,225 +1490,14 @@
 <footer class="footer">
     <div>
         <div class="footer-logo">Shelvd</div>
-        <div class="footer-sub" data-i18n="footerSub">Personal Library</div>
+        <div class="footer-sub">Personal Library</div>
     </div>
     <div class="footer-links">
-        <a href="/index.html" data-i18n="footerApp">App</a>
+        <a href="/index.html">App</a>
     </div>
 </footer>
 
 <script>
-    const landingTranslations = {
-        en: {
-            pageTitle: 'Shelvd — Your Personal Library',
-            pageDescription: 'Snap a cover, build your shelf, share your library. Shelvd turns your books into a beautiful 3D collection.',
-            ogTitle: 'Shelvd — Your Personal Library',
-            ogDescription: 'Snap a cover, build your shelf, share your library.',
-            languageToggle: 'Language selector',
-            openLibrary: 'Open library',
-            heroEyebrow: 'Your Personal Library',
-            heroHeadline: 'Your books,<br>beautifully stacked.',
-            heroDesc: 'Snap a cover, catalog your collection. Build a 3D library that\'s uniquely yours and share it with the world.',
-            heroPrimaryCta: 'Start your shelf',
-            heroSecondaryCta: 'See how it works',
-            brandSub: 'Personal Library',
-            featuresEyebrow: 'How it works',
-            featuresTitle: 'Three steps to<br>your library',
-            featureOneTitle: 'Snap a cover',
-            featureOneDesc: 'Take a photo of any book cover. The title, author, and details appear instantly. No typing, no searching.',
-            featureTwoTitle: 'Build your shelf',
-            featureTwoDesc: 'Watch your books stack into a 3D shelf. Browse by scrolling through your collection — every spine, every cover.',
-            featureThreeTitle: 'Share your library',
-            featureThreeDesc: 'Get a unique link to your shelf. Anyone can browse your collection — no account needed. Your reading identity, public.',
-            shareProfileName: '@yourname',
-            shareProfileCount: '24 books',
-            shareToast: 'Link copied',
-            shareUrl: 'shelvd.app/@yourname',
-            showcaseLabel: 'Your shelf, in 3D',
-            statOneLabel: 'To add a book',
-            statTwoLabel: 'Interactive shelf',
-            statThreeLabel: 'Books on your shelf',
-            ctaTitle: 'Claim your shelf',
-            ctaSub: 'Free forever. No ads. Just your books.',
-            ctaButton: 'Get started',
-            contactEyebrow: 'Get in touch',
-            contactTitle: 'Questions, feedback,<br>partnerships.',
-            contactLine: 'Contact us at <a href="mailto:hello@shelvd.studio">hello@shelvd.studio</a>',
-            footerSub: 'Personal Library',
-            footerApp: 'App'
-        },
-        es: {
-            pageTitle: 'Shelvd — Tu biblioteca personal',
-            pageDescription: 'Escanea una portada, construye tu biblioteca y compártela. Shelvd convierte tus libros en una hermosa colección 3D.',
-            ogTitle: 'Shelvd — Tu biblioteca personal',
-            ogDescription: 'Escanea una portada, construye tu biblioteca y compártela.',
-            languageToggle: 'Selector de idioma',
-            openLibrary: 'Abrir biblioteca',
-            heroEyebrow: 'Tu biblioteca personal',
-            heroHeadline: 'Tus libros,<br>apilados con elegancia.',
-            heroDesc: 'Escanea una portada, organiza tu colección. Crea una biblioteca 3D que sea realmente tuya y compártela con el mundo.',
-            heroPrimaryCta: 'Crea tu biblioteca',
-            heroSecondaryCta: 'Ver cómo funciona',
-            brandSub: 'Biblioteca personal',
-            featuresEyebrow: 'Cómo funciona',
-            featuresTitle: 'Tres pasos para<br>tu biblioteca',
-            featureOneTitle: 'Escanea una portada',
-            featureOneDesc: 'Toma una foto de cualquier portada. El título, el autor y los detalles aparecen al instante. Sin escribir, sin buscar.',
-            featureTwoTitle: 'Construye tu biblioteca',
-            featureTwoDesc: 'Mira cómo tus libros se apilan en una biblioteca 3D. Recorre tu colección deslizando: cada lomo, cada portada.',
-            featureThreeTitle: 'Comparte tu biblioteca',
-            featureThreeDesc: 'Obtén un enlace único para tu biblioteca. Cualquiera puede explorar tu colección, sin necesidad de cuenta. Tu identidad lectora, en público.',
-            shareProfileName: '@tunombre',
-            shareProfileCount: '24 libros',
-            shareToast: 'Enlace copiado',
-            shareUrl: 'shelvd.app/@tunombre',
-            showcaseLabel: 'Tu biblioteca, en 3D',
-            statOneLabel: 'para agregar un libro',
-            statTwoLabel: 'biblioteca interactiva',
-            statThreeLabel: 'libros en tu biblioteca',
-            ctaTitle: 'Haz tuya tu biblioteca',
-            ctaSub: 'Gratis para siempre. Sin anuncios. Solo tus libros.',
-            ctaButton: 'Empezar',
-            contactEyebrow: 'Contacto',
-            contactTitle: 'Preguntas, comentarios,<br>alianzas.',
-            contactLine: 'Escríbenos a <a href="mailto:hello@shelvd.studio">hello@shelvd.studio</a>',
-            footerSub: 'Biblioteca personal',
-            footerApp: 'Aplicación'
-        }
-    };
-
-    const landingLangKey = 'shelvd-landing-lang';
-    const titleNode = document.getElementById('page-title');
-    const descriptionNode = document.getElementById('page-description');
-    const ogTitleNode = document.getElementById('og-title');
-    const ogDescriptionNode = document.getElementById('og-description');
-    const translatableTextNodes = document.querySelectorAll('[data-i18n]');
-    const translatableHtmlNodes = document.querySelectorAll('[data-i18n-html]');
-    const ariaLabelNodes = document.querySelectorAll('[data-i18n-aria-label]');
-    const langToggleButtons = document.querySelectorAll('[data-lang-switch]');
-    const heroEyebrow = document.getElementById('hero-eyebrow');
-    const heroEyebrowText = document.getElementById('hero-eyebrow-text');
-    const shareUrlText = document.getElementById('share-url-text');
-    let currentLandingLanguage = 'en';
-    let heroTypingTimers = [];
-    let sharePlayed = false;
-
-    function getLandingText(key, lang = currentLandingLanguage) {
-        return landingTranslations[lang]?.[key] ?? landingTranslations.en[key] ?? '';
-    }
-
-    function clearHeroEyebrowTyping() {
-        heroTypingTimers.forEach(window.clearTimeout);
-        heroTypingTimers = [];
-    }
-
-    function queueHeroEyebrowTimer(fn, delay) {
-        const timerId = window.setTimeout(fn, delay);
-        heroTypingTimers.push(timerId);
-        return timerId;
-    }
-
-    function renderHeroEyebrow(text, animate) {
-        if (!heroEyebrow || !heroEyebrowText) return;
-
-        clearHeroEyebrowTyping();
-        heroEyebrow.dataset.text = text;
-        heroEyebrowText.setAttribute('aria-label', text);
-        heroEyebrow.classList.remove('is-complete');
-
-        if (!animate || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            heroEyebrowText.textContent = text;
-            heroEyebrow.classList.add('is-complete');
-            return;
-        }
-
-        heroEyebrowText.textContent = '';
-        let charIndex = 0;
-        const startDelay = 320;
-        const typeSpeed = 55;
-
-        const typeNextCharacter = () => {
-            charIndex += 1;
-            heroEyebrowText.textContent = text.slice(0, charIndex);
-
-            if (charIndex < text.length) {
-                queueHeroEyebrowTimer(typeNextCharacter, typeSpeed);
-            } else {
-                queueHeroEyebrowTimer(() => heroEyebrow.classList.add('is-complete'), 240);
-            }
-        };
-
-        queueHeroEyebrowTimer(typeNextCharacter, startDelay);
-    }
-
-    function persistLandingLanguage(lang) {
-        try {
-            window.localStorage.setItem(landingLangKey, lang);
-        } catch (error) {}
-    }
-
-    function readStoredLandingLanguage() {
-        try {
-            const saved = window.localStorage.getItem(landingLangKey);
-            return saved === 'es' ? 'es' : 'en';
-        } catch (error) {
-            return 'en';
-        }
-    }
-
-    function setActiveLanguageButton(lang) {
-        langToggleButtons.forEach(button => {
-            const isActive = button.dataset.langSwitch === lang;
-            button.classList.toggle('is-active', isActive);
-            button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-        });
-    }
-
-    function applyLandingLanguage(lang, options = {}) {
-        const nextLang = lang === 'es' ? 'es' : 'en';
-        const animateHero = Boolean(options.animateHero);
-        currentLandingLanguage = nextLang;
-
-        document.documentElement.lang = nextLang;
-        if (titleNode) titleNode.textContent = getLandingText('pageTitle', nextLang);
-        if (descriptionNode) descriptionNode.content = getLandingText('pageDescription', nextLang);
-        if (ogTitleNode) ogTitleNode.content = getLandingText('ogTitle', nextLang);
-        if (ogDescriptionNode) ogDescriptionNode.content = getLandingText('ogDescription', nextLang);
-
-        translatableTextNodes.forEach(node => {
-            node.textContent = getLandingText(node.dataset.i18n, nextLang);
-        });
-
-        translatableHtmlNodes.forEach(node => {
-            node.innerHTML = getLandingText(node.dataset.i18nHtml, nextLang);
-        });
-
-        ariaLabelNodes.forEach(node => {
-            node.setAttribute('aria-label', getLandingText(node.dataset.i18nAriaLabel, nextLang));
-        });
-
-        renderHeroEyebrow(getLandingText('heroEyebrow', nextLang), animateHero);
-
-        if (shareUrlText && sharePlayed) {
-            shareUrlText.textContent = getLandingText('shareUrl', nextLang);
-        } else if (shareUrlText) {
-            shareUrlText.textContent = '';
-        }
-
-        setActiveLanguageButton(nextLang);
-        persistLandingLanguage(nextLang);
-    }
-
-    langToggleButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const nextLang = button.dataset.langSwitch === 'es' ? 'es' : 'en';
-            if (nextLang === currentLandingLanguage) return;
-            applyLandingLanguage(nextLang);
-        });
-    });
-
-    applyLandingLanguage(readStoredLandingLanguage(), { animateHero: true });
-
     // ── Tower fall + scatter physics ──
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const allBooks = Array.from(document.querySelectorAll(".book"));
@@ -1978,7 +1703,9 @@
 
     // ── Card 3: Share — browser mockup with typewriter ──
     const shareDemo = document.getElementById('share-demo');
-    const getShareUrl = () => getLandingText('shareUrl');
+    const shareUrlText = document.getElementById('share-url-text');
+    const fullUrl = 'shelvd.app/@yourname';
+    let sharePlayed = false;
 
     function typeUrl(text, el, delay, callback) {
         let i = 0;
@@ -2015,7 +1742,7 @@
                 // First show browser
                 shareDemo.classList.add('active');
                 // Then type the URL
-                typeUrl(getShareUrl(), shareUrlText, 600, () => {
+                typeUrl(fullUrl, shareUrlText, 600, () => {
                     // Animate spines appearing inside browser
                     animateMiniShelf();
                 });
@@ -2144,6 +1871,40 @@
         const widthVariance = 85 + Math.random() * 15; // 85% to 100%
         spine.style.width = widthVariance + '%';
     });
+
+    // ── Hero eyebrow: one-shot typing ──
+    const heroEyebrow = document.getElementById('hero-eyebrow');
+    const heroEyebrowText = document.getElementById('hero-eyebrow-text');
+    if (heroEyebrow && heroEyebrowText) {
+        const fullText = heroEyebrow.dataset.text || 'Your Personal Library';
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        if (prefersReducedMotion) {
+            heroEyebrowText.textContent = fullText;
+            heroEyebrow.classList.add('is-complete');
+        } else {
+            let charIndex = 0;
+            const startDelay = 320;
+            const typeSpeed = 55;
+
+            setTimeout(() => {
+                const typeNextCharacter = () => {
+                    charIndex += 1;
+                    heroEyebrowText.textContent = fullText.slice(0, charIndex);
+
+                    if (charIndex < fullText.length) {
+                        setTimeout(typeNextCharacter, typeSpeed);
+                    } else {
+                        setTimeout(() => {
+                            heroEyebrow.classList.add('is-complete');
+                        }, 240);
+                    }
+                };
+
+                typeNextCharacter();
+            }, startDelay);
+        }
+    }
 
 </script>
 
