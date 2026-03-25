@@ -500,6 +500,18 @@
             </div>
             <span>Grid</span>
         </label>
+        <label class="globe-toggle-label">
+            <input type="radio" name="view" value="globe">
+            <div class="toggle-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
+                    <ellipse cx="12" cy="12" rx="4" ry="9" stroke="currentColor" stroke-width="1.5"/>
+                    <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="1.5"/>
+                    <line x1="3" y1="15" x2="21" y2="15" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+            </div>
+            <span>Globe</span>
+        </label>
     </div>
 </div>
 
@@ -530,6 +542,9 @@
 <!-- Grid View (hidden by default) -->
 <div class="grid-view" id="grid-view" style="display:none;"></div>
 
+<!-- Globe View (hidden by default, desktop only) -->
+<div id="globe-view" style="display:none;"></div>
+
 <script src="https://unpkg.com/heic2any@0.0.4/dist/heic2any.min.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -544,7 +559,7 @@
 </script>
 <script type="module" src="auth.js?v=20260324k"></script>
 <script src="analytics.js?v=20260324b"></script>
-<script type="module" src="app.js?v=20260324k"></script>
+<script type="module" src="app.js?v=20260324m"></script>
 <!-- PWA Install Banner -->
 <div class="pwa-install-banner" id="pwa-install-banner" style="display:none;">
     <div class="pwa-install-content">

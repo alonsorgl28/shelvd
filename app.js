@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { initGlobe, destroyGlobe } from './globe.js';
 
 // ─── State ───
 let scene, camera, renderer, controls;
@@ -7,7 +8,7 @@ let raycaster, mouse;
 let bookObjects = [];
 let pulledOutBook = null;
 let mousePosition = { x: 0, y: 0 };
-let currentView = 'shelf'; // 'shelf' | 'grid'
+let currentView = 'shelf'; // 'shelf' | 'grid' | 'globe'
 let coverCache = {}; // edition key -> coverUrl
 
 const container = document.getElementById('library-3d-container');
@@ -1385,17 +1386,37 @@ function setupViewToggle() {
 function switchView(view) {
     currentView = view;
     const gridEl = document.getElementById('grid-view');
+    const globeEl = document.getElementById('globe-view');
     const containerEl = document.getElementById('library-3d-container');
     const scrollbar = document.getElementById('stack-scrollbar');
+
+    // Tear down globe if leaving it
+    if (view !== 'globe' && globeEl.dataset.globeActive === 'true') {
+        destroyGlobe(globeEl);
+        globeEl.dataset.globeActive = '';
+    }
 
     if (view === 'grid') {
         if (pulledOutBook) returnBookToStack(pulledOutBook);
         hideBookDetail();
         containerEl.style.display = 'none';
         scrollbar.classList.remove('visible');
+        globeEl.style.display = 'none';
         gridEl.style.display = 'block';
         renderGridView();
+    } else if (view === 'globe') {
+        if (pulledOutBook) returnBookToStack(pulledOutBook);
+        hideBookDetail();
+        containerEl.style.display = 'none';
+        scrollbar.classList.remove('visible');
+        gridEl.style.display = 'none';
+        globeEl.style.display = 'block';
+        const books = bookObjects.map(b => b.userData.bookData);
+        initGlobe(globeEl, books, getVisibleCoverUrl, (bookData) => renderBookDetail(bookData));
+        globeEl.dataset.globeActive = 'true';
     } else {
+        // shelf
+        globeEl.style.display = 'none';
         gridEl.style.display = 'none';
         containerEl.style.display = 'block';
         scrollbar.classList.add('visible');

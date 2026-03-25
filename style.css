@@ -1506,6 +1506,23 @@ body {
     z-index: 1;
 }
 
+#globe-view {
+    width: 100%;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: #0a0f1a;
+    overflow: hidden;
+    z-index: 1;
+}
+
+#globe-view canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
 .library-3d-container canvas {
     display: block;
     width: 100%;
@@ -2134,6 +2151,11 @@ body {
 
     .grid-view {
         padding: 60px 16px 90px;
+    }
+
+    /* Globe is desktop-only */
+    .globe-toggle-label {
+        display: none !important;
     }
 }
 
