@@ -1478,7 +1478,9 @@ function switchView(view) {
         gridEl.style.display = 'none';
         globeEl.style.display = 'block';
         const books = bookObjects.map(b => b.userData.bookData);
-        initGlobe(globeEl, books, getVisibleCoverUrl, makeGlobeBookMesh, applyGlobeCover, (bookData) => renderBookDetail(bookData));
+        initGlobe(globeEl, books, getVisibleCoverUrl, makeGlobeBookMesh, applyGlobeCover,
+            (bookData) => renderBookDetail(bookData),
+            () => hideBookDetail());
         globeEl.dataset.globeActive = 'true';
     } else {
         // shelf
