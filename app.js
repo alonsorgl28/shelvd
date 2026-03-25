@@ -1373,6 +1373,72 @@ function updateScrollbar() {
     thumb.style.top = (clampedPct * trackHeight) + 'px';
 }
 
+// ─── Globe Book Factory ───
+function makeGlobeBookMesh(bookData) {
+    const pageCount = bookData.pages || 250;
+    const bookSpineWidth = Math.min(0.5, Math.max(0.08, pageCount * 0.0004));
+    const baseHeight = 1.2;
+    const baseCoverWidth = 0.8;
+    const defaultColor = generateBookColor(bookData.title);
+
+    const materials = [];
+    for (let i = 0; i < 6; i++) {
+        if (i === 0 || i === 2 || i === 3) {
+            materials[i] = new THREE.MeshStandardMaterial({ color: 0xfafafa, roughness: 1.0, metalness: 0.0 });
+        } else {
+            materials[i] = new THREE.MeshStandardMaterial({ color: defaultColor, roughness: 1.0, metalness: 0.0 });
+        }
+    }
+
+    const spineTexture = createSpineTexture(bookData.title, bookData.author, bookData.pages, baseHeight, bookSpineWidth, defaultColor);
+    materials[1] = new THREE.MeshStandardMaterial({ map: spineTexture, roughness: 1.0, metalness: 0.0 });
+
+    const coverPlaceholder = createCoverPlaceholder(bookData.title, bookData.author, baseCoverWidth, baseHeight, defaultColor);
+    materials[4] = new THREE.MeshStandardMaterial({ map: coverPlaceholder, roughness: 1.0, metalness: 0.0 });
+
+    const geometry = new THREE.BoxGeometry(baseCoverWidth, baseHeight, bookSpineWidth);
+    const mesh = new THREE.Mesh(geometry, materials);
+    mesh.userData = {
+        bookId: bookData.id,
+        bookData: bookData,
+        bookSpineWidth: bookSpineWidth,
+        baseHeight: baseHeight,
+        baseCoverWidth: baseCoverWidth,
+        dominantColor: defaultColor,
+    };
+    return mesh;
+}
+
+function applyGlobeCover(mesh, coverUrl) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function () {
+        getDominantColor(img, function (color) {
+            const hexColor = parseInt(color.replace('#', '0x'));
+            for (let i = 0; i < 6; i++) {
+                if (i !== 4 && i !== 0 && i !== 2 && i !== 3 && mesh.material[i]) {
+                    mesh.material[i].color.setHex(hexColor);
+                }
+            }
+            const spineTexture = createSpineTexture(
+                mesh.userData.bookData.title, mesh.userData.bookData.author,
+                mesh.userData.bookData.pages, mesh.userData.baseHeight,
+                mesh.userData.bookSpineWidth, color
+            );
+            mesh.material[1] = new THREE.MeshStandardMaterial({ map: spineTexture, roughness: 1.0, metalness: 0.0 });
+        });
+
+        const texture = new THREE.Texture(img);
+        texture.minFilter = THREE.LinearMipmapLinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.generateMipmaps = true;
+        texture.needsUpdate = true;
+        mesh.material[4] = new THREE.MeshStandardMaterial({ map: texture, roughness: 1.0, metalness: 0.0 });
+    };
+    img.onerror = function () { /* keep placeholder */ };
+    img.src = coverUrl;
+}
+
 // ─── View Toggle ───
 function setupViewToggle() {
     document.querySelectorAll('.view-toggle input[type="radio"]').forEach(radio => {
@@ -1412,7 +1478,7 @@ function switchView(view) {
         gridEl.style.display = 'none';
         globeEl.style.display = 'block';
         const books = bookObjects.map(b => b.userData.bookData);
-        initGlobe(globeEl, books, getVisibleCoverUrl, (bookData) => renderBookDetail(bookData));
+        initGlobe(globeEl, books, getVisibleCoverUrl, makeGlobeBookMesh, applyGlobeCover, (bookData) => renderBookDetail(bookData));
         globeEl.dataset.globeActive = 'true';
     } else {
         // shelf
