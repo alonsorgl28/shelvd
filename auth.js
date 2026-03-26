@@ -438,7 +438,6 @@ const logoutBtn = document.getElementById('logout-btn');
 const stepChoose = document.getElementById('add-step-choose');
 const captureZone = document.getElementById('add-capture-zone');
 const coverInput = document.getElementById('add-cover-input');
-const spineInput = document.getElementById('add-spine-input');
 const backInput = document.getElementById('add-back-input');
 const stepCapture = document.getElementById('add-step-capture');
 const stepAnalyzing = document.getElementById('add-step-analyzing');
@@ -447,7 +446,6 @@ const addStepBackBtn = document.getElementById('add-back-btn');
 const addChooseManualBtn = document.getElementById('add-choose-manual');
 const addRetakeBtn = document.getElementById('add-retake-btn');
 const addConfirmBtn = document.getElementById('add-confirm-btn');
-const addSpinePhotoBtn = document.getElementById('add-spine-photo-btn');
 const addBackPhotoBtn = document.getElementById('add-back-photo-btn');
 const addIsbnScanBtn = document.getElementById('add-isbn-scan-btn');
 const addDetailToggle = document.getElementById('add-detail-toggle');
@@ -465,7 +463,6 @@ const addCandidateList = document.getElementById('add-candidate-list');
 const addRescueActions = document.getElementById('add-rescue-actions');
 const addStatusMessage = document.getElementById('add-status-message');
 const evidenceCover = document.getElementById('add-evidence-cover');
-const evidenceSpine = document.getElementById('add-evidence-spine');
 const evidenceBack = document.getElementById('add-evidence-back');
 const addSummaryCover = document.getElementById('add-summary-cover');
 const addSummaryPublisher = document.getElementById('add-summary-publisher');
@@ -479,7 +476,6 @@ let addModalCloseTimeout = null;
 let addModalHaloTimeout = null;
 let addLaunchTrigger = addBtn;
 let isbnRefreshTimeout = null;
-let barcodeLibraryPromise = null;
 
 const addFieldRefs = {
     title: document.getElementById('add-field-title'),
@@ -522,9 +518,9 @@ function createEmptyAnalysis(matchStatus = 'manual_required') {
 
 const addState = {
     mode: 'photo',
-    files: { cover: null, spine: null, back: null },
-    base64: { cover: null, spine: null, back: null },
-    previewUrls: { cover: null, spine: null, back: null },
+    files: { cover: null, back: null },
+    base64: { cover: null, back: null },
+    previewUrls: { cover: null, back: null },
     analysis: createEmptyAnalysis(),
     selectedCandidateSourceId: null,
     advancedOpen: false,
@@ -596,10 +592,10 @@ function resetEditionFields() {
 }
 
 function resetAddState() {
-    ['cover', 'spine', 'back'].forEach((kind) => revokePreviewUrl(kind));
+    ['cover', 'back'].forEach((kind) => revokePreviewUrl(kind));
     addState.mode = 'photo';
-    addState.files = { cover: null, spine: null, back: null };
-    addState.base64 = { cover: null, spine: null, back: null };
+    addState.files = { cover: null, back: null };
+    addState.base64 = { cover: null, back: null };
     addState.analysis = createEmptyAnalysis();
     addState.selectedCandidateSourceId = null;
     addState.advancedOpen = false;
@@ -640,7 +636,6 @@ function renderPreviewBox(container, url, alt, placeholder) {
 
 function renderEvidencePreviews() {
     renderPreviewBox(evidenceCover, addState.previewUrls.cover, 'Front cover', 'Front cover');
-    renderPreviewBox(evidenceSpine, addState.previewUrls.spine, 'Spine', 'Not added');
     renderPreviewBox(evidenceBack, addState.previewUrls.back, 'Barcode or back cover', 'Not added');
 }
 
@@ -1210,7 +1205,7 @@ function applyAnalysisResult(data, currentFields, fallbackStatus = '') {
         setAddStatus(addState.analysis.analysis_issue, 'warning');
     } else if (!mergedFields.title && !mergedFields.author) {
         setAddStatus(
-            fallbackStatus || 'We could not read the cover yet. Try the spine, the barcode, or type the ISBN manually.',
+            fallbackStatus || 'We could not read the cover yet. Try scanning the barcode or type the ISBN manually.',
             'warning'
         );
     } else if ((mergedFields.isbn_13 || mergedFields.isbn_10) && mergedFields.title && mergedFields.author) {
@@ -1240,96 +1235,28 @@ async function invokeEditionAnalysis(body) {
     return data;
 }
 
-function loadBarcodeScanner() {
-    if (window.Quagga) return Promise.resolve(window.Quagga);
-    if (barcodeLibraryPromise) return barcodeLibraryPromise;
-
-    barcodeLibraryPromise = new Promise((resolve, reject) => {
-        const existing = document.querySelector('script[data-shelvd-quagga]');
-        if (existing) {
-            existing.addEventListener('load', () => resolve(window.Quagga));
-            existing.addEventListener('error', () => reject(new Error('Could not load the barcode scanner')));
-            return;
-        }
-
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js';
-        script.async = true;
-        script.dataset.shelvdQuagga = 'true';
-        script.onload = () => window.Quagga ? resolve(window.Quagga) : reject(new Error('Barcode scanner unavailable'));
-        script.onerror = () => reject(new Error('Could not load the barcode scanner'));
-        document.head.appendChild(script);
-    });
-
-    return barcodeLibraryPromise;
-}
-
-async function detectIsbnWithBarcodeDetector(file) {
-    if (!('BarcodeDetector' in window) || !window.createImageBitmap) return null;
-
-    const detector = new window.BarcodeDetector({
-        formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e']
-    });
-    const bitmap = await createImageBitmap(file);
-
-    try {
-        const results = await detector.detect(bitmap);
-        for (const result of results || []) {
-            const isbn = normalizeIsbn(result?.rawValue);
-            if (isbn && (isbn.startsWith('978') || isbn.startsWith('979') || isbn.length === 10)) {
-                return isbn;
-            }
-        }
-        return null;
-    } finally {
-        if (typeof bitmap.close === 'function') bitmap.close();
-    }
-}
-
-async function detectIsbnWithQuagga(file) {
-    const quagga = await loadBarcodeScanner();
-    const objectUrl = URL.createObjectURL(file);
-
-    try {
-        const result = await new Promise((resolve) => {
-            quagga.decodeSingle({
-                src: objectUrl,
-                numOfWorkers: 0,
-                locate: true,
-                inputStream: {
-                    size: 1200
-                },
-                decoder: {
-                    readers: ['ean_reader', 'ean_8_reader', 'upc_reader', 'upc_e_reader']
-                }
-            }, (decoded) => resolve(decoded || null));
-        });
-
-        const rawCode = result?.codeResult?.code || null;
-        const isbn = normalizeIsbn(rawCode);
-        if (isbn && (isbn.startsWith('978') || isbn.startsWith('979') || isbn.length === 10)) {
-            return isbn;
-        }
-        return null;
-    } finally {
-        URL.revokeObjectURL(objectUrl);
-    }
-}
-
 async function detectIsbnFromFile(file) {
+    if (!('BarcodeDetector' in window) || !window.createImageBitmap) return null;
     try {
-        const nativeIsbn = await detectIsbnWithBarcodeDetector(file);
-        if (nativeIsbn) return nativeIsbn;
+        const detector = new window.BarcodeDetector({
+            formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e']
+        });
+        const bitmap = await createImageBitmap(file);
+        try {
+            const results = await detector.detect(bitmap);
+            for (const result of results || []) {
+                const isbn = normalizeIsbn(result?.rawValue);
+                if (isbn && (isbn.startsWith('978') || isbn.startsWith('979') || isbn.length === 10)) {
+                    return isbn;
+                }
+            }
+        } finally {
+            if (typeof bitmap.close === 'function') bitmap.close();
+        }
     } catch (err) {
         console.warn('BarcodeDetector failed:', err);
     }
-
-    try {
-        return await detectIsbnWithQuagga(file);
-    } catch (err) {
-        console.warn('Quagga decode failed:', err);
-        return null;
-    }
+    return null;
 }
 
 async function lookupEditionByIsbn(isbn, message = 'Checking ISBN details') {
@@ -1405,7 +1332,6 @@ async function analyzeEditionEvidence(message = 'Checking the exact edition') {
     try {
         const data = await invokeEditionAnalysis({
             cover_image: addState.base64.cover,
-            spine_image: addState.base64.spine,
             back_image: addState.base64.back,
             manual_overrides: buildManualOverrides()
         });
@@ -1436,8 +1362,6 @@ async function handleEvidenceInput(kind, event, options = {}) {
         addState.mode = 'photo';
         if (kind === 'cover') {
             await analyzeEditionEvidence('Checking the front cover');
-        } else if (kind === 'spine') {
-            await analyzeEditionEvidence('Checking the spine against online editions');
         } else {
             const detectedIsbn = await detectIsbnFromFile(normalizedFile);
             if (detectedIsbn) {
@@ -1512,12 +1436,7 @@ if (addFieldRefs.isbn_13) {
 }
 
 coverInput.addEventListener('change', (event) => handleEvidenceInput('cover', event, { showSpinner: true }));
-spineInput.addEventListener('change', (event) => handleEvidenceInput('spine', event));
 backInput.addEventListener('change', (event) => handleEvidenceInput('back', event));
-
-if (addSpinePhotoBtn) {
-    addSpinePhotoBtn.addEventListener('click', () => openFilePicker(spineInput, 'Take a photo of the spine if the title or author is unclear.'));
-}
 
 if (addIsbnScanBtn) {
     addIsbnScanBtn.addEventListener('click', () => openFilePicker(backInput, 'Take a photo of the ISBN or barcode.'));
@@ -1588,7 +1507,6 @@ addConfirmBtn.addEventListener('click', async () => {
                 language: mergedEdition.language,
                 translator: mergedEdition.translator,
                 format: mergedEdition.format,
-                spine_photo_url: uploaded.spine,
                 back_photo_url: uploaded.back,
                 match_status: finalMatchStatus
             })
