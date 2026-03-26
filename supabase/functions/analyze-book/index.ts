@@ -934,6 +934,44 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
+    const barcodeImage = cleanText(body.barcode_image);
+
+    // Fast barcode-only path: just read the ISBN digits from the image
+    if (barcodeImage) {
+      const content: Array<Record<string, unknown>> = [
+        {
+          type: "text",
+          text: "This is a photo of the back cover of a book. Find and read the ISBN number printed in human-readable digits near or below the barcode.",
+        },
+        {
+          type: "image",
+          source: { type: "base64", media_type: "image/jpeg", data: barcodeImage },
+        },
+        {
+          type: "text",
+          text: `Return ONLY valid JSON:
+{
+  "isbn_13": string|null,
+  "isbn_10": string|null
+}
+Rules:
+- Read the digit string printed near the barcode — do NOT try to decode the barcode bars.
+- ISBN-13 starts with 978 or 979 and is exactly 13 digits.
+- ISBN-10 is exactly 10 characters (digits, last may be X).
+- If the digits are not clearly readable, return null for both fields.`,
+        },
+      ];
+      try {
+        const raw = await callAnthropicJson<Record<string, unknown>>(content, 80);
+        return jsonResponse({
+          isbn_13: normalizeIsbn(raw.isbn_13, 13),
+          isbn_10: normalizeIsbn(raw.isbn_10, 10),
+        });
+      } catch (_err) {
+        return jsonResponse({ isbn_13: null, isbn_10: null });
+      }
+    }
+
     const coverImage = cleanText(body.cover_image) || cleanText(body.image);
     const spineImage = cleanText(body.spine_image);
     const backImage = cleanText(body.back_image);

@@ -1548,7 +1548,7 @@ async function extractIsbnFromBarcodeFrame(base64) {
 
         const { data, error } = await sb.functions.invoke('analyze-book', {
             headers: { Authorization: `Bearer ${session.access_token}` },
-            body: { cover_image: base64 }
+            body: { barcode_image: base64 }
         });
 
         if (error) throw new Error(error.message || 'Failed');
