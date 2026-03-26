@@ -1513,34 +1513,27 @@ async function openBarcodeScanner() {
         hint.textContent = 'Frame the barcode, then tap Capture';
         captureBtn.style.display = 'block';
 
-        captureBtn.onclick = async () => {
-            captureBtn.disabled = true;
-            captureBtn.textContent = 'Reading...';
-            status.textContent = 'Reading barcode...';
-
-            // Wait for video to have valid dimensions
-            let waited = 0;
-            while ((video.videoWidth === 0 || video.videoHeight === 0) && waited < 2000) {
-                await new Promise(r => setTimeout(r, 100));
-                waited += 100;
-            }
-
-            if (video.videoWidth === 0 || video.videoHeight === 0) {
-                status.textContent = 'Camera not ready. Try again.';
-                captureBtn.disabled = false;
-                captureBtn.textContent = 'Capture';
-                return;
-            }
-
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-            const base64 = canvas.toDataURL('image/jpeg', 0.9).split(',')[1];
-
+        captureBtn.onclick = () => {
             stopScanner();
-
-            await extractIsbnFromBarcodeFrame(base64);
+            // Use native file input for full-quality photo (avoids blurry video frame on iOS)
+            const tmpInput = document.createElement('input');
+            tmpInput.type = 'file';
+            tmpInput.accept = 'image/*';
+            tmpInput.capture = 'environment';
+            tmpInput.style.display = 'none';
+            document.body.appendChild(tmpInput);
+            tmpInput.onchange = async (e) => {
+                document.body.removeChild(tmpInput);
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = async (ev) => {
+                    const base64 = ev.target.result.split(',')[1];
+                    await extractIsbnFromBarcodeFrame(base64);
+                };
+                reader.readAsDataURL(file);
+            };
+            setTimeout(() => tmpInput.click(), 200);
         };
     }
 }
