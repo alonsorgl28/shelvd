@@ -1418,7 +1418,7 @@ async function analyzeEditionEvidence(message = 'Checking the exact edition') {
         addState.selectedCandidateSourceId = null;
         addState.advancedOpen = true;
         if (!addFieldRefs.pages.value) addFieldRefs.pages.value = '250';
-        setAddStatus('Could not analyze the cover yet. You can keep the photo, add the ISBN, or try another shot.', 'error');
+        setAddStatus('Your photo will be used as the cover. Fill in the title and author below, or add the ISBN to autofill.', 'info');
     }
 
     renderConfirmStep();
