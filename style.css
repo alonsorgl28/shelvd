@@ -2253,3 +2253,110 @@ body {
     height: 100%; background: rgba(255,255,255,0.5); border-radius: 2px;
     width: 0%; transition: width 0.3s;
 }
+
+/* ── Barcode Scanner Modal ── */
+.barcode-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 11000;
+    background: rgba(0,0,0,0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.barcode-modal-inner {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+}
+.barcode-modal-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.barcode-modal-title {
+    color: rgba(255,255,255,0.88);
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.barcode-modal-close {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.5);
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+}
+.barcode-modal-close:hover { color: rgba(255,255,255,0.88); }
+.barcode-viewport {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+}
+.barcode-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.barcode-box {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 72%;
+    height: 30%;
+    border: 2px solid rgba(255,255,255,0.7);
+    border-radius: 6px;
+    box-shadow: 0 0 0 2000px rgba(0,0,0,0.42);
+}
+.barcode-box::before,
+.barcode-box::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-color: #fff;
+    border-style: solid;
+}
+.barcode-box::before { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-radius: 3px 0 0 0; }
+.barcode-box::after  { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-radius: 0 0 3px 0; }
+.barcode-hint {
+    position: absolute;
+    bottom: 12px;
+    left: 0; right: 0;
+    text-align: center;
+    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+}
+.barcode-capture-btn {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.88);
+    border-radius: 24px;
+    padding: 12px 32px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.15s;
+}
+.barcode-capture-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); }
+.barcode-capture-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.barcode-status {
+    color: rgba(255,255,255,0.6);
+    font-size: 13px;
+    text-align: center;
+    min-height: 20px;
+}

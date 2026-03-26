@@ -1439,7 +1439,97 @@ coverInput.addEventListener('change', (event) => handleEvidenceInput('cover', ev
 backInput.addEventListener('change', (event) => handleEvidenceInput('back', event));
 
 if (addIsbnScanBtn) {
-    addIsbnScanBtn.addEventListener('click', () => openFilePicker(backInput, 'Take a photo of the ISBN or barcode.'));
+    addIsbnScanBtn.addEventListener('click', openBarcodeScanner);
+}
+
+// ─── Live Barcode Scanner ───
+let barcodeScanStream = null;
+
+async function openBarcodeScanner() {
+    const modal = document.getElementById('barcode-modal');
+    const video = document.getElementById('barcode-video');
+    const closeBtn = document.getElementById('barcode-modal-close');
+    const captureBtn = document.getElementById('barcode-capture-btn');
+    const hint = document.getElementById('barcode-hint');
+    const status = document.getElementById('barcode-status');
+
+    // Request camera
+    try {
+        barcodeScanStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+        video.srcObject = barcodeScanStream;
+    } catch (err) {
+        // Camera denied — fall back to file input
+        openFilePicker(backInput, 'Take a photo of the ISBN barcode on the back cover.');
+        return;
+    }
+
+    modal.style.display = 'flex';
+    status.textContent = '';
+
+    function stopScanner() {
+        if (barcodeScanStream) {
+            barcodeScanStream.getTracks().forEach(t => t.stop());
+            barcodeScanStream = null;
+        }
+        if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+        modal.style.display = 'none';
+        captureBtn.style.display = 'none';
+        captureBtn.disabled = false;
+        captureBtn.textContent = 'Capture';
+        status.textContent = '';
+    }
+
+    closeBtn.onclick = stopScanner;
+
+    let scanInterval = null;
+
+    if ('BarcodeDetector' in window) {
+        // Auto-scan mode (Chrome / Android)
+        hint.textContent = 'Hold steady — scanning automatically';
+        const detector = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
+        let scanning = false;
+
+        scanInterval = setInterval(async () => {
+            if (scanning || video.readyState < 2) return;
+            scanning = true;
+            try {
+                const results = await detector.detect(video);
+                for (const result of results || []) {
+                    const isbn = normalizeIsbn(result?.rawValue);
+                    if (isbn && (isbn.startsWith('978') || isbn.startsWith('979') || isbn.length === 10)) {
+                        stopScanner();
+                        setFieldValue('isbn_13', isbn);
+                        setAddStatus('ISBN detected. Checking edition details.', 'success');
+                        await lookupEditionByIsbn(isbn, 'Checking ISBN details');
+                        return;
+                    }
+                }
+            } catch (e) { /* continue */ } finally { scanning = false; }
+        }, 300);
+    } else {
+        // Manual capture mode (iOS Safari)
+        hint.textContent = 'Frame the barcode, then tap Capture';
+        captureBtn.style.display = 'block';
+
+        captureBtn.onclick = async () => {
+            captureBtn.disabled = true;
+            captureBtn.textContent = 'Reading...';
+            status.textContent = 'Sending to AI...';
+
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+
+            stopScanner();
+
+            addState.base64.back = base64;
+            await analyzeEditionEvidence('Reading the barcode');
+        };
+    }
 }
 
 if (addRetakeBtn) {

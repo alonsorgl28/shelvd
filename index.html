@@ -433,6 +433,23 @@
     </div>
 </div>
 
+<!-- Barcode Scanner Modal -->
+<div class="barcode-modal" id="barcode-modal" style="display:none;">
+    <div class="barcode-modal-inner">
+        <div class="barcode-modal-header">
+            <span class="barcode-modal-title">Scan barcode</span>
+            <button class="barcode-modal-close" id="barcode-modal-close">&times;</button>
+        </div>
+        <div class="barcode-viewport">
+            <video class="barcode-video" id="barcode-video" autoplay playsinline muted></video>
+            <div class="barcode-box"></div>
+            <div class="barcode-hint" id="barcode-hint">Point at the ISBN barcode on the back cover</div>
+        </div>
+        <button class="barcode-capture-btn" id="barcode-capture-btn" style="display:none;">Capture</button>
+        <div class="barcode-status" id="barcode-status"></div>
+    </div>
+</div>
+
 <!-- Import/Export Modal -->
 <div class="io-modal" id="io-modal" style="display:none;">
     <div class="io-backdrop" id="io-backdrop"></div>
