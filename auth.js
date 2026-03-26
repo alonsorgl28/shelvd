@@ -1516,19 +1516,64 @@ async function openBarcodeScanner() {
         captureBtn.onclick = async () => {
             captureBtn.disabled = true;
             captureBtn.textContent = 'Reading...';
-            status.textContent = 'Sending to AI...';
+            status.textContent = 'Reading barcode...';
+
+            // Wait for video to have valid dimensions
+            let waited = 0;
+            while ((video.videoWidth === 0 || video.videoHeight === 0) && waited < 2000) {
+                await new Promise(r => setTimeout(r, 100));
+                waited += 100;
+            }
+
+            if (video.videoWidth === 0 || video.videoHeight === 0) {
+                status.textContent = 'Camera not ready. Try again.';
+                captureBtn.disabled = false;
+                captureBtn.textContent = 'Capture';
+                return;
+            }
 
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             canvas.getContext('2d').drawImage(video, 0, 0);
-            const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+            const base64 = canvas.toDataURL('image/jpeg', 0.9).split(',')[1];
 
             stopScanner();
 
-            addState.base64.back = base64;
-            await analyzeEditionEvidence('Reading the barcode');
+            await extractIsbnFromBarcodeFrame(base64);
         };
+    }
+}
+
+async function extractIsbnFromBarcodeFrame(base64) {
+    clearAddStatus();
+    showAnalyzingState('Reading the barcode...');
+
+    try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session?.access_token) throw new Error('Session expired');
+
+        const { data, error } = await sb.functions.invoke('analyze-book', {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+            body: { cover_image: base64 }
+        });
+
+        if (error) throw new Error(error.message || 'Failed');
+
+        const isbn = normalizeIsbn(data?.isbn_13 || data?.isbn_10);
+        if (isbn && (isbn.startsWith('978') || isbn.startsWith('979') || isbn.length === 10)) {
+            setFieldValue('isbn_13', isbn);
+            setAddStatus('ISBN detected. Checking edition details.', 'success');
+            renderConfirmStep();
+            await lookupEditionByIsbn(isbn, 'Checking ISBN details');
+        } else {
+            setAddStatus('Could not read the ISBN. Try again or type it manually.', 'warning');
+            renderConfirmStep();
+        }
+    } catch (err) {
+        console.error('Barcode extract error:', err);
+        setAddStatus('Could not read the barcode. Type the ISBN manually.', 'warning');
+        renderConfirmStep();
     }
 }
 
