@@ -288,8 +288,8 @@ async function init(username, isPublic) {
 
     // Scene — editorial cream
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xfdfcf3);
-    scene.fog = new THREE.Fog(0xfdfcf3, 6, 14); // subtle depth fade
+    scene.background = new THREE.Color(0xffffff);
+    scene.fog = new THREE.Fog(0xffffff, 6, 14); // subtle depth fade
 
     // Stars
     const starCount = 200;

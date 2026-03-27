@@ -2365,19 +2365,19 @@ body {
 
 /* ═══════════════════════════════════════════════════════
    EDITORIAL LIGHT THEME — Criterion / Monocle
-   Palette: Cream #fdfcf3 · Ink #1a1410 · Paper #faf7f2
+   Palette: Cream #ffffff · Ink #1a1410 · Paper #faf7f2
    Type: DM Serif Display (headings) + existing sans (body)
    ═══════════════════════════════════════════════════════ */
 
 /* Global */
 body {
-    background: #fdfcf3;
+    background: #ffffff;
     color: #1a1410;
 }
 
 /* ── Auth screen ── */
 .auth-screen {
-    background: #fdfcf3;
+    background: #ffffff;
 }
 .auth-stars {
     display: none;
@@ -2451,7 +2451,7 @@ body {
 .auth-button {
     background: #1a1410;
     border-color: #1a1410;
-    color: #fdfcf3;
+    color: #ffffff;
     box-shadow: 0 2px 12px rgba(26, 20, 16, 0.15);
 }
 .auth-button:hover {
@@ -2517,7 +2517,7 @@ body {
 /* ── App canvas containers ── */
 .library-3d-container,
 #globe-view {
-    background: #fdfcf3;
+    background: #ffffff;
 }
 
 /* ── Shelvd logo (bottom-right) ── */
