@@ -2620,6 +2620,59 @@ body {
 /* ── Book arrow ── */
 .library-book-arrow-button  { background: rgba(255,255,255,0.9) !important; border: 1px solid rgba(0,0,0,0.1) !important; color: #6e6e6e !important; }
 
+/* ── Book Action Bar ── */
+.book-action-bar {
+    position: fixed;
+    bottom: 110px;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.95);
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 100px;
+    padding: 7px 10px 7px 16px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    pointer-events: none;
+    white-space: nowrap;
+    max-width: calc(100vw - 48px);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    z-index: 100;
+}
+.book-action-bar.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+.book-action-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 13px;
+    color: #000;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+.book-action-delete {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #b3b3b3;
+    padding: 5px 8px;
+    border-radius: 100px;
+    transition: color 0.15s, background 0.15s;
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 12px;
+}
+.book-action-delete:hover { color: #cc2200; background: rgba(204,34,0,0.06); }
+.book-action-delete.confirming { color: #cc2200; background: rgba(204,34,0,0.08); }
+
 /* ── Add book modal ── */
 .add-book-backdrop  { background: rgba(255,255,255,0.75) !important; backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important; }
 .add-book-card      { background: #ffffff !important; border-color: rgba(0,0,0,0.08) !important; box-shadow: 0 24px 80px rgba(0,0,0,0.1) !important; }

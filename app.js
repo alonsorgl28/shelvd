@@ -113,6 +113,20 @@ function getMatchTone(status) {
 }
 
 function renderBookDetail(bookData) {
+    // Show action bar (always, regardless of detail panel)
+    const actionBar = document.getElementById('book-action-bar');
+    const actionTitleEl = document.getElementById('book-action-title');
+    const deleteBtn = document.getElementById('book-action-delete');
+    if (actionBar && actionTitleEl) {
+        actionTitleEl.textContent = bookData?.title || '';
+        if (deleteBtn) {
+            deleteBtn.dataset.bookId = bookData?.id || '';
+            // Only show delete for own Supabase books (sb- prefix), not seed/public books
+            deleteBtn.style.display = String(bookData?.id || '').startsWith('sb-') ? '' : 'none';
+        }
+        actionBar.classList.add('visible');
+    }
+
     if (!detailPanel || !detailBadge || !detailTitle || !detailAuthor || !detailSummary || !detailGrid) return;
     const matchUi = getMatchTone(bookData?.match_status);
     detailBadge.className = `book-detail-badge ${matchUi.tone}`;
@@ -152,6 +166,14 @@ function renderBookDetail(bookData) {
 }
 
 function hideBookDetail() {
+    const actionBar = document.getElementById('book-action-bar');
+    if (actionBar) actionBar.classList.remove('visible');
+    const deleteBtn = document.getElementById('book-action-delete');
+    if (deleteBtn) {
+        deleteBtn.classList.remove('confirming');
+        const lbl = deleteBtn.querySelector('.book-action-delete-label');
+        if (lbl) lbl.textContent = 'Remove';
+    }
     if (!detailPanel) return;
     detailPanel.hidden = true;
 }
@@ -2118,4 +2140,21 @@ window.addEventListener('shelvd:book-added', async (e) => {
     } catch (err) { /* ignore */ }
 
     if (finalCover) applyCoverToBook(safeId, finalCover);
+});
+
+// Listen for book deletions
+window.addEventListener('shelvd:book-deleted', (e) => {
+    const { bookId } = e.detail;
+    const bookObj = findBookObjectById(bookId);
+    if (bookObj) {
+        scene.remove(bookObj);
+        const idx = bookObjects.indexOf(bookObj);
+        if (idx > -1) bookObjects.splice(idx, 1);
+        arrangeBooksInStack();
+        window.shelvdBookObjects = bookObjects;
+        document.getElementById('header-book-count').textContent = bookObjects.length + ' books';
+    }
+    if (pulledOutBook && String(pulledOutBook.userData.bookId) === String(bookId)) {
+        pulledOutBook = null;
+    }
 });

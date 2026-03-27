@@ -360,6 +360,39 @@ if (searchToggleBtn) {
     });
 }
 
+// ─── Delete Book ───
+async function deleteBook(rawId) {
+    const { error } = await sb.from('books').delete().eq('id', rawId);
+    if (error) { console.error('Delete failed:', error); return false; }
+    return true;
+}
+
+document.getElementById('book-action-delete').addEventListener('click', async function () {
+    const btn = this;
+    const bookId = btn.dataset.bookId; // sb-{uuid}
+    if (!bookId) return;
+
+    if (!btn.classList.contains('confirming')) {
+        btn.classList.add('confirming');
+        btn.querySelector('.book-action-delete-label').textContent = 'Confirm?';
+        setTimeout(() => {
+            if (btn.classList.contains('confirming')) {
+                btn.classList.remove('confirming');
+                btn.querySelector('.book-action-delete-label').textContent = 'Remove';
+            }
+        }, 3000);
+        return;
+    }
+
+    btn.disabled = true;
+    const rawId = bookId.replace(/^sb-/, '');
+    const ok = await deleteBook(rawId);
+    btn.disabled = false;
+    if (ok) {
+        window.dispatchEvent(new CustomEvent('shelvd:book-deleted', { detail: { bookId } }));
+    }
+});
+
 // ─── Logout Button ───
 document.getElementById('logout-btn').addEventListener('click', async () => {
     await sb.auth.signOut();
