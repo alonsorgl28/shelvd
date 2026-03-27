@@ -47,6 +47,12 @@ function getPublicUsername() {
     return match ? match[1].toLowerCase() : null;
 }
 
+// Immediately hide auth screen for public profile URLs (sync, before onAuthStateChange fires).
+// Ensures app.js fallback triggers init() without waiting for the async onAuthStateChange.
+if (getPublicUsername()) {
+    authScreen.style.display = 'none';
+}
+
 // ─── Auth state management ───
 let hasEnteredLibrary = false;
 
@@ -1510,53 +1516,72 @@ async function openBarcodeScanner() {
             } catch (e) { /* continue */ } finally { scanning = false; }
         }, 300);
     } else {
-        // ZXing fallback (iOS Safari — no native BarcodeDetector)
-        hint.textContent = 'Initializing scanner…';
-        let zxingReader;
-        try {
-            const hints = new Map();
-            hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E]);
-            hints.set(DecodeHintType.TRY_HARDER, true);
-            zxingReader = new MultiFormatReader();
-            zxingReader.setHints(hints);
-            hint.textContent = 'Hold steady — scanning automatically';
-        } catch (e) {
-            hint.textContent = 'Scanner init error: ' + (e?.message || String(e));
-            return;
-        }
-        const scanCanvas = document.createElement('canvas');
-        const scanCtx = scanCanvas.getContext('2d');
-        const NOT_FOUND_MSG = 'No MultiFormat Readers were able to detect the code.';
-        scanInterval = setInterval(() => {
-            if (video.readyState < 2 || video.videoWidth === 0) return;
-            try {
-                scanCanvas.width = video.videoWidth;
-                scanCanvas.height = video.videoHeight;
-                scanCtx.drawImage(video, 0, 0);
-                const { data, width, height } = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-                const luminance = new RGBLuminanceSource(data, width, height);
-                // Try HybridBinarizer first, then GlobalHistogramBinarizer
-                let result;
+        // iOS Safari fallback — canvas taint blocks ZXing from reading video frames
+        // Solution: use native file input with capture="environment", decode the static photo
+        hint.textContent = 'Aim at the barcode, then tap Capture';
+        captureBtn.style.display = '';
+        captureBtn.textContent = 'Capture';
+
+        captureBtn.onclick = () => {
+            // Stop video stream before opening file picker
+            stopScanner();
+
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.setAttribute('capture', 'environment');
+
+            fileInput.onchange = async () => {
+                const file = fileInput.files && fileInput.files[0];
+                if (!file) return;
+
+                // Try ZXing on the static photo (no canvas taint with file input)
+                let isbn = null;
                 try {
-                    result = zxingReader.decode(new BinaryBitmap(new HybridBinarizer(luminance)));
-                } catch (_) {
-                    result = zxingReader.decode(new BinaryBitmap(new GlobalHistogramBinarizer(luminance)));
+                    const hints = new Map();
+                    hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E]);
+                    hints.set(DecodeHintType.TRY_HARDER, true);
+                    const zxingReader = new MultiFormatReader();
+                    zxingReader.setHints(hints);
+
+                    const bitmap = await createImageBitmap(file);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = bitmap.width;
+                    canvas.height = bitmap.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(bitmap, 0, 0);
+                    bitmap.close();
+
+                    const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const luminance = new RGBLuminanceSource(data, width, height);
+                    let result;
+                    try {
+                        result = zxingReader.decode(new BinaryBitmap(new HybridBinarizer(luminance)));
+                    } catch (_) {
+                        result = zxingReader.decode(new BinaryBitmap(new GlobalHistogramBinarizer(luminance)));
+                    }
+                    isbn = normalizeIsbn(result.getText());
+                } catch (e) {
+                    // ZXing failed — will try Claude fallback below
                 }
-                const isbn = normalizeIsbn(result.getText());
+
                 if (isbn && (isbn.startsWith('978') || isbn.startsWith('979') || isbn.length === 10)) {
-                    stopScanner();
                     setFieldValue('isbn_13', isbn);
                     setAddStatus('ISBN detected. Checking edition details.', 'success');
-                    lookupEditionByIsbn(isbn, 'Checking ISBN details');
+                    await lookupEditionByIsbn(isbn, 'Checking ISBN details');
+                } else {
+                    // ZXing couldn't read it — send to Claude as fallback
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        const base64 = e.target.result.split(',')[1];
+                        await extractIsbnFromBarcodeFrame(base64);
+                    };
+                    reader.readAsDataURL(file);
                 }
-            } catch (e) {
-                // Only show non-"not found" errors
-                const msg = e?.message || String(e);
-                if (msg && msg !== NOT_FOUND_MSG) {
-                    hint.textContent = 'Scan error: ' + msg;
-                }
-            }
-        }, 300);
+            };
+
+            fileInput.click();
+        };
     }
 }
 
