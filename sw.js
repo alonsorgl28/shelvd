@@ -4,7 +4,7 @@ const STATIC_ASSETS = [
     '/index.html',
     '/style.css',
     '/auth.js',
-    '/auth.js?v=20260327b',
+    '/auth.js?v=20260327c',
     '/app.js',
     '/app.js?v=20260324k',
     '/pwa-install.js',

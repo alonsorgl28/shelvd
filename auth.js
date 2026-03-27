@@ -1,5 +1,3 @@
-import { MultiFormatReader, BinaryBitmap, HybridBinarizer, GlobalHistogramBinarizer, RGBLuminanceSource, DecodeHintType, BarcodeFormat } from '@zxing/library';
-
 // ─── Supabase Auth for Shelvd ───
 
 const SUPABASE_URL = 'https://ttdxdcxighxlauwcmhgk.supabase.co';
@@ -1538,6 +1536,7 @@ async function openBarcodeScanner() {
                 // Try ZXing on the static photo (no canvas taint with file input)
                 let isbn = null;
                 try {
+                    const { MultiFormatReader, BinaryBitmap, HybridBinarizer, GlobalHistogramBinarizer, RGBLuminanceSource, DecodeHintType, BarcodeFormat } = await import('@zxing/library');
                     const hints = new Map();
                     hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E]);
                     hints.set(DecodeHintType.TRY_HARDER, true);
