@@ -2523,3 +2523,11 @@ body {
 .add-choose-icon         { color: #b3b3b3 !important; }
 .add-choose-label        { color: #000000 !important; font-family: inherit !important; }
 .add-choose-desc         { color: #6e6e6e !important; font-family: inherit !important; }
+
+/* ── Grid view ── */
+.grid-view                       { background: #ffffff !important; }
+.grid-book-cover                 { background: #f3f3f3 !important; }
+.grid-book-cover .placeholder    { color: #b3b3b3 !important; }
+.grid-book-title                 { color: #000000 !important; }
+.grid-book-author                { color: #6e6e6e !important; }
+.grid-book-meta                  { color: #b3b3b3 !important; }
