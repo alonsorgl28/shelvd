@@ -1,4 +1,4 @@
-import { MultiFormatReader, BinaryBitmap, HybridBinarizer, RGBLuminanceSource } from '@zxing/library';
+import { MultiFormatReader, BinaryBitmap, HybridBinarizer, GlobalHistogramBinarizer, RGBLuminanceSource, DecodeHintType, BarcodeFormat } from '@zxing/library';
 
 // ─── Supabase Auth for Shelvd ───
 
@@ -1510,11 +1510,15 @@ async function openBarcodeScanner() {
             } catch (e) { /* continue */ } finally { scanning = false; }
         }, 300);
     } else {
-        // ZXing fallback — shows real error in hint so we can diagnose
+        // ZXing fallback (iOS Safari — no native BarcodeDetector)
         hint.textContent = 'Initializing scanner…';
         let zxingReader;
         try {
+            const hints = new Map();
+            hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E]);
+            hints.set(DecodeHintType.TRY_HARDER, true);
             zxingReader = new MultiFormatReader();
+            zxingReader.setHints(hints);
             hint.textContent = 'Hold steady — scanning automatically';
         } catch (e) {
             hint.textContent = 'Scanner init error: ' + (e?.message || String(e));
@@ -1522,7 +1526,7 @@ async function openBarcodeScanner() {
         }
         const scanCanvas = document.createElement('canvas');
         const scanCtx = scanCanvas.getContext('2d');
-        let lastErr = '';
+        const NOT_FOUND_MSG = 'No MultiFormat Readers were able to detect the code.';
         scanInterval = setInterval(() => {
             if (video.readyState < 2 || video.videoWidth === 0) return;
             try {
@@ -1531,8 +1535,13 @@ async function openBarcodeScanner() {
                 scanCtx.drawImage(video, 0, 0);
                 const { data, width, height } = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
                 const luminance = new RGBLuminanceSource(data, width, height);
-                const bitmap = new BinaryBitmap(new HybridBinarizer(luminance));
-                const result = zxingReader.decode(bitmap);
+                // Try HybridBinarizer first, then GlobalHistogramBinarizer
+                let result;
+                try {
+                    result = zxingReader.decode(new BinaryBitmap(new HybridBinarizer(luminance)));
+                } catch (_) {
+                    result = zxingReader.decode(new BinaryBitmap(new GlobalHistogramBinarizer(luminance)));
+                }
                 const isbn = normalizeIsbn(result.getText());
                 if (isbn && (isbn.startsWith('978') || isbn.startsWith('979') || isbn.length === 10)) {
                     stopScanner();
@@ -1541,10 +1550,10 @@ async function openBarcodeScanner() {
                     lookupEditionByIsbn(isbn, 'Checking ISBN details');
                 }
             } catch (e) {
-                const name = e?.name || '';
-                if (name !== 'NotFoundException' && name !== 'ChecksumException' && name !== 'FormatException') {
-                    const msg = e?.message || String(e);
-                    if (msg !== lastErr) { lastErr = msg; hint.textContent = 'Scan error: ' + msg; }
+                // Only show non-"not found" errors
+                const msg = e?.message || String(e);
+                if (msg && msg !== NOT_FOUND_MSG) {
+                    hint.textContent = 'Scan error: ' + msg;
                 }
             }
         }, 300);
