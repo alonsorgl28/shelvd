@@ -288,8 +288,8 @@ async function init(username, isPublic) {
 
     // Scene — editorial cream
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf5f0e8);
-    scene.fog = new THREE.Fog(0xf5f0e8, 6, 14); // subtle depth fade
+    scene.background = new THREE.Color(0xfdfcf3);
+    scene.fog = new THREE.Fog(0xfdfcf3, 6, 14); // subtle depth fade
 
     // Stars
     const starCount = 200;
@@ -808,8 +808,8 @@ function generateBookColor(title) {
         hash = title.charCodeAt(i) + ((hash << 5) - hash);
     }
     const h = Math.abs(hash % 360);
-    const s = 25 + Math.abs((hash >> 8) % 30); // 25-55% saturation
-    const l = 35 + Math.abs((hash >> 16) % 25); // 35-60% lightness
+    const s = 40 + Math.abs((hash >> 8) % 25); // 40-65% saturation — richer on light bg
+    const l = 18 + Math.abs((hash >> 16) % 24); // 18-42% lightness — Criterion-depth contrast
     return hslToHex(h, s, l);
 }
 
