@@ -429,6 +429,7 @@ async function init(username, isPublic) {
     setupScrollbar();
     setupViewToggle();
     setupSearch();
+    setupActionDropdown();
 
     // Animation loop
     animate();
@@ -462,8 +463,8 @@ function createBook(bookData, index) {
 
     const materials = [];
     for (let i = 0; i < 6; i++) {
-        if (i === 0 || i === 2 || i === 3) {
-            materials[i] = new Mat({ color: 0xffffff, ...matProps });
+        if (i === 2 || i === 3) {
+            materials[i] = new Mat({ color: 0xf0ebe0, ...matProps });
         } else {
             materials[i] = new Mat({ color: defaultColor, ...matProps });
         }
@@ -471,6 +472,9 @@ function createBook(bookData, index) {
 
     // Create spine text texture immediately
     const spineTexture = createSpineTexture(bookData.title, bookData.author, bookData.pages, baseHeight, bookSpineWidth, defaultColor);
+    // Page edge texture — stacked pages effect (the visual differentiator)
+    const pageEdgeTexture = createPageEdgeTexture(baseHeight, bookSpineWidth);
+    materials[0] = new Mat({ map: pageEdgeTexture, ...matProps });
     materials[1] = new Mat({ map: spineTexture, ...matProps });
 
     // Create front cover placeholder (skip on mobile to save GPU memory)
@@ -554,9 +558,14 @@ function createSpineTexture(title, author, pages, bookHeight, bookSpineWidth, bg
     ctx.fillStyle = bandColor;
     ctx.fillRect(0, canvasHeight - bandHeight, canvasWidth, bandHeight);
 
-    // ── Top accent line (2px) ──
+    // ── Top headband (3% height) — mirrors bottom, simulates book headband ──
+    const headbandHeight = Math.round(canvasHeight * 0.03);
+    ctx.fillStyle = bandColor;
+    ctx.fillRect(0, 0, canvasWidth, headbandHeight);
+
+    // ── Top accent line (2px) — sits just below headband ──
     ctx.fillStyle = `rgba(255,255,255,0.17)`;
-    ctx.fillRect(0, 0, canvasWidth, 2);
+    ctx.fillRect(0, headbandHeight, canvasWidth, 2);
 
     // ── Auto-contrast: light text on dark bg, dark text on light bg ──
     const luminance = (bgRgb.r * 0.299 + bgRgb.g * 0.587 + bgRgb.b * 0.114) / 255;
@@ -626,6 +635,63 @@ function createSpineTexture(title, author, pages, bookHeight, bookSpineWidth, bg
 
     ctx.globalAlpha = 1;
     ctx.restore();
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.needsUpdate = true;
+    return texture;
+}
+
+// ─── Page Edge Texture ───
+function createPageEdgeTexture(bookHeight, bookSpineWidth) {
+    const baseResolution = window.innerWidth <= 768 ? 512 : 1024;
+    const aspectRatio = bookHeight / bookSpineWidth;
+
+    let canvasWidth, canvasHeight;
+    if (aspectRatio > 1) {
+        canvasHeight = baseResolution;
+        canvasWidth = Math.round(baseResolution / aspectRatio);
+    } else {
+        canvasWidth = baseResolution;
+        canvasHeight = Math.round(baseResolution * aspectRatio);
+    }
+    canvasWidth = Math.max(64, canvasWidth);
+    canvasHeight = Math.max(64, canvasHeight);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+    const ctx = canvas.getContext('2d');
+
+    // Warm paper base
+    ctx.fillStyle = '#f0ebe0';
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    // Horizontal gradient: slightly darker on the left edge (spine shadow)
+    const shadowGrad = ctx.createLinearGradient(0, 0, canvasWidth, 0);
+    shadowGrad.addColorStop(0, 'rgba(0,0,0,0.18)');
+    shadowGrad.addColorStop(0.12, 'rgba(0,0,0,0.05)');
+    shadowGrad.addColorStop(1, 'rgba(0,0,0,0.0)');
+    ctx.fillStyle = shadowGrad;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    // Page lines — horizontal, evenly spaced
+    const lineCount = Math.round(canvasHeight * 0.55);
+    const spacing = canvasHeight / lineCount;
+    ctx.strokeStyle = 'rgba(0,0,0,0.055)';
+    ctx.lineWidth = 0.8;
+    for (let i = 0; i < lineCount; i++) {
+        const y = Math.round(i * spacing) + 0.5;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvasWidth, y);
+        ctx.stroke();
+    }
+
+    // Hard left edge — spine shadow line
+    ctx.fillStyle = 'rgba(0,0,0,0.20)';
+    ctx.fillRect(0, 0, 2, canvasHeight);
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.minFilter = THREE.LinearFilter;
@@ -1383,8 +1449,8 @@ function makeGlobeBookMesh(bookData) {
 
     const materials = [];
     for (let i = 0; i < 6; i++) {
-        if (i === 0 || i === 2 || i === 3) {
-            materials[i] = new THREE.MeshStandardMaterial({ color: 0xfafafa, roughness: 1.0, metalness: 0.0 });
+        if (i === 2 || i === 3) {
+            materials[i] = new THREE.MeshStandardMaterial({ color: 0xf0ebe0, roughness: 1.0, metalness: 0.0 });
         } else {
             materials[i] = new THREE.MeshStandardMaterial({ color: defaultColor, roughness: 1.0, metalness: 0.0 });
         }
@@ -1392,6 +1458,8 @@ function makeGlobeBookMesh(bookData) {
 
     const spineTexture = createSpineTexture(bookData.title, bookData.author, bookData.pages, baseHeight, bookSpineWidth, defaultColor);
     materials[1] = new THREE.MeshStandardMaterial({ map: spineTexture, roughness: 1.0, metalness: 0.0 });
+    const pageEdgeTexture = createPageEdgeTexture(baseHeight, bookSpineWidth);
+    materials[0] = new THREE.MeshStandardMaterial({ map: pageEdgeTexture, roughness: 1.0, metalness: 0.0 });
 
     const coverPlaceholder = createCoverPlaceholder(bookData.title, bookData.author, baseCoverWidth, baseHeight, defaultColor);
     materials[4] = new THREE.MeshStandardMaterial({ map: coverPlaceholder, roughness: 1.0, metalness: 0.0 });
@@ -1439,18 +1507,124 @@ function applyGlobeCover(mesh, coverUrl) {
     img.src = coverUrl;
 }
 
-// ─── View Toggle ───
+// ─── Action Dropdown ───
+function setupActionDropdown() {
+    const adrop   = document.getElementById('adrop');
+    const trigger = document.getElementById('adrop-trigger');
+    const menu    = document.getElementById('adrop-menu');
+    if (!adrop || !trigger || !menu) return;
+
+    let isOpen = false;
+
+    function openDrop()  { isOpen = true;  adrop.classList.add('open');    trigger.setAttribute('aria-expanded', 'true'); }
+    function closeDrop() { isOpen = false; adrop.classList.remove('open'); trigger.setAttribute('aria-expanded', 'false'); }
+
+    trigger.addEventListener('click', () => { if (isOpen) closeDrop(); else openDrop(); });
+
+    document.addEventListener('mousedown', (e) => {
+        if (isOpen && !adrop.contains(e.target)) closeDrop();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isOpen) closeDrop();
+    });
+
+    // Close dropdown after any item is clicked
+    menu.querySelectorAll('.adrop-item').forEach(item => {
+        item.addEventListener('click', () => {
+            // Small delay so the action can fire before the menu hides
+            setTimeout(closeDrop, 80);
+        });
+    });
+}
+
+// ─── View Select (animated dropdown) ───
+const VSELECT_ICONS = {
+    shelf: `<rect x="4" y="6.25" width="16" height="1.5" rx="0.75" fill="currentColor"/><rect x="5" y="9.25" width="14" height="1.5" rx="0.75" fill="currentColor"/><rect x="3" y="12.25" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect x="6" y="15.25" width="12" height="1.5" rx="0.75" fill="currentColor"/><rect x="4" y="18.25" width="16" height="1.5" rx="0.75" fill="currentColor"/>`,
+    grid:  `<rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.5"/>`,
+    globe: `<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><ellipse cx="12" cy="12" rx="4" ry="9" stroke="currentColor" stroke-width="1.5"/><line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="1.5"/><line x1="3" y1="15" x2="21" y2="15" stroke="currentColor" stroke-width="1.5"/>`,
+};
+const VSELECT_LABELS = { shelf: 'Shelf', grid: 'Grid', globe: 'Globe' };
+
+function updateVSelectTrigger(view) {
+    const icon = document.getElementById('vselect-trigger-icon');
+    const label = document.getElementById('vselect-trigger-label');
+    if (icon) icon.innerHTML = VSELECT_ICONS[view] || '';
+    if (label) label.textContent = VSELECT_LABELS[view] || view;
+
+    // Update item checked states and animate checked bg
+    const items = document.querySelectorAll('.vselect-item');
+    const dropdown = document.getElementById('view-select-dropdown');
+    const checkedBg = document.getElementById('vselect-checked-bg');
+    items.forEach(item => {
+        const isChecked = item.dataset.value === view;
+        item.classList.toggle('is-checked', isChecked);
+        item.setAttribute('aria-selected', isChecked ? 'true' : 'false');
+        if (isChecked && checkedBg && dropdown) {
+            checkedBg.style.top = item.offsetTop + 'px';
+            checkedBg.style.height = item.offsetHeight + 'px';
+        }
+    });
+}
+
 function setupViewToggle() {
-    document.querySelectorAll('.view-toggle input[type="radio"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            const view = e.target.value;
+    const vselect   = document.getElementById('view-select');
+    const trigger   = document.getElementById('view-select-trigger');
+    const dropdown  = document.getElementById('view-select-dropdown');
+    const hoverBg   = document.getElementById('vselect-hover-bg');
+    const checkedBg = document.getElementById('vselect-checked-bg');
+    if (!vselect || !trigger || !dropdown) return;
+
+    let isOpen = false;
+
+    function openSelect() {
+        isOpen = true;
+        vselect.classList.add('open');
+        trigger.setAttribute('aria-expanded', 'true');
+        // Position checked bg immediately (no transition on first position)
+        const checkedItem = dropdown.querySelector('.vselect-item.is-checked');
+        if (checkedItem && checkedBg) {
+            checkedBg.style.transition = 'none';
+            checkedBg.style.top    = checkedItem.offsetTop + 'px';
+            checkedBg.style.height = checkedItem.offsetHeight + 'px';
+            requestAnimationFrame(() => { checkedBg.style.transition = ''; });
+        }
+    }
+
+    function closeSelect() {
+        isOpen = false;
+        vselect.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+        hoverBg.style.opacity = '0';
+    }
+
+    trigger.addEventListener('click', () => { if (isOpen) closeSelect(); else openSelect(); });
+
+    document.addEventListener('mousedown', (e) => {
+        if (isOpen && !vselect.contains(e.target)) closeSelect();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isOpen) closeSelect();
+    });
+
+    dropdown.querySelectorAll('.vselect-item').forEach(item => {
+        item.addEventListener('mouseenter', () => {
+            if (!hoverBg) return;
+            hoverBg.style.top    = item.offsetTop + 'px';
+            hoverBg.style.height = item.offsetHeight + 'px';
+            hoverBg.style.opacity = '1';
+        });
+        item.addEventListener('mouseleave', () => { hoverBg.style.opacity = '0'; });
+        item.addEventListener('click', () => {
+            const view = item.dataset.value;
             switchView(view);
+            closeSelect();
         });
     });
 }
 
 function switchView(view) {
     currentView = view;
+    updateVSelectTrigger(view);
     const gridEl = document.getElementById('grid-view');
     const globeEl = document.getElementById('globe-view');
     const containerEl = document.getElementById('library-3d-container');
@@ -1520,7 +1694,6 @@ function renderGridView() {
     gridEl.querySelectorAll('.grid-book').forEach(el => {
         el.addEventListener('click', () => {
             // Switch to shelf and pull out
-            document.querySelector('.view-toggle input[value="shelf"]').checked = true;
             switchView('shelf');
             const book = findBookObjectById(el.dataset.bookId);
             if (book) {
