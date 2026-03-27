@@ -2516,3 +2516,10 @@ body {
 .add-confirm-btn         { background: #000000 !important; border-color: #000000 !important; color: #ffffff !important; }
 .add-confirm-btn:hover   { background: #222222 !important; }
 .add-retake-btn          { color: #6e6e6e !important; }
+
+/* ── Add book modal — choose step (new structure) ── */
+.add-choose-option       { background: #f9f9f9 !important; border-color: rgba(0,0,0,0.1) !important; color: #000000 !important; }
+.add-choose-option:hover { background: #f3f3f3 !important; border-color: rgba(0,0,0,0.2) !important; }
+.add-choose-icon         { color: #b3b3b3 !important; }
+.add-choose-label        { color: #000000 !important; font-family: inherit !important; }
+.add-choose-desc         { color: #6e6e6e !important; font-family: inherit !important; }
