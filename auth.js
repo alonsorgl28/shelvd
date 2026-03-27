@@ -1,4 +1,4 @@
-import { BrowserMultiFormatReader } from '@zxing/browser';
+import { MultiFormatReader, BinaryBitmap, HybridBinarizer, RGBLuminanceSource } from '@zxing/library';
 
 // ─── Supabase Auth for Shelvd ───
 
@@ -1487,25 +1487,31 @@ async function openBarcodeScanner() {
 
     let scanInterval = null;
 
-    // ZXing auto-scan — works on all browsers including iOS Safari
+    // ZXing core decoder — captures each video frame to canvas and decodes directly
     hint.textContent = 'Hold steady — scanning automatically';
-    const codeReader = new BrowserMultiFormatReader();
-    let scanning = false;
+    const zxingReader = new MultiFormatReader();
+    const scanCanvas = document.createElement('canvas');
+    const scanCtx = scanCanvas.getContext('2d');
 
-    scanInterval = setInterval(async () => {
-        if (scanning || video.readyState < 2) return;
-        scanning = true;
+    scanInterval = setInterval(() => {
+        if (video.readyState < 2 || video.videoWidth === 0) return;
         try {
-            const result = await codeReader.decodeFromVideoElement(video);
+            scanCanvas.width = video.videoWidth;
+            scanCanvas.height = video.videoHeight;
+            scanCtx.drawImage(video, 0, 0);
+            const { data, width, height } = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+            const luminance = new RGBLuminanceSource(data, width, height);
+            const bitmap = new BinaryBitmap(new HybridBinarizer(luminance));
+            const result = zxingReader.decode(bitmap);
             const isbn = normalizeIsbn(result.getText());
             if (isbn && (isbn.startsWith('978') || isbn.startsWith('979') || isbn.length === 10)) {
                 stopScanner();
                 setFieldValue('isbn_13', isbn);
                 setAddStatus('ISBN detected. Checking edition details.', 'success');
-                await lookupEditionByIsbn(isbn, 'Checking ISBN details');
+                lookupEditionByIsbn(isbn, 'Checking ISBN details');
             }
-        } catch (e) { /* NotFoundException = no barcode in frame yet, continue */ } finally { scanning = false; }
-    }, 400);
+        } catch (e) { /* NotFoundException = no barcode in frame yet, continue */ }
+    }, 300);
 }
 
 async function extractIsbnFromBarcodeFrame(base64) {
