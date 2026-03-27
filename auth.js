@@ -1487,31 +1487,68 @@ async function openBarcodeScanner() {
 
     let scanInterval = null;
 
-    // ZXing core decoder — captures each video frame to canvas and decodes directly
-    hint.textContent = 'Hold steady — scanning automatically';
-    const zxingReader = new MultiFormatReader();
-    const scanCanvas = document.createElement('canvas');
-    const scanCtx = scanCanvas.getContext('2d');
-
-    scanInterval = setInterval(() => {
-        if (video.readyState < 2 || video.videoWidth === 0) return;
+    if ('BarcodeDetector' in window) {
+        // Native BarcodeDetector (Chrome, Android, iOS 17+)
+        hint.textContent = 'Hold steady — scanning automatically';
+        const detector = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
+        let scanning = false;
+        scanInterval = setInterval(async () => {
+            if (scanning || video.readyState < 2) return;
+            scanning = true;
+            try {
+                const results = await detector.detect(video);
+                for (const r of results || []) {
+                    const isbn = normalizeIsbn(r?.rawValue);
+                    if (isbn && (isbn.startsWith('978') || isbn.startsWith('979') || isbn.length === 10)) {
+                        stopScanner();
+                        setFieldValue('isbn_13', isbn);
+                        setAddStatus('ISBN detected. Checking edition details.', 'success');
+                        await lookupEditionByIsbn(isbn, 'Checking ISBN details');
+                        return;
+                    }
+                }
+            } catch (e) { /* continue */ } finally { scanning = false; }
+        }, 300);
+    } else {
+        // ZXing fallback — shows real error in hint so we can diagnose
+        hint.textContent = 'Initializing scanner…';
+        let zxingReader;
         try {
-            scanCanvas.width = video.videoWidth;
-            scanCanvas.height = video.videoHeight;
-            scanCtx.drawImage(video, 0, 0);
-            const { data, width, height } = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-            const luminance = new RGBLuminanceSource(data, width, height);
-            const bitmap = new BinaryBitmap(new HybridBinarizer(luminance));
-            const result = zxingReader.decode(bitmap);
-            const isbn = normalizeIsbn(result.getText());
-            if (isbn && (isbn.startsWith('978') || isbn.startsWith('979') || isbn.length === 10)) {
-                stopScanner();
-                setFieldValue('isbn_13', isbn);
-                setAddStatus('ISBN detected. Checking edition details.', 'success');
-                lookupEditionByIsbn(isbn, 'Checking ISBN details');
+            zxingReader = new MultiFormatReader();
+            hint.textContent = 'Hold steady — scanning automatically';
+        } catch (e) {
+            hint.textContent = 'Scanner init error: ' + (e?.message || String(e));
+            return;
+        }
+        const scanCanvas = document.createElement('canvas');
+        const scanCtx = scanCanvas.getContext('2d');
+        let lastErr = '';
+        scanInterval = setInterval(() => {
+            if (video.readyState < 2 || video.videoWidth === 0) return;
+            try {
+                scanCanvas.width = video.videoWidth;
+                scanCanvas.height = video.videoHeight;
+                scanCtx.drawImage(video, 0, 0);
+                const { data, width, height } = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+                const luminance = new RGBLuminanceSource(data, width, height);
+                const bitmap = new BinaryBitmap(new HybridBinarizer(luminance));
+                const result = zxingReader.decode(bitmap);
+                const isbn = normalizeIsbn(result.getText());
+                if (isbn && (isbn.startsWith('978') || isbn.startsWith('979') || isbn.length === 10)) {
+                    stopScanner();
+                    setFieldValue('isbn_13', isbn);
+                    setAddStatus('ISBN detected. Checking edition details.', 'success');
+                    lookupEditionByIsbn(isbn, 'Checking ISBN details');
+                }
+            } catch (e) {
+                const name = e?.name || '';
+                if (name !== 'NotFoundException' && name !== 'ChecksumException' && name !== 'FormatException') {
+                    const msg = e?.message || String(e);
+                    if (msg !== lastErr) { lastErr = msg; hint.textContent = 'Scan error: ' + msg; }
+                }
             }
-        } catch (e) { /* NotFoundException = no barcode in frame yet, continue */ }
-    }, 300);
+        }, 300);
+    }
 }
 
 async function extractIsbnFromBarcodeFrame(base64) {
