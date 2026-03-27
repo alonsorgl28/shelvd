@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap');
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 /* ── Auth Screen ── */
@@ -2359,4 +2361,302 @@ body {
     font-size: 13px;
     text-align: center;
     min-height: 20px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   EDITORIAL LIGHT THEME — Criterion / Monocle
+   Palette: Cream #f5f0e8 · Ink #1a1410 · Paper #faf7f2
+   Type: DM Serif Display (headings) + existing sans (body)
+   ═══════════════════════════════════════════════════════ */
+
+/* Global */
+body {
+    background: #f5f0e8;
+    color: #1a1410;
+}
+
+/* ── Auth screen ── */
+.auth-screen {
+    background: #f5f0e8;
+}
+.auth-stars {
+    display: none;
+}
+
+/* ── Library card ── */
+.library-card {
+    background: rgba(252, 249, 244, 0.97);
+    border-color: rgba(26, 20, 16, 0.1);
+    box-shadow:
+        0 2px 40px rgba(26, 20, 16, 0.08),
+        0 1px 0 rgba(26, 20, 16, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+.library-card::before { display: none; }
+.library-card::after {
+    border-color: rgba(26, 20, 16, 0.05);
+}
+
+/* ── Logo & typography ── */
+.library-card-logo {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-weight: 400;
+    color: #1a1410;
+    letter-spacing: -0.02em;
+    text-shadow: none;
+}
+.lc-books {
+    opacity: 0.55;
+    color: #1a1410;
+}
+.library-card-subtitle {
+    color: rgba(26, 20, 16, 0.35);
+}
+.library-card-number {
+    color: rgba(26, 20, 16, 0.28);
+}
+.library-card-footer {
+    border-color: rgba(26, 20, 16, 0.08);
+}
+.library-card-stamp {
+    border-color: rgba(26, 20, 16, 0.1);
+    background: rgba(245, 240, 232, 0.6);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* ── Auth inputs ── */
+.auth-label {
+    color: rgba(26, 20, 16, 0.5);
+}
+.auth-input {
+    background: rgba(245, 240, 232, 0.9);
+    border-color: rgba(26, 20, 16, 0.12);
+    color: #1a1410;
+    box-shadow: inset 0 1px 3px rgba(26, 20, 16, 0.05);
+}
+.auth-input:focus {
+    background: #faf7f2;
+    border-color: rgba(26, 20, 16, 0.3);
+    box-shadow:
+        inset 0 1px 3px rgba(26, 20, 16, 0.05),
+        0 0 0 3px rgba(26, 20, 16, 0.06);
+}
+.auth-input::placeholder {
+    color: rgba(26, 20, 16, 0.28);
+}
+
+/* ── Auth buttons ── */
+.auth-button {
+    background: #1a1410;
+    border-color: #1a1410;
+    color: #f5f0e8;
+    box-shadow: 0 2px 12px rgba(26, 20, 16, 0.15);
+}
+.auth-button:hover {
+    background: #2d2419;
+    border-color: #2d2419;
+    box-shadow: 0 4px 18px rgba(26, 20, 16, 0.2);
+    transform: translateY(-1px);
+}
+.auth-button:active {
+    transform: scale(0.985);
+}
+.auth-google-btn {
+    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(245,242,237,0.95));
+    border-color: rgba(26, 20, 16, 0.12);
+    color: #1a1410;
+    box-shadow:
+        0 2px 8px rgba(26, 20, 16, 0.08),
+        inset 0 1px 0 rgba(255,255,255,0.9);
+}
+.auth-google-btn:hover {
+    background: linear-gradient(180deg, #ffffff, rgba(248,245,240,0.98));
+    box-shadow:
+        0 4px 12px rgba(26, 20, 16, 0.1),
+        inset 0 1px 0 rgba(255,255,255,1);
+}
+.auth-divider::before,
+.auth-divider::after {
+    background: rgba(26, 20, 16, 0.1);
+}
+.auth-divider span {
+    color: rgba(26, 20, 16, 0.3);
+}
+
+/* ── Auth states ── */
+.auth-check-text {
+    color: #1a1410;
+}
+.auth-check-sub {
+    color: rgba(26, 20, 16, 0.5);
+}
+.auth-check-sub strong {
+    color: #1a1410;
+}
+.auth-link-btn {
+    color: rgba(26, 20, 16, 0.38);
+}
+.auth-link-btn:hover {
+    color: rgba(26, 20, 16, 0.72);
+}
+.auth-username-preview {
+    background: rgba(245, 240, 232, 0.9);
+    border-color: rgba(26, 20, 16, 0.1);
+    color: rgba(26, 20, 16, 0.42);
+    box-shadow: inset 0 1px 3px rgba(26, 20, 16, 0.05);
+}
+.auth-username-preview strong {
+    color: #1a1410;
+}
+.auth-error {
+    color: #c0392b;
+}
+
+/* ── App canvas containers ── */
+.library-3d-container,
+#globe-view {
+    background: #f5f0e8;
+}
+
+/* ── Shelvd logo (bottom-right) ── */
+.shelvd-logo {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-weight: 400;
+    color: rgba(26, 20, 16, 0.28);
+    letter-spacing: -0.02em;
+}
+.shelvd-logo:hover {
+    color: rgba(26, 20, 16, 0.6);
+}
+.shelvd-logo-books {
+    color: #1a1410;
+    opacity: 0.3;
+}
+
+/* ── User header (top-left) ── */
+.library-user-header {
+    background: rgba(252, 249, 244, 0.88);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    box-shadow: 0 2px 16px rgba(26, 20, 16, 0.06), 0 1px 0 rgba(26,20,16,0.04);
+    border: 1px solid rgba(26, 20, 16, 0.07);
+}
+.library-user-username {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #1a1410;
+    letter-spacing: -0.01em;
+}
+.library-user-stats {
+    color: rgba(26, 20, 16, 0.42);
+}
+
+/* ── Action buttons (top-right) ── */
+.action-btn {
+    background: rgba(252, 249, 244, 0.88);
+    border-color: rgba(26, 20, 16, 0.1);
+    color: rgba(26, 20, 16, 0.55);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 2px 8px rgba(26, 20, 16, 0.06);
+}
+.action-btn:hover {
+    background: rgba(252, 249, 244, 0.98);
+    border-color: rgba(26, 20, 16, 0.18);
+    color: #1a1410;
+    box-shadow: 0 4px 12px rgba(26, 20, 16, 0.08);
+}
+
+/* ── Search ── */
+.search-toggle-btn,
+.utility-menu-toggle {
+    background: rgba(252, 249, 244, 0.88);
+    border-color: rgba(26, 20, 16, 0.1);
+    color: rgba(26, 20, 16, 0.45);
+}
+.search-toggle-btn:hover,
+.utility-menu-toggle:hover,
+.utility-menu-toggle.active {
+    background: rgba(252, 249, 244, 0.98);
+    border-color: rgba(26, 20, 16, 0.18);
+    color: #1a1410;
+}
+.search-input-wrap {
+    background: rgba(252, 249, 244, 0.96);
+    border-color: rgba(26, 20, 16, 0.12);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 4px 16px rgba(26, 20, 16, 0.06);
+}
+.search-input {
+    color: #1a1410;
+}
+.search-input::placeholder {
+    color: rgba(26, 20, 16, 0.28);
+}
+.search-input-icon {
+    color: rgba(26, 20, 16, 0.35);
+}
+.search-clear-btn {
+    background: rgba(26, 20, 16, 0.06);
+    color: rgba(26, 20, 16, 0.45);
+}
+.search-clear-btn:hover {
+    background: rgba(26, 20, 16, 0.12);
+    color: #1a1410;
+}
+.search-count {
+    color: rgba(26, 20, 16, 0.38);
+}
+
+/* ── View toggle pill (bottom-center) ── */
+.library-view-toggle-pill .view-toggle {
+    background: rgba(252, 249, 244, 0.92);
+    border-color: rgba(26, 20, 16, 0.1);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    box-shadow: 0 2px 12px rgba(26, 20, 16, 0.06);
+}
+.library-view-toggle-pill .view-toggle label {
+    color: rgba(26, 20, 16, 0.4);
+}
+.library-view-toggle-pill .view-toggle label:hover {
+    color: rgba(26, 20, 16, 0.7);
+}
+.library-view-toggle-pill .view-toggle label:has(input:checked) {
+    background: rgba(26, 20, 16, 0.08);
+    color: #1a1410;
+}
+
+/* ── Book arrow (swipe up) ── */
+.library-book-arrow-button {
+    background: rgba(252, 249, 244, 0.85);
+    border: 1px solid rgba(26, 20, 16, 0.1);
+    color: rgba(26, 20, 16, 0.5);
+}
+
+/* ── Add book modal ── */
+.add-book-backdrop {
+    background: rgba(245, 240, 232, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+.add-book-card {
+    background: #faf7f2;
+    border-color: rgba(26, 20, 16, 0.08);
+    box-shadow: 0 24px 80px rgba(26, 20, 16, 0.15);
+}
+.add-step-title {
+    color: #1a1410;
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-weight: 400;
+}
+.add-close-btn {
+    color: rgba(26, 20, 16, 0.35);
+}
+.add-close-btn:hover {
+    color: #1a1410;
 }

@@ -286,10 +286,10 @@ async function init(username, isPublic) {
         }
     }
 
-    // Scene — deep navy ink
+    // Scene — editorial cream
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0f1a);
-    scene.fog = new THREE.Fog(0x0a0f1a, 6, 14); // subtle depth fade
+    scene.background = new THREE.Color(0xf5f0e8);
+    scene.fog = new THREE.Fog(0xf5f0e8, 6, 14); // subtle depth fade
 
     // Stars
     const starCount = 200;
