@@ -1,3 +1,5 @@
+import { BrowserMultiFormatReader } from '@zxing/browser';
+
 // ─── Supabase Auth for Shelvd ───
 
 const SUPABASE_URL = 'https://ttdxdcxighxlauwcmhgk.supabase.co';
@@ -1485,59 +1487,25 @@ async function openBarcodeScanner() {
 
     let scanInterval = null;
 
-    if ('BarcodeDetector' in window) {
-        // Auto-scan mode (Chrome / Android)
-        hint.textContent = 'Hold steady — scanning automatically';
-        const detector = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
-        let scanning = false;
+    // ZXing auto-scan — works on all browsers including iOS Safari
+    hint.textContent = 'Hold steady — scanning automatically';
+    const codeReader = new BrowserMultiFormatReader();
+    let scanning = false;
 
-        scanInterval = setInterval(async () => {
-            if (scanning || video.readyState < 2) return;
-            scanning = true;
-            try {
-                const results = await detector.detect(video);
-                for (const result of results || []) {
-                    const isbn = normalizeIsbn(result?.rawValue);
-                    if (isbn && (isbn.startsWith('978') || isbn.startsWith('979') || isbn.length === 10)) {
-                        stopScanner();
-                        setFieldValue('isbn_13', isbn);
-                        setAddStatus('ISBN detected. Checking edition details.', 'success');
-                        await lookupEditionByIsbn(isbn, 'Checking ISBN details');
-                        return;
-                    }
-                }
-            } catch (e) { /* continue */ } finally { scanning = false; }
-        }, 300);
-    } else {
-        // Manual capture mode (iOS Safari)
-        hint.textContent = 'Frame the barcode, then tap Capture';
-        captureBtn.style.display = 'block';
-
-        captureBtn.onclick = () => {
-            stopScanner();
-            const tmpInput = document.createElement('input');
-            tmpInput.type = 'file';
-            tmpInput.accept = 'image/*';
-            tmpInput.capture = 'environment';
-            tmpInput.style.display = 'none';
-            document.body.appendChild(tmpInput);
-            // Use addEventListener (more reliable than onchange on iOS Safari)
-            tmpInput.addEventListener('change', async (e) => {
-                // Read files BEFORE removing from DOM
-                const file = e.target.files?.[0];
-                document.body.removeChild(tmpInput);
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = async (ev) => {
-                    const base64 = ev.target.result.split(',')[1];
-                    await extractIsbnFromBarcodeFrame(base64);
-                };
-                reader.readAsDataURL(file);
-            });
-            // Direct click — no setTimeout (iOS blocks file input clicks from async context)
-            tmpInput.click();
-        };
-    }
+    scanInterval = setInterval(async () => {
+        if (scanning || video.readyState < 2) return;
+        scanning = true;
+        try {
+            const result = await codeReader.decodeFromVideoElement(video);
+            const isbn = normalizeIsbn(result.getText());
+            if (isbn && (isbn.startsWith('978') || isbn.startsWith('979') || isbn.length === 10)) {
+                stopScanner();
+                setFieldValue('isbn_13', isbn);
+                setAddStatus('ISBN detected. Checking edition details.', 'success');
+                await lookupEditionByIsbn(isbn, 'Checking ISBN details');
+            }
+        } catch (e) { /* NotFoundException = no barcode in frame yet, continue */ } finally { scanning = false; }
+    }, 400);
 }
 
 async function extractIsbnFromBarcodeFrame(base64) {
