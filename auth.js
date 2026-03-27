@@ -1515,16 +1515,17 @@ async function openBarcodeScanner() {
 
         captureBtn.onclick = () => {
             stopScanner();
-            // Use native file input for full-quality photo (avoids blurry video frame on iOS)
             const tmpInput = document.createElement('input');
             tmpInput.type = 'file';
             tmpInput.accept = 'image/*';
             tmpInput.capture = 'environment';
             tmpInput.style.display = 'none';
             document.body.appendChild(tmpInput);
-            tmpInput.onchange = async (e) => {
-                document.body.removeChild(tmpInput);
+            // Use addEventListener (more reliable than onchange on iOS Safari)
+            tmpInput.addEventListener('change', async (e) => {
+                // Read files BEFORE removing from DOM
                 const file = e.target.files?.[0];
+                document.body.removeChild(tmpInput);
                 if (!file) return;
                 const reader = new FileReader();
                 reader.onload = async (ev) => {
@@ -1532,8 +1533,9 @@ async function openBarcodeScanner() {
                     await extractIsbnFromBarcodeFrame(base64);
                 };
                 reader.readAsDataURL(file);
-            };
-            setTimeout(() => tmpInput.click(), 200);
+            });
+            // Direct click — no setTimeout (iOS blocks file input clicks from async context)
+            tmpInput.click();
         };
     }
 }
