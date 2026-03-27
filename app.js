@@ -560,10 +560,10 @@ function createSpineTexture(title, author, pages, bookHeight, bookSpineWidth, bg
 
     // ── Auto-contrast: light text on dark bg, dark text on light bg ──
     const luminance = (bgRgb.r * 0.299 + bgRgb.g * 0.587 + bgRgb.b * 0.114) / 255;
-    const textColor = luminance > 0.45 ? '#000000' : '#ffffff';
-    const textAlpha = luminance > 0.45 ? 0.88 : 0.95;
-    const subtextAlpha = luminance > 0.45 ? 0.54 : 0.6;
-    const lineAlpha = luminance > 0.45 ? 0.18 : 0.24;
+    const textColor = luminance > 0.22 ? '#000000' : '#ffffff';
+    const textAlpha = luminance > 0.22 ? 0.88 : 0.95;
+    const subtextAlpha = luminance > 0.22 ? 0.54 : 0.6;
+    const lineAlpha = luminance > 0.22 ? 0.18 : 0.24;
 
     // All text is drawn rotated -90° (spine reads bottom-to-top)
     ctx.save();
@@ -671,10 +671,10 @@ function createCoverPlaceholder(title, author, width, height, bgColor) {
 
     // Text color — auto contrast
     const lum = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
-    const textColor = lum > 0.45
+    const textColor = lum > 0.22
         ? `rgba(0, 0, 0, 0.7)`
         : `rgba(255, 255, 255, 0.75)`;
-    const subtextColor = lum > 0.45
+    const subtextColor = lum > 0.22
         ? `rgba(0, 0, 0, 0.4)`
         : `rgba(255, 255, 255, 0.4)`;
 
