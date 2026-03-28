@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Shelvd — Migrate books.json → Supabase</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  body { font-family: monospace; background: #0a0a0a; color: #ccc; padding: 40px; max-width: 700px; margin: 0 auto; }
+  h1 { color: #fff; font-size: 18px; margin-bottom: 4px; }
+  p { color: #666; font-size: 13px; margin-bottom: 32px; }
+  #log { font-size: 12px; line-height: 1.8; }
+  .ok  { color: #4ade80; }
+  .err { color: #f87171; }
+  .inf { color: #60a5fa; }
+  .warn{ color: #fbbf24; }
+  button { background: #fff; color: #000; border: none; padding: 10px 24px; font-size: 14px; cursor: pointer; border-radius: 4px; font-family: monospace; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
+</head>
+<body>
+<h1>books.json → Supabase</h1>
+<p>Inserta los libros estáticos en tu cuenta. Abre esta página con tu sesión activa en shelvd.</p>
+<button id="btn" onclick="run()">Iniciar migración</button>
+<br><br>
+<div id="log"></div>
+
+<script>
+const SUPABASE_URL = 'https://ttdxdcxighxlauwcmhgk.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0ZHhkY3hpZ2h4bGF1d2NtaGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTgzMzksImV4cCI6MjA4OTY5NDMzOX0.XLbEFU8xaCFk9B2yAjuyk2pRMW1casXn30zICv3bIu8';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function log(msg, cls = '') {
+  const el = document.getElementById('log');
+  el.innerHTML += `<div class="${cls}">${msg}</div>`;
+  window.scrollTo(0, document.body.scrollHeight);
+}
+
+async function run() {
+  const btn = document.getElementById('btn');
+  btn.disabled = true;
+
+  // 1. Check session
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    log('✗ No hay sesión activa. Abre primero shelvd.com, inicia sesión, luego vuelve aquí.', 'err');
+    btn.disabled = false;
+    return;
+  }
+  log(`✓ Sesión activa: ${session.user.email}`, 'ok');
+
+  // 2. Check existing books to avoid duplicates
+  const { data: existing } = await sb.from('books').select('title').eq('user_id', session.user.id);
+  const existingTitles = new Set((existing || []).map(b => b.title.toLowerCase().trim()));
+  log(`ℹ ${existingTitles.size} libros ya en Supabase`, 'inf');
+
+  // 3. Load books.json
+  const res = await fetch('/books.json');
+  const books = await res.json();
+  log(`ℹ ${books.length} libros en books.json`, 'inf');
+
+  // 4. Filter out duplicates
+  const toInsert = books.filter(b => !existingTitles.has(b.title.toLowerCase().trim()));
+  const skipped = books.length - toInsert.length;
+  if (skipped > 0) log(`⚠ ${skipped} ya existen — se omiten`, 'warn');
+  log(`→ Insertando ${toInsert.length} libros...`, 'inf');
+
+  // 5. Insert in batches of 20
+  let inserted = 0;
+  let errors = 0;
+  const batchSize = 20;
+  for (let i = 0; i < toInsert.length; i += batchSize) {
+    const batch = toInsert.slice(i, i + batchSize).map(b => ({
+      user_id: session.user.id,
+      title: b.title,
+      author: b.author || 'Unknown',
+      pages: b.pages || 250,
+      cover: b.cover || null,
+      digital_cover_url: b.digital_cover_url || null,
+      match_status: 'manual_required'
+    }));
+    const { error } = await sb.from('books').insert(batch);
+    if (error) {
+      log(`✗ Batch ${Math.floor(i/batchSize)+1} falló: ${error.message}`, 'err');
+      errors += batch.length;
+    } else {
+      inserted += batch.length;
+      log(`✓ Batch ${Math.floor(i/batchSize)+1}: ${batch.length} libros insertados (total: ${inserted})`, 'ok');
+    }
+  }
+
+  // 6. Summary
+  log('', '');
+  if (errors === 0) {
+    log(`✓ Migración completa — ${inserted} libros en Supabase`, 'ok');
+    log('Siguiente paso: vaciá books.json → [] y hace push.', 'inf');
+  } else {
+    log(`⚠ ${inserted} insertados, ${errors} con error`, 'warn');
+  }
+  btn.textContent = 'Listo';
+}
+</script>
+</body>
+</html>
