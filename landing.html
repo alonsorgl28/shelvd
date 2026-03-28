@@ -966,8 +966,8 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-template-areas:
-                "shelf globe"
-                "grid  grid";
+                "shelf grid"
+                "globe globe";
             gap: 22px;
         }
 
@@ -985,12 +985,13 @@
         }
 
         .showcase-panel-shelf { grid-area: shelf; }
-        .showcase-panel-globe { grid-area: globe; }
+        .showcase-panel-globe {
+            grid-area: globe;
+            min-height: 520px;
+        }
         .showcase-panel-grid {
             grid-area: grid;
-            min-height: 228px;
-            width: min(560px, calc(100% - 260px));
-            justify-self: center;
+            min-height: 420px;
         }
 
         .showcase-label {
@@ -1014,9 +1015,9 @@
         }
 
         .showcase-stack-wrapper {
-            width: 66%;
-            max-width: 480px;
-            height: 84%;
+            width: 62%;
+            max-width: 440px;
+            height: 80%;
             overflow: hidden;
             position: relative;
             transform: rotateX(4deg);
@@ -1124,7 +1125,7 @@
         .showcase-grid-wrap {
             position: absolute;
             inset: 0;
-            padding: 46px 0 22px;
+            padding: 58px 16px 26px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1147,8 +1148,8 @@
         .showcase-grid-book {
             cursor: default;
             transition: transform 0.2s ease;
-            width: 108px;
-            flex: 0 0 108px;
+            width: 118px;
+            flex: 0 0 118px;
         }
 
         .showcase-grid-book:hover {
@@ -1391,8 +1392,8 @@
                 grid-template-columns: 1fr;
                 grid-template-areas:
                     "shelf"
-                    "globe"
-                    "grid";
+                    "grid"
+                    "globe";
             }
             .showcase-panel {
                 min-height: 360px;
@@ -1403,10 +1404,13 @@
             }
             .showcase-panel-grid {
                 width: 100%;
-                min-height: 210px;
+                min-height: 220px;
+            }
+            .showcase-panel-globe {
+                min-height: 420px;
             }
             .showcase-grid-wrap {
-                padding: 42px 0 18px;
+                padding: 48px 0 18px;
             }
             .showcase-grid-real {
                 gap: 12px;
@@ -1736,20 +1740,23 @@
                 </div>
             </section>
 
+            <section class="showcase-panel showcase-panel-grid">
+                <div class="showcase-label">Grid</div>
+                <div class="showcase-grid-wrap">
+                    <div class="showcase-grid-real" id="showcase-grid-real"></div>
+                </div>
+            </section>
+
             <section class="showcase-panel showcase-panel-globe">
                 <div class="showcase-label">Globe</div>
                 <div class="showcase-globe-shell">
                     <div class="showcase-real-globe" id="showcase-real-globe"></div>
                 </div>
                 <div class="showcase-globe-copy">
-                    <div class="showcase-copy-chip">Step inside the globe</div>
-                </div>
-            </section>
-
-            <section class="showcase-panel showcase-panel-grid">
-                <div class="showcase-label">Grid</div>
-                <div class="showcase-grid-wrap">
-                    <div class="showcase-grid-real" id="showcase-grid-real"></div>
+                    <div>
+                        <div class="showcase-copy-title">Try our interactive Globe shelf</div>
+                        <span class="showcase-copy-sub">Drag to explore the collection.</span>
+                    </div>
                 </div>
             </section>
         </div>
