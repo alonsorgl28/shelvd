@@ -974,21 +974,14 @@
         .showcase-panel {
             position: relative;
             overflow: hidden;
-            border-radius: 28px;
-            border: 1px solid rgba(255,255,255,0.07);
-            background:
-                radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 34%),
-                linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+            border-radius: 0;
+            border: none;
+            background: transparent;
             min-height: 420px;
         }
 
         .showcase-panel::after {
-            content: "";
-            position: absolute;
-            inset: auto 18px 18px 18px;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
-            pointer-events: none;
+            content: none;
         }
 
         .showcase-panel-shelf { grid-area: shelf; }
