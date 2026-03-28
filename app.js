@@ -574,6 +574,21 @@ function createSpineTexture(title, author, pages, bookHeight, bookSpineWidth, bg
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
+    // ── Rounded spine illusion: horizontal curvature gradient ──
+    // Dark on both edges + bright highlight in center = eye perceives a curved surface
+    const curveGrad = ctx.createLinearGradient(0, 0, canvasWidth, 0);
+    curveGrad.addColorStop(0,    'rgba(0,0,0,0.42)');
+    curveGrad.addColorStop(0.10, 'rgba(0,0,0,0.10)');
+    curveGrad.addColorStop(0.38, 'rgba(0,0,0,0.0)');
+    curveGrad.addColorStop(0.46, 'rgba(255,255,255,0.10)');
+    curveGrad.addColorStop(0.50, 'rgba(255,255,255,0.18)');
+    curveGrad.addColorStop(0.54, 'rgba(255,255,255,0.10)');
+    curveGrad.addColorStop(0.62, 'rgba(0,0,0,0.0)');
+    curveGrad.addColorStop(0.90, 'rgba(0,0,0,0.10)');
+    curveGrad.addColorStop(1,    'rgba(0,0,0,0.42)');
+    ctx.fillStyle = curveGrad;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
     // ── Bottom band (8% height) ──
     const bandHeight = Math.round(canvasHeight * 0.08);
     const bandColor = `rgb(${Math.max(0, bgRgb.r - 34)},${Math.max(0, bgRgb.g - 34)},${Math.max(0, bgRgb.b - 34)})`;
