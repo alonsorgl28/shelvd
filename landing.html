@@ -932,6 +932,24 @@
             margin: 0 auto;
         }
 
+        .showcase-heading {
+            margin: 0 0 18px;
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: rgba(0,0,0,0.34);
+        }
+
+        .showcase-group {
+            position: relative;
+            background: #141a2e;
+            overflow: hidden;
+            box-shadow: 0 0 28px rgba(20,26,46,0.18), 0 0 90px rgba(100,120,200,0.06);
+            opacity: 0;
+            transform: translateY(60px) scale(0.97);
+            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
         .showcase-frame {
             width: 100%;
             min-height: 840px;
@@ -946,6 +964,15 @@
             transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
+        .showcase-group-overview {
+            min-height: 520px;
+            margin-bottom: 18px;
+        }
+
+        .showcase-group-globe {
+            min-height: 560px;
+        }
+
         .showcase-canvas {
             position: absolute;
             inset: 0;
@@ -954,7 +981,8 @@
             pointer-events: none;
         }
 
-        .showcase-frame.visible {
+        .showcase-frame.visible,
+        .showcase-group.visible {
             opacity: 1;
             transform: translateY(0) scale(1);
         }
@@ -1694,9 +1722,11 @@
 
 <!-- ── Showcase ── -->
 <div class="showcase">
-    <div class="showcase-frame" data-reveal data-star-count="108" data-star-brightness="1.38" data-star-drift="1.78" data-star-glow="1.38">
+    <div class="showcase-heading">Explore your library, three ways</div>
+
+    <div class="showcase-group showcase-group-overview" data-reveal data-star-count="108" data-star-brightness="1.38" data-star-drift="1.78" data-star-glow="1.38">
         <canvas class="showcase-canvas" aria-hidden="true"></canvas>
-        <div class="showcase-inner">
+        <div class="showcase-inner" style="grid-template-areas: 'shelf grid';">
             <section class="showcase-panel showcase-panel-shelf">
                 <div class="showcase-label">Shelf</div>
                 <div class="showcase-stack-scene">
@@ -1746,7 +1776,12 @@
                     <div class="showcase-grid-real" id="showcase-grid-real"></div>
                 </div>
             </section>
+        </div>
+    </div>
 
+    <div class="showcase-group showcase-group-globe" data-reveal data-star-count="108" data-star-brightness="1.38" data-star-drift="1.78" data-star-glow="1.38">
+        <canvas class="showcase-canvas" aria-hidden="true"></canvas>
+        <div class="showcase-inner" style="grid-template-columns: 1fr; grid-template-areas: 'globe';">
             <section class="showcase-panel showcase-panel-globe">
                 <div class="showcase-label">Globe</div>
                 <div class="showcase-globe-shell">
