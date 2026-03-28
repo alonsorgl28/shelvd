@@ -509,7 +509,7 @@ function createBook(bookData, index) {
         });
     }
 
-    const geometry = createRoundedSpineBookGeometry(baseCoverWidth, baseHeight, bookSpineWidth);
+    const geometry = new THREE.BoxGeometry(baseCoverWidth, baseHeight, bookSpineWidth);
     const mesh = new THREE.Mesh(geometry, materials);
 
     mesh.rotation.y = Math.PI / 2;
@@ -531,118 +531,6 @@ function createBook(bookData, index) {
 
     bookObjects.push(mesh);
     scene.add(mesh);
-}
-
-// ─── Rounded Spine Geometry ───
-function createRoundedSpineBookGeometry(width, height, depth) {
-    const segments = window.innerWidth <= 768 ? 5 : 7;
-    const hw = width / 2;
-    const hh = height / 2;
-    const hd = depth / 2;
-
-    const positions = [];
-    const normals   = [];
-    const uvs       = [];
-    const indices   = [];
-    let vi = 0;
-
-    // Pre-compute arc points (N+1 vertices along spine arc)
-    // Arc: center at (-hw, z=0), radius=hd, angle 0→π
-    const arcX = [], arcZ = [];
-    for (let i = 0; i <= segments; i++) {
-        const a = (i / segments) * Math.PI;
-        arcX.push(-hw - hd * Math.sin(a));
-        arcZ.push(       hd * Math.cos(a));
-    }
-
-    function addQuad(p0, p1, p2, p3, n0, n1, n2, n3, uv0, uv1, uv2, uv3) {
-        positions.push(...p0, ...p1, ...p2, ...p3);
-        normals.push(...n0, ...n1, ...n2, ...n3);
-        uvs.push(...uv0, ...uv1, ...uv2, ...uv3);
-        indices.push(vi, vi+1, vi+2,  vi, vi+2, vi+3);
-        vi += 4;
-    }
-    function flatN(nx, ny, nz) { return [nx, ny, nz]; }
-
-    const geo = new THREE.BufferGeometry();
-    const groups = [];
-
-    // ── Group 0: +X page edges (flat) ──
-    let gs = indices.length;
-    addQuad(
-        [ hw,-hh,-hd], [ hw,-hh, hd], [ hw, hh, hd], [ hw, hh,-hd],
-        flatN(1,0,0), flatN(1,0,0), flatN(1,0,0), flatN(1,0,0),
-        [0,0],[1,0],[1,1],[0,1]
-    );
-    groups.push({ start: gs, count: 6, materialIndex: 0 });
-
-    // ── Group 1: spine — arc, curves outward in -X ──
-    gs = indices.length;
-    for (let i = 0; i < segments; i++) {
-        const nx0 = -Math.sin((i/segments)*Math.PI),     nz0 = Math.cos((i/segments)*Math.PI);
-        const nx1 = -Math.sin(((i+1)/segments)*Math.PI), nz1 = Math.cos(((i+1)/segments)*Math.PI);
-        const u0 = i/segments, u1 = (i+1)/segments;
-        addQuad(
-            [arcX[i],  -hh, arcZ[i]  ], [arcX[i+1], -hh, arcZ[i+1]],
-            [arcX[i+1], hh, arcZ[i+1]], [arcX[i],    hh, arcZ[i]  ],
-            [nx0,0,nz0], [nx1,0,nz1], [nx1,0,nz1], [nx0,0,nz0],
-            [u0,0],[u1,0],[u1,1],[u0,1]
-        );
-    }
-    groups.push({ start: gs, count: segments * 6, materialIndex: 1 });
-
-    // ── Group 2: +Y top — follows arc profile, no gap ──
-    // Each segment: arc edge + corresponding page-edge strip
-    gs = indices.length;
-    for (let i = 0; i < segments; i++) {
-        const u0 = i/segments, u1 = (i+1)/segments;
-        addQuad(
-            [arcX[i],   hh, arcZ[i]  ], [arcX[i+1], hh, arcZ[i+1]],
-            [hw,        hh, arcZ[i+1]], [hw,         hh, arcZ[i]  ],
-            flatN(0,1,0), flatN(0,1,0), flatN(0,1,0), flatN(0,1,0),
-            [u0,0],[u1,0],[u1,1],[u0,1]
-        );
-    }
-    groups.push({ start: gs, count: segments * 6, materialIndex: 2 });
-
-    // ── Group 3: -Y bottom — follows arc profile, no gap ──
-    gs = indices.length;
-    for (let i = 0; i < segments; i++) {
-        const u0 = i/segments, u1 = (i+1)/segments;
-        addQuad(
-            [hw,        -hh, arcZ[i]  ], [hw,         -hh, arcZ[i+1]],
-            [arcX[i+1], -hh, arcZ[i+1]], [arcX[i],    -hh, arcZ[i]  ],
-            flatN(0,-1,0), flatN(0,-1,0), flatN(0,-1,0), flatN(0,-1,0),
-            [u0,0],[u1,0],[u1,1],[u0,1]
-        );
-    }
-    groups.push({ start: gs, count: segments * 6, materialIndex: 3 });
-
-    // ── Group 4: +Z front cover (flat) ──
-    gs = indices.length;
-    addQuad(
-        [-hw,-hh, hd], [ hw,-hh, hd], [ hw, hh, hd], [-hw, hh, hd],
-        flatN(0,0,1), flatN(0,0,1), flatN(0,0,1), flatN(0,0,1),
-        [0,0],[1,0],[1,1],[0,1]
-    );
-    groups.push({ start: gs, count: 6, materialIndex: 4 });
-
-    // ── Group 5: -Z back cover (flat) ──
-    gs = indices.length;
-    addQuad(
-        [ hw,-hh,-hd], [-hw,-hh,-hd], [-hw, hh,-hd], [ hw, hh,-hd],
-        flatN(0,0,-1), flatN(0,0,-1), flatN(0,0,-1), flatN(0,0,-1),
-        [0,0],[1,0],[1,1],[0,1]
-    );
-    groups.push({ start: gs, count: 6, materialIndex: 5 });
-
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    geo.setAttribute('normal',   new THREE.Float32BufferAttribute(normals, 3));
-    geo.setAttribute('uv',       new THREE.Float32BufferAttribute(uvs, 2));
-    geo.setIndex(indices);
-    for (const g of groups) geo.addGroup(g.start, g.count, g.materialIndex);
-
-    return geo;
 }
 
 // ─── Spine Texture ───
@@ -1613,7 +1501,7 @@ function makeGlobeBookMesh(bookData) {
     const coverPlaceholder = createCoverPlaceholder(bookData.title, bookData.author, baseCoverWidth, baseHeight, defaultColor);
     materials[4] = new THREE.MeshStandardMaterial({ map: coverPlaceholder, roughness: 1.0, metalness: 0.0 });
 
-    const geometry = createRoundedSpineBookGeometry(baseCoverWidth, baseHeight, bookSpineWidth);
+    const geometry = new THREE.BoxGeometry(baseCoverWidth, baseHeight, bookSpineWidth);
     const mesh = new THREE.Mesh(geometry, materials);
     mesh.userData = {
         bookId: bookData.id,
