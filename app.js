@@ -541,90 +541,98 @@ function createRoundedSpineBookGeometry(width, height, depth) {
     const hd = depth / 2;
 
     const positions = [];
-    const normals = [];
-    const uvs = [];
-    const indices = [];
-    let vi = 0; // vertex index counter
+    const normals   = [];
+    const uvs       = [];
+    const indices   = [];
+    let vi = 0;
 
-    function addFlatQuad(v0, v1, v2, v3, nx, ny, nz, u0v0, u1v0, u1v1, u0v1) {
-        positions.push(...v0, ...v1, ...v2, ...v3);
-        normals.push(nx, ny, nz, nx, ny, nz, nx, ny, nz, nx, ny, nz);
-        uvs.push(...u0v0, ...u1v0, ...u1v1, ...u0v1);
-        indices.push(vi, vi+1, vi+2, vi, vi+2, vi+3);
+    // Pre-compute arc points (N+1 vertices along spine arc)
+    // Arc: center at (-hw, z=0), radius=hd, angle 0→π
+    const arcX = [], arcZ = [];
+    for (let i = 0; i <= segments; i++) {
+        const a = (i / segments) * Math.PI;
+        arcX.push(-hw - hd * Math.sin(a));
+        arcZ.push(       hd * Math.cos(a));
+    }
+
+    function addQuad(p0, p1, p2, p3, n0, n1, n2, n3, uv0, uv1, uv2, uv3) {
+        positions.push(...p0, ...p1, ...p2, ...p3);
+        normals.push(...n0, ...n1, ...n2, ...n3);
+        uvs.push(...uv0, ...uv1, ...uv2, ...uv3);
+        indices.push(vi, vi+1, vi+2,  vi, vi+2, vi+3);
         vi += 4;
     }
+    function flatN(nx, ny, nz) { return [nx, ny, nz]; }
 
     const geo = new THREE.BufferGeometry();
     const groups = [];
 
-    // ── Group 0: +X page edges ──
+    // ── Group 0: +X page edges (flat) ──
     let gs = indices.length;
-    addFlatQuad(
-        [ hw, -hh, -hd], [ hw, -hh,  hd], [ hw,  hh,  hd], [ hw,  hh, -hd],
-        1, 0, 0,
-        [0,0], [1,0], [1,1], [0,1]
+    addQuad(
+        [ hw,-hh,-hd], [ hw,-hh, hd], [ hw, hh, hd], [ hw, hh,-hd],
+        flatN(1,0,0), flatN(1,0,0), flatN(1,0,0), flatN(1,0,0),
+        [0,0],[1,0],[1,1],[0,1]
     );
     groups.push({ start: gs, count: 6, materialIndex: 0 });
 
-    // ── Group 1: spine — circular arc, curves outward in -X ──
+    // ── Group 1: spine — arc, curves outward in -X ──
     gs = indices.length;
     for (let i = 0; i < segments; i++) {
-        const a0 = (i / segments) * Math.PI;
-        const a1 = ((i + 1) / segments) * Math.PI;
-
-        const x0 = -hw - hd * Math.sin(a0);
-        const z0 =       hd * Math.cos(a0);
-        const x1 = -hw - hd * Math.sin(a1);
-        const z1 =       hd * Math.cos(a1);
-
-        const nx0 = -Math.sin(a0), nz0 = Math.cos(a0);
-        const nx1 = -Math.sin(a1), nz1 = Math.cos(a1);
-
-        const u0 = i / segments;
-        const u1 = (i + 1) / segments;
-
-        // Two triangles per segment, 4 vertices (bottom row, top row)
-        positions.push(x0,-hh,z0,  x1,-hh,z1,  x1,hh,z1,  x0,hh,z0);
-        normals.push(nx0,0,nz0,  nx1,0,nz1,  nx1,0,nz1,  nx0,0,nz0);
-        uvs.push(u0,0,  u1,0,  u1,1,  u0,1);
-        indices.push(vi, vi+1, vi+2,  vi, vi+2, vi+3);
-        vi += 4;
+        const nx0 = -Math.sin((i/segments)*Math.PI),     nz0 = Math.cos((i/segments)*Math.PI);
+        const nx1 = -Math.sin(((i+1)/segments)*Math.PI), nz1 = Math.cos(((i+1)/segments)*Math.PI);
+        const u0 = i/segments, u1 = (i+1)/segments;
+        addQuad(
+            [arcX[i],  -hh, arcZ[i]  ], [arcX[i+1], -hh, arcZ[i+1]],
+            [arcX[i+1], hh, arcZ[i+1]], [arcX[i],    hh, arcZ[i]  ],
+            [nx0,0,nz0], [nx1,0,nz1], [nx1,0,nz1], [nx0,0,nz0],
+            [u0,0],[u1,0],[u1,1],[u0,1]
+        );
     }
     groups.push({ start: gs, count: segments * 6, materialIndex: 1 });
 
-    // ── Group 2: +Y top ──
+    // ── Group 2: +Y top — follows arc profile, no gap ──
+    // Each segment: arc edge + corresponding page-edge strip
     gs = indices.length;
-    addFlatQuad(
-        [-hw,  hh,  hd], [ hw,  hh,  hd], [ hw,  hh, -hd], [-hw,  hh, -hd],
-        0, 1, 0,
-        [0,1], [1,1], [1,0], [0,0]
-    );
-    groups.push({ start: gs, count: 6, materialIndex: 2 });
+    for (let i = 0; i < segments; i++) {
+        const u0 = i/segments, u1 = (i+1)/segments;
+        addQuad(
+            [arcX[i],   hh, arcZ[i]  ], [arcX[i+1], hh, arcZ[i+1]],
+            [hw,        hh, arcZ[i+1]], [hw,         hh, arcZ[i]  ],
+            flatN(0,1,0), flatN(0,1,0), flatN(0,1,0), flatN(0,1,0),
+            [u0,0],[u1,0],[u1,1],[u0,1]
+        );
+    }
+    groups.push({ start: gs, count: segments * 6, materialIndex: 2 });
 
-    // ── Group 3: -Y bottom ──
+    // ── Group 3: -Y bottom — follows arc profile, no gap ──
     gs = indices.length;
-    addFlatQuad(
-        [-hw, -hh, -hd], [ hw, -hh, -hd], [ hw, -hh,  hd], [-hw, -hh,  hd],
-        0, -1, 0,
-        [0,0], [1,0], [1,1], [0,1]
-    );
-    groups.push({ start: gs, count: 6, materialIndex: 3 });
+    for (let i = 0; i < segments; i++) {
+        const u0 = i/segments, u1 = (i+1)/segments;
+        addQuad(
+            [hw,        -hh, arcZ[i]  ], [hw,         -hh, arcZ[i+1]],
+            [arcX[i+1], -hh, arcZ[i+1]], [arcX[i],    -hh, arcZ[i]  ],
+            flatN(0,-1,0), flatN(0,-1,0), flatN(0,-1,0), flatN(0,-1,0),
+            [u0,0],[u1,0],[u1,1],[u0,1]
+        );
+    }
+    groups.push({ start: gs, count: segments * 6, materialIndex: 3 });
 
-    // ── Group 4: +Z front cover ──
+    // ── Group 4: +Z front cover (flat) ──
     gs = indices.length;
-    addFlatQuad(
-        [-hw, -hh,  hd], [ hw, -hh,  hd], [ hw,  hh,  hd], [-hw,  hh,  hd],
-        0, 0, 1,
-        [0,0], [1,0], [1,1], [0,1]
+    addQuad(
+        [-hw,-hh, hd], [ hw,-hh, hd], [ hw, hh, hd], [-hw, hh, hd],
+        flatN(0,0,1), flatN(0,0,1), flatN(0,0,1), flatN(0,0,1),
+        [0,0],[1,0],[1,1],[0,1]
     );
     groups.push({ start: gs, count: 6, materialIndex: 4 });
 
-    // ── Group 5: -Z back cover ──
+    // ── Group 5: -Z back cover (flat) ──
     gs = indices.length;
-    addFlatQuad(
-        [ hw, -hh, -hd], [-hw, -hh, -hd], [-hw,  hh, -hd], [ hw,  hh, -hd],
-        0, 0, -1,
-        [0,0], [1,0], [1,1], [0,1]
+    addQuad(
+        [ hw,-hh,-hd], [-hw,-hh,-hd], [-hw, hh,-hd], [ hw, hh,-hd],
+        flatN(0,0,-1), flatN(0,0,-1), flatN(0,0,-1), flatN(0,0,-1),
+        [0,0],[1,0],[1,1],[0,1]
     );
     groups.push({ start: gs, count: 6, materialIndex: 5 });
 
