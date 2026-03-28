@@ -971,7 +971,7 @@
 
         .showcase-group-overview {
             min-height: 520px;
-            margin-bottom: 68px;
+            margin-bottom: 108px;
         }
 
         .showcase-group-globe {
@@ -1140,7 +1140,7 @@
         }
 
         .showcase-globe-intro {
-            margin: 0 0 38px;
+            margin: 0 0 46px;
             padding-left: 2px;
         }
 
@@ -1443,11 +1443,11 @@
             }
             .showcase-inner {
                 padding: 26px;
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr !important;
                 grid-template-areas:
                     "shelf"
                     "grid"
-                    "globe";
+                    "globe" !important;
                 gap: 30px;
             }
             .showcase-panel {
@@ -1459,16 +1459,18 @@
             }
             .showcase-panel-grid {
                 width: 100%;
-                min-height: 220px;
+                min-height: 280px;
             }
             .showcase-panel-globe {
                 min-height: 420px;
             }
             .showcase-grid-wrap {
-                padding: 48px 0 18px;
+                padding: 42px 8px 24px;
+                overflow: hidden;
             }
             .showcase-grid-real {
                 gap: 12px;
+                min-width: max-content;
             }
             .showcase-grid-book {
                 width: 96px;
@@ -1501,9 +1503,16 @@
                 max-width: 300px;
             }
 
-            .btn-primary, .btn-secondary, .btn-download-mac {
+            .btn-primary, .btn-secondary {
                 width: 100%;
                 justify-content: center;
+            }
+
+            .btn-download-mac {
+                width: auto;
+                max-width: 100%;
+                justify-content: center;
+                align-self: center;
             }
 
             .btn-download-mac-copy {
