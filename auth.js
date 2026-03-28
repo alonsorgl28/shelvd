@@ -1481,10 +1481,95 @@ if (addIsbnScanBtn) {
     addIsbnScanBtn.addEventListener('click', openBarcodeScanner);
 }
 
-// ─── Live Barcode Scanner ───
+// ─── Barcode Scanner ───
 let barcodeScanStream = null;
 
+async function decodeIsbnFromPhoto(file) {
+    let isbn = null;
+
+    // 1. BarcodeDetector on static photo — fast and reliable on iOS/Android with real images
+    if ('BarcodeDetector' in window) {
+        try {
+            const detector = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
+            const bitmap = await createImageBitmap(file);
+            const results = await detector.detect(bitmap);
+            if (typeof bitmap.close === 'function') bitmap.close();
+            for (const r of results || []) {
+                const candidate = normalizeIsbn(r?.rawValue);
+                if (candidate && (candidate.startsWith('978') || candidate.startsWith('979') || candidate.length === 10)) {
+                    isbn = candidate;
+                    break;
+                }
+            }
+        } catch (e) { /* fall through to ZXing */ }
+    }
+
+    // 2. ZXing on static photo — no canvas taint (file input images are not tainted)
+    if (!isbn) {
+        try {
+            const hints = new Map();
+            hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E]);
+            hints.set(DecodeHintType.TRY_HARDER, true);
+            const zxingReader = new MultiFormatReader();
+            zxingReader.setHints(hints);
+
+            const bitmap = await createImageBitmap(file);
+            const canvas = document.createElement('canvas');
+            canvas.width = bitmap.width;
+            canvas.height = bitmap.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(bitmap, 0, 0);
+            if (typeof bitmap.close === 'function') bitmap.close();
+
+            const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const luminance = new RGBLuminanceSource(data, width, height);
+            let result;
+            try {
+                result = zxingReader.decode(new BinaryBitmap(new HybridBinarizer(luminance)));
+            } catch (_) {
+                result = zxingReader.decode(new BinaryBitmap(new GlobalHistogramBinarizer(luminance)));
+            }
+            isbn = normalizeIsbn(result.getText());
+        } catch (e) { /* fall through to Claude */ }
+    }
+
+    if (isbn && (isbn.startsWith('978') || isbn.startsWith('979') || isbn.length === 10)) {
+        setFieldValue('isbn_13', isbn);
+        setAddStatus('ISBN detected. Checking edition details.', 'success');
+        await lookupEditionByIsbn(isbn, 'Checking ISBN details');
+    } else {
+        // 3. Claude fallback — send image to edge function
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            const base64 = ev.target.result.split(',')[1];
+            await extractIsbnFromBarcodeFrame(base64);
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
 async function openBarcodeScanner() {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    if (isMobile) {
+        // Mobile: skip video entirely — native camera gives full-res photo, much more reliable
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.setAttribute('capture', 'environment');
+
+        fileInput.onchange = async () => {
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) return;
+            showAnalyzingState('Reading barcode...');
+            await decodeIsbnFromPhoto(file);
+        };
+
+        fileInput.click();
+        return;
+    }
+
+    // Desktop: live video scanner with BarcodeDetector
     const modal = document.getElementById('barcode-modal');
     const video = document.getElementById('barcode-video');
     const closeBtn = document.getElementById('barcode-modal-close');
@@ -1492,20 +1577,20 @@ async function openBarcodeScanner() {
     const hint = document.getElementById('barcode-hint');
     const status = document.getElementById('barcode-status');
 
-    // Request camera
     try {
         barcodeScanStream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
         });
         video.srcObject = barcodeScanStream;
     } catch (err) {
-        // Camera denied — fall back to file input
         openFilePicker(backInput, 'Take a photo of the ISBN barcode on the back cover.');
         return;
     }
 
     modal.style.display = 'flex';
     status.textContent = '';
+
+    let scanInterval = null;
 
     function stopScanner() {
         if (barcodeScanStream) {
@@ -1522,10 +1607,7 @@ async function openBarcodeScanner() {
 
     closeBtn.onclick = stopScanner;
 
-    let scanInterval = null;
-
     if ('BarcodeDetector' in window) {
-        // Native BarcodeDetector (Chrome, Android, iOS 17+)
         hint.textContent = 'Hold steady — scanning automatically';
         const detector = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
         let scanning = false;
@@ -1547,72 +1629,26 @@ async function openBarcodeScanner() {
             } catch (e) { /* continue */ } finally { scanning = false; }
         }, 300);
     } else {
-        // iOS Safari fallback — canvas taint blocks ZXing from reading video frames
-        // Solution: use native file input with capture="environment", decode the static photo
-        hint.textContent = 'Aim at the barcode, then tap Capture';
+        // Desktop without BarcodeDetector: capture button → ZXing/Claude on static frame
+        hint.textContent = 'Point at the barcode, then click Capture';
         captureBtn.style.display = '';
-        captureBtn.textContent = 'Capture';
 
-        captureBtn.onclick = () => {
-            // Stop video stream before opening file picker
+        captureBtn.onclick = async () => {
+            if (video.readyState < 2) return;
+            captureBtn.disabled = true;
+            captureBtn.textContent = 'Processing…';
+
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
             stopScanner();
 
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.accept = 'image/*';
-            fileInput.setAttribute('capture', 'environment');
-
-            fileInput.onchange = async () => {
-                const file = fileInput.files && fileInput.files[0];
-                if (!file) return;
-
-                // Try ZXing on the static photo (no canvas taint with file input)
-                let isbn = null;
-                try {
-                    const { MultiFormatReader, BinaryBitmap, HybridBinarizer, GlobalHistogramBinarizer, RGBLuminanceSource, DecodeHintType, BarcodeFormat } = await import('@zxing/library');
-                    const hints = new Map();
-                    hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E]);
-                    hints.set(DecodeHintType.TRY_HARDER, true);
-                    const zxingReader = new MultiFormatReader();
-                    zxingReader.setHints(hints);
-
-                    const bitmap = await createImageBitmap(file);
-                    const canvas = document.createElement('canvas');
-                    canvas.width = bitmap.width;
-                    canvas.height = bitmap.height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(bitmap, 0, 0);
-                    bitmap.close();
-
-                    const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    const luminance = new RGBLuminanceSource(data, width, height);
-                    let result;
-                    try {
-                        result = zxingReader.decode(new BinaryBitmap(new HybridBinarizer(luminance)));
-                    } catch (_) {
-                        result = zxingReader.decode(new BinaryBitmap(new GlobalHistogramBinarizer(luminance)));
-                    }
-                    isbn = normalizeIsbn(result.getText());
-                } catch (e) {
-                    // ZXing failed — will try Claude fallback below
-                }
-
-                if (isbn && (isbn.startsWith('978') || isbn.startsWith('979') || isbn.length === 10)) {
-                    setFieldValue('isbn_13', isbn);
-                    setAddStatus('ISBN detected. Checking edition details.', 'success');
-                    await lookupEditionByIsbn(isbn, 'Checking ISBN details');
-                } else {
-                    // ZXing couldn't read it — send to Claude as fallback
-                    const reader = new FileReader();
-                    reader.onload = async (e) => {
-                        const base64 = e.target.result.split(',')[1];
-                        await extractIsbnFromBarcodeFrame(base64);
-                    };
-                    reader.readAsDataURL(file);
-                }
-            };
-
-            fileInput.click();
+            canvas.toBlob(async (blob) => {
+                if (!blob) { setAddStatus('Could not capture frame.', 'warning'); return; }
+                showAnalyzingState('Reading barcode...');
+                await decodeIsbnFromPhoto(blob);
+            }, 'image/jpeg', 0.95);
         };
     }
 }
