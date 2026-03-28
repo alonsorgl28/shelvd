@@ -995,8 +995,8 @@
         .showcase-panel-globe { grid-area: globe; }
         .showcase-panel-grid {
             grid-area: grid;
-            min-height: 310px;
-            width: min(760px, calc(100% - 120px));
+            min-height: 228px;
+            width: min(560px, calc(100% - 260px));
             justify-self: center;
         }
 
@@ -1021,9 +1021,9 @@
         }
 
         .showcase-stack-wrapper {
-            width: 58%;
-            max-width: 420px;
-            height: 76%;
+            width: 66%;
+            max-width: 480px;
+            height: 84%;
             overflow: hidden;
             position: relative;
             transform: rotateX(4deg);
@@ -1114,7 +1114,7 @@
         .showcase-globe-shell {
             position: absolute;
             inset: 0;
-            padding: 14px;
+            padding: 0;
         }
 
         .showcase-real-globe {
@@ -1131,7 +1131,7 @@
         .showcase-grid-wrap {
             position: absolute;
             inset: 0;
-            padding: 54px 36px 30px;
+            padding: 46px 0 22px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1139,15 +1139,23 @@
 
         .showcase-grid-real {
             width: 100%;
-            max-width: 620px;
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 18px;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            will-change: transform;
+            animation: showcaseGridMarquee 28s linear infinite;
+        }
+
+        @keyframes showcaseGridMarquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
         }
 
         .showcase-grid-book {
             cursor: default;
             transition: transform 0.2s ease;
+            width: 108px;
+            flex: 0 0 108px;
         }
 
         .showcase-grid-book:hover {
@@ -1397,19 +1405,22 @@
                 min-height: 360px;
             }
             .showcase-stack-wrapper {
-                width: 78%;
-                height: 73%;
+                width: 82%;
+                height: 78%;
             }
             .showcase-panel-grid {
                 width: 100%;
-                min-height: 290px;
+                min-height: 210px;
             }
             .showcase-grid-wrap {
-                padding: 48px 18px 24px;
+                padding: 42px 0 18px;
             }
             .showcase-grid-real {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 14px;
+                gap: 12px;
+            }
+            .showcase-grid-book {
+                width: 96px;
+                flex-basis: 96px;
             }
             .showcase-shelf-copy,
             .showcase-globe-copy {
@@ -2366,7 +2377,9 @@ function populateGrid() {
     const grid = document.getElementById('showcase-grid-real');
     if (!grid) return;
 
-    grid.innerHTML = showcaseBooks.map((book) => {
+    const marqueeBooks = [...showcaseBooks, ...showcaseBooks, ...showcaseBooks];
+
+    grid.innerHTML = marqueeBooks.map((book) => {
         const palette = generateBookColor(book.title);
         return `
             <article class="showcase-grid-book">
