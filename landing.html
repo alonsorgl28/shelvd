@@ -171,6 +171,13 @@
             text-align: center;
         }
 
+        .hero-download-wrap {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 28px;
+        }
+
         .hero-eyebrow {
             font-size: 13px;
             letter-spacing: 0.02em;
@@ -1212,6 +1219,10 @@
             .section { padding: 80px 20px; }
             .showcase { padding: 0 20px 80px; }
 
+            .hero-download-wrap {
+                margin-bottom: 22px;
+            }
+
             .features-grid { grid-template-columns: 1fr; }
 
             .stats {
@@ -1282,6 +1293,19 @@
 
 <!-- ── Hero ── -->
 <section class="hero">
+    <div class="hero-download-wrap">
+        <button type="button" class="btn-download-mac" aria-label="Download for macOS">
+            <span class="btn-download-mac-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M16.37 12.22c.02 2.12 1.86 2.83 1.88 2.84-.02.05-.29.98-.95 1.95-.57.83-1.16 1.66-2.09 1.68-.91.02-1.2-.54-2.24-.54-1.04 0-1.37.52-2.23.56-.9.03-1.58-.9-2.15-1.73-1.16-1.67-2.05-4.72-.86-6.79.59-1.03 1.65-1.68 2.81-1.7.88-.02 1.7.6 2.23.6.53 0 1.53-.74 2.58-.63.44.02 1.67.18 2.46 1.33-.06.04-1.47.86-1.44 2.43Zm-1.98-5.42c.47-.57.79-1.37.71-2.16-.68.03-1.5.45-1.99 1.01-.44.5-.83 1.31-.72 2.09.76.06 1.53-.39 2-.94Z"/>
+                </svg>
+            </span>
+            <span class="btn-download-mac-copy">
+                <span class="btn-download-mac-kicker">Desktop app</span>
+                <span class="btn-download-mac-label">Download for macOS</span>
+            </span>
+        </button>
+    </div>
     <p class="hero-eyebrow" id="hero-eyebrow" data-text="Your Personal Library">
         <span class="hero-eyebrow-text" id="hero-eyebrow-text" aria-label="Your Personal Library"></span>
         <span class="hero-eyebrow-cursor" aria-hidden="true"></span>
@@ -1294,17 +1318,6 @@
             <span>Start your shelf</span>
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
         </a>
-        <button type="button" class="btn-download-mac" aria-label="Download for macOS">
-            <span class="btn-download-mac-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                    <path d="M16.37 12.22c.02 2.12 1.86 2.83 1.88 2.84-.02.05-.29.98-.95 1.95-.57.83-1.16 1.66-2.09 1.68-.91.02-1.2-.54-2.24-.54-1.04 0-1.37.52-2.23.56-.9.03-1.58-.9-2.15-1.73-1.16-1.67-2.05-4.72-.86-6.79.59-1.03 1.65-1.68 2.81-1.7.88-.02 1.7.6 2.23.6.53 0 1.53-.74 2.58-.63.44.02 1.67.18 2.46 1.33-.06.04-1.47.86-1.44 2.43Zm-1.98-5.42c.47-.57.79-1.37.71-2.16-.68.03-1.5.45-1.99 1.01-.44.5-.83 1.31-.72 2.09.76.06 1.53-.39 2-.94Z"/>
-                </svg>
-            </span>
-            <span class="btn-download-mac-copy">
-                <span class="btn-download-mac-kicker">Desktop app</span>
-                <span class="btn-download-mac-label">Download for macOS</span>
-            </span>
-        </button>
         <a href="#features" class="btn-secondary">
             See how it works
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="8 12 12 16 16 12"/></svg>
