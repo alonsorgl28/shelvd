@@ -934,16 +934,17 @@
 
         .showcase-heading {
             margin: 0 0 18px;
-            font-size: 11px;
-            letter-spacing: 0.16em;
-            text-transform: uppercase;
-            color: rgba(0,0,0,0.34);
+            font-size: clamp(30px, 5vw, 54px);
+            letter-spacing: -0.06em;
+            line-height: 0.94;
+            color: #111111;
         }
 
         .showcase-group {
             position: relative;
             background: #141a2e;
             overflow: hidden;
+            border-radius: var(--radius);
             box-shadow: 0 0 28px rgba(20,26,46,0.18), 0 0 90px rgba(100,120,200,0.06);
             opacity: 0;
             transform: translateY(60px) scale(0.97);
@@ -971,6 +972,7 @@
 
         .showcase-group-globe {
             min-height: 560px;
+            margin-top: 30px;
         }
 
         .showcase-canvas {
@@ -1002,7 +1004,7 @@
         .showcase-panel {
             position: relative;
             overflow: hidden;
-            border-radius: 0;
+            border-radius: 28px;
             border: none;
             background: transparent;
             min-height: 420px;
@@ -1131,6 +1133,25 @@
             letter-spacing: -0.02em;
             color: rgba(255,255,255,0.92);
             white-space: nowrap;
+        }
+
+        .showcase-globe-intro {
+            margin: 0 0 14px;
+            padding-left: 2px;
+        }
+
+        .showcase-globe-intro-title {
+            font-size: clamp(28px, 4vw, 44px);
+            letter-spacing: -0.06em;
+            line-height: 0.94;
+            color: #111111;
+        }
+
+        .showcase-globe-intro-sub {
+            margin-top: 8px;
+            font-size: 14px;
+            color: rgba(0,0,0,0.52);
+            letter-spacing: -0.01em;
         }
 
         .showcase-globe-shell {
@@ -1728,7 +1749,6 @@
         <canvas class="showcase-canvas" aria-hidden="true"></canvas>
         <div class="showcase-inner" style="grid-template-areas: 'shelf grid';">
             <section class="showcase-panel showcase-panel-shelf">
-                <div class="showcase-label">Shelf</div>
                 <div class="showcase-stack-scene">
                     <div class="showcase-stack-wrapper">
                         <div class="showcase-stack" id="showcase-stack">
@@ -1765,9 +1785,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="showcase-shelf-copy">
-                    <div class="showcase-copy-title">Shelf</div>
-                </div>
             </section>
 
             <section class="showcase-panel showcase-panel-grid">
@@ -1779,6 +1796,11 @@
         </div>
     </div>
 
+    <div class="showcase-globe-intro">
+        <div class="showcase-globe-intro-title">Try our interactive Globe shelf</div>
+        <div class="showcase-globe-intro-sub">Drag to explore the collection.</div>
+    </div>
+
     <div class="showcase-group showcase-group-globe" data-reveal data-star-count="108" data-star-brightness="1.38" data-star-drift="1.78" data-star-glow="1.38">
         <canvas class="showcase-canvas" aria-hidden="true"></canvas>
         <div class="showcase-inner" style="grid-template-columns: 1fr; grid-template-areas: 'globe';">
@@ -1786,12 +1808,6 @@
                 <div class="showcase-label">Globe</div>
                 <div class="showcase-globe-shell">
                     <div class="showcase-real-globe" id="showcase-real-globe"></div>
-                </div>
-                <div class="showcase-globe-copy">
-                    <div>
-                        <div class="showcase-copy-title">Try our interactive Globe shelf</div>
-                        <span class="showcase-copy-sub">Drag to explore the collection.</span>
-                    </div>
                 </div>
             </section>
         </div>
