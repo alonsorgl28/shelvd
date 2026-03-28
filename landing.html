@@ -961,13 +961,161 @@
 
         .showcase-inner {
             position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            inset: 0;
+            display: grid;
+            grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+            gap: 32px;
+            align-items: stretch;
+            padding: 40px;
+            perspective: 800px;
+        }
+
+        .showcase-sidebar {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 28px;
+        }
+
+        .showcase-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .showcase-kicker {
+            font-size: 11px;
+            color: rgba(255,255,255,0.32);
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        .showcase-title {
+            margin: 0;
+            font-size: clamp(28px, 4vw, 46px);
+            line-height: 0.94;
+            letter-spacing: -0.05em;
+        }
+
+        .showcase-description {
+            margin: 0;
+            max-width: 28ch;
+            color: rgba(255,255,255,0.62);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .showcase-tabs {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px;
+            width: fit-content;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(12px);
+        }
+
+        .showcase-tab {
+            border: 0;
+            background: transparent;
+            color: rgba(255,255,255,0.5);
+            border-radius: 999px;
+            padding: 10px 14px;
+            font: inherit;
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+        }
+
+        .showcase-tab:hover {
+            color: rgba(255,255,255,0.86);
+        }
+
+        .showcase-tab.is-active {
+            color: #ffffff;
+            background: rgba(255,255,255,0.1);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+        }
+
+        .showcase-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .showcase-mode {
+            font-size: 12px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.3);
+        }
+
+        .showcase-mode strong {
+            color: rgba(255,255,255,0.84);
+            font-weight: 500;
+        }
+
+        .showcase-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: fit-content;
+            margin-top: 4px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 999px;
+            padding: 11px 14px;
+            background: rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.82);
+            text-decoration: none;
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .showcase-cta:hover {
+            transform: translateY(-1px);
+            border-color: rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.07);
+        }
+
+        .showcase-viewport {
+            position: relative;
+            min-height: 0;
+            border-radius: 28px;
+            border: 1px solid rgba(255,255,255,0.07);
+            background:
+                radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 36%),
+                linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+            overflow: hidden;
+        }
+
+        .showcase-scene {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transform: translateY(18px) scale(0.985);
+            pointer-events: none;
+            transition: opacity 0.35s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .showcase-scene.is-active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .showcase-stack-scene {
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
-            perspective: 800px;
+            padding: 28px;
         }
 
         .showcase-stack-wrapper {
@@ -1027,15 +1175,221 @@
             letter-spacing: 0.03em;
         }
 
-        .showcase-label {
-            font-size: 11px;
-            color: rgba(255,255,255,0.25);
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
+        .showcase-grid-scene {
             position: absolute;
-            bottom: 16px;
-            left: 0; right: 0;
-            text-align: center;
+            inset: 0;
+            padding: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .showcase-grid {
+            display: grid;
+            width: min(100%, 620px);
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .showcase-cover {
+            position: relative;
+            aspect-ratio: 0.72;
+            border-radius: 18px;
+            overflow: hidden;
+            padding: 16px 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 18px 36px rgba(0,0,0,0.22);
+            border: 1px solid rgba(255,255,255,0.08);
+            transform: translateY(var(--offset, 0px));
+        }
+
+        .showcase-cover::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.16));
+            pointer-events: none;
+        }
+
+        .showcase-cover-kicker,
+        .showcase-cover-author,
+        .showcase-cover-title {
+            position: relative;
+            z-index: 1;
+        }
+
+        .showcase-cover-kicker {
+            font-size: 9px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.72);
+        }
+
+        .showcase-cover-title {
+            font-size: 18px;
+            line-height: 0.98;
+            letter-spacing: -0.05em;
+            max-width: 8ch;
+        }
+
+        .showcase-cover-author {
+            font-size: 11px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.78);
+        }
+
+        .showcase-globe-scene {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .showcase-globe-stage {
+            position: relative;
+            width: min(100%, 720px);
+            height: 100%;
+            min-height: 360px;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .showcase-globe-stage.is-dragging {
+            cursor: grabbing;
+        }
+
+        .showcase-globe-core {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 250px;
+            height: 250px;
+            margin-left: -125px;
+            margin-top: -125px;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 32% 30%, rgba(255,255,255,0.28), rgba(255,255,255,0.08) 28%, transparent 52%),
+                radial-gradient(circle at 50% 50%, rgba(90,122,255,0.14), rgba(17,23,40,0.92) 70%);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: inset 0 0 40px rgba(255,255,255,0.05), 0 0 60px rgba(63,85,174,0.16);
+            transform: translateZ(0) scale(var(--globe-core-scale, 1));
+            transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.8s ease;
+        }
+
+        .showcase-globe-core::before,
+        .showcase-globe-core::after {
+            content: "";
+            position: absolute;
+            inset: 16px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .showcase-globe-core::after {
+            inset: 48px;
+            border-color: rgba(255,255,255,0.05);
+        }
+
+        .showcase-globe-books {
+            position: absolute;
+            inset: 0;
+            transform-style: preserve-3d;
+        }
+
+        .showcase-globe-book {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 76px;
+            height: 110px;
+            margin-left: -38px;
+            margin-top: -55px;
+            border-radius: 12px;
+            overflow: hidden;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 18px 40px rgba(0,0,0,0.28);
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+        }
+
+        .showcase-globe-book span {
+            display: block;
+        }
+
+        .showcase-globe-book-kicker {
+            font-size: 8px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.64);
+        }
+
+        .showcase-globe-book-title {
+            font-size: 12px;
+            line-height: 1;
+            letter-spacing: -0.05em;
+            max-width: 5ch;
+            color: rgba(255,255,255,0.95);
+        }
+
+        .showcase-globe-book-author {
+            font-size: 9px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.72);
+        }
+
+        .showcase-globe-hint {
+            position: absolute;
+            left: 24px;
+            right: 24px;
+            bottom: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            z-index: 2;
+            color: rgba(255,255,255,0.46);
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .showcase-globe-enter {
+            border: 0;
+            border-radius: 999px;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+            font: inherit;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .showcase-globe-enter:hover {
+            background: rgba(255,255,255,0.16);
+            transform: translateY(-1px);
+        }
+
+        .showcase-globe-scene.is-inside .showcase-globe-core {
+            transform: translateZ(0) scale(1.82);
+            box-shadow: inset 0 0 56px rgba(255,255,255,0.04), 0 0 110px rgba(63,85,174,0.22);
+        }
+
+        .showcase-globe-scene.is-inside .showcase-globe-hint {
+            color: rgba(255,255,255,0.74);
         }
 
         /* ── Stats ── */
@@ -1210,6 +1564,66 @@
             .brand-section { padding: 60px 24px 100px; }
             .section { padding: 80px 20px; }
             .showcase { padding: 0 20px 80px; }
+            .showcase-inner {
+                grid-template-columns: 1fr;
+                gap: 22px;
+                padding: 24px;
+            }
+            .showcase-sidebar {
+                gap: 18px;
+            }
+            .showcase-description {
+                max-width: none;
+            }
+            .showcase-tabs {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .showcase-tab {
+                flex: 1;
+                text-align: center;
+                padding: 10px 8px;
+            }
+            .showcase-viewport {
+                min-height: 420px;
+            }
+            .showcase-stack-wrapper {
+                width: 82%;
+                height: 74%;
+            }
+            .showcase-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 12px;
+            }
+            .showcase-cover {
+                border-radius: 14px;
+                padding: 14px 12px;
+            }
+            .showcase-cover-title {
+                font-size: 16px;
+            }
+            .showcase-globe-stage {
+                min-height: 320px;
+            }
+            .showcase-globe-core {
+                width: 210px;
+                height: 210px;
+                margin-left: -105px;
+                margin-top: -105px;
+            }
+            .showcase-globe-book {
+                width: 64px;
+                height: 94px;
+                margin-left: -32px;
+                margin-top: -47px;
+            }
+            .showcase-globe-hint {
+                left: 16px;
+                right: 16px;
+                bottom: 16px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
 
             .hero-download-wrap {
                 margin-top: -18px;
@@ -1480,60 +1894,165 @@
     <div class="showcase-frame" data-reveal data-star-count="108" data-star-brightness="1.38" data-star-drift="1.78" data-star-glow="1.38">
         <canvas class="showcase-canvas" aria-hidden="true"></canvas>
         <div class="showcase-inner">
-            <div class="showcase-stack-wrapper">
-                <div class="showcase-stack" id="showcase-stack">
-                    <div class="showcase-spine" style="height:22px;background:linear-gradient(90deg,#8b7355,#a0845c);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Dune</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Herbert</span></div>
-                    <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#c4b8a0,#d4c8b0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">El Almuerzo Desnudo</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Burroughs</span></div>
-                    <div class="showcase-spine" style="height:15px;background:linear-gradient(90deg,#bfb8a8,#d0c8b8);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">El Amor en los Tiempos del Colera</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">García Márquez</span></div>
-                    <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#5a6e5a,#6d856d);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">El Cisne Negro</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Taleb</span></div>
-                    <div class="showcase-spine" style="height:13px;background:linear-gradient(90deg,#9e3b3b,#b54545);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">El Club de la Lucha</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Palahniuk</span></div>
-                    <div class="showcase-spine" style="height:15px;background:linear-gradient(90deg,#8a7a6a,#9a8a7a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">El Corazon de las Tinieblas</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Conrad</span></div>
-                    <div class="showcase-spine" style="height:12px;background:linear-gradient(90deg,#c8bca8,#d8ccb8);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">El Principito</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Saint-Exupéry</span></div>
-                    <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#a09080,#b0a090);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">El Retrato de Dorian Gray</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Wilde</span></div>
-                    <div class="showcase-spine" style="height:22px;background:linear-gradient(90deg,#7a8a5a,#8a9a6a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Empire of Pain</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Keefe</span></div>
-                    <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#a0946e,#b0a47e);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">En el Camino</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Kerouac</span></div>
-                    <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#c4b090,#d4c0a0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">Factfulness</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Rosling</span></div>
-                    <div class="showcase-spine" style="height:13px;background:linear-gradient(90deg,#c85a3a,#d86a4a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Fahrenheit 451</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Bradbury</span></div>
-                    <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#8a7a5a,#9a8a6a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Grandes Esperanzas</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Dickens</span></div>
-                    <div class="showcase-spine" style="height:24px;background:linear-gradient(90deg,#6b7ba3,#8090b8);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Gravity's Rainbow</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Pynchon</span></div>
-                    <div class="showcase-spine" style="height:22px;background:linear-gradient(90deg,#c4a882,#d4b892);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">Gray's Anatomy</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Gray</span></div>
-                    <div class="showcase-spine" style="height:18px;background:linear-gradient(90deg,#6a8a6a,#7a9a7a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Libertad</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Franzen</span></div>
-                    <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#a0906a,#b0a07a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">Lolita</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Nabokov</span></div>
-                    <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#7ac0d0,#8ad0e0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.7);">Moby Dick</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.35);">Melville</span></div>
-                    <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#2a2a2a,#3a3a3a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.8);">On the Origin of Species</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.35);">Darwin</span></div>
-                    <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#5a8a3a,#6a9a4a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">One Flew Over the Cuckoo's Nest</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Kesey</span></div>
-                    <div class="showcase-spine" style="height:18px;background:linear-gradient(90deg,#c8ba90,#d8caa0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">Principles</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Dalio</span></div>
-                    <div class="showcase-spine" style="height:13px;background:linear-gradient(90deg,#c8a050,#d8b060);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.7);">Steppenwolf</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.35);">Hesse</span></div>
-                    <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#8a7a6a,#9a8a7a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">The Grapes of Wrath</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Steinbeck</span></div>
-                    <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#d85a5a,#e86a6a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">The Subtle Art</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Manson</span></div>
-                    <!-- Duplicate for seamless loop -->
-                    <div class="showcase-spine" style="height:22px;background:linear-gradient(90deg,#8b7355,#a0845c);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Dune</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Herbert</span></div>
-                    <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#c4b8a0,#d4c8b0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">El Almuerzo Desnudo</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Burroughs</span></div>
-                    <div class="showcase-spine" style="height:15px;background:linear-gradient(90deg,#bfb8a8,#d0c8b8);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">El Amor en los Tiempos del Colera</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">García Márquez</span></div>
-                    <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#5a6e5a,#6d856d);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">El Cisne Negro</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Taleb</span></div>
-                    <div class="showcase-spine" style="height:13px;background:linear-gradient(90deg,#9e3b3b,#b54545);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">El Club de la Lucha</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Palahniuk</span></div>
-                    <div class="showcase-spine" style="height:15px;background:linear-gradient(90deg,#8a7a6a,#9a8a7a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">El Corazon de las Tinieblas</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Conrad</span></div>
-                    <div class="showcase-spine" style="height:12px;background:linear-gradient(90deg,#c8bca8,#d8ccb8);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">El Principito</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Saint-Exupéry</span></div>
-                    <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#a09080,#b0a090);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">El Retrato de Dorian Gray</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Wilde</span></div>
-                    <div class="showcase-spine" style="height:22px;background:linear-gradient(90deg,#7a8a5a,#8a9a6a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Empire of Pain</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Keefe</span></div>
-                    <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#a0946e,#b0a47e);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">En el Camino</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Kerouac</span></div>
-                    <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#c4b090,#d4c0a0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">Factfulness</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Rosling</span></div>
-                    <div class="showcase-spine" style="height:13px;background:linear-gradient(90deg,#c85a3a,#d86a4a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Fahrenheit 451</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Bradbury</span></div>
-                    <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#8a7a5a,#9a8a6a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Grandes Esperanzas</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Dickens</span></div>
-                    <div class="showcase-spine" style="height:24px;background:linear-gradient(90deg,#6b7ba3,#8090b8);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Gravity's Rainbow</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Pynchon</span></div>
-                    <div class="showcase-spine" style="height:22px;background:linear-gradient(90deg,#c4a882,#d4b892);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">Gray's Anatomy</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Gray</span></div>
-                    <div class="showcase-spine" style="height:18px;background:linear-gradient(90deg,#6a8a6a,#7a9a7a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Libertad</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Franzen</span></div>
-                    <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#a0906a,#b0a07a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">Lolita</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Nabokov</span></div>
-                    <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#7ac0d0,#8ad0e0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.7);">Moby Dick</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.35);">Melville</span></div>
-                    <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#2a2a2a,#3a3a3a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.8);">On the Origin of Species</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.35);">Darwin</span></div>
-                    <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#5a8a3a,#6a9a4a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">One Flew Over the Cuckoo's Nest</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Kesey</span></div>
-                    <div class="showcase-spine" style="height:18px;background:linear-gradient(90deg,#c8ba90,#d8caa0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">Principles</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Dalio</span></div>
-                    <div class="showcase-spine" style="height:13px;background:linear-gradient(90deg,#c8a050,#d8b060);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.7);">Steppenwolf</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.35);">Hesse</span></div>
-                    <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#8a7a6a,#9a8a7a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">The Grapes of Wrath</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Steinbeck</span></div>
-                    <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#d85a5a,#e86a6a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">The Subtle Art</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Manson</span></div>
+            <div class="showcase-sidebar">
+                <div class="showcase-copy">
+                    <div class="showcase-kicker">Library Views</div>
+                    <h2 class="showcase-title">Your library, three ways.</h2>
+                    <p class="showcase-description" id="showcase-description">Browse the same collection as a living shelf, a crisp cover grid, or a spinning globe you can step into.</p>
+                </div>
+                <div class="showcase-meta">
+                    <div class="showcase-tabs" role="tablist" aria-label="Shelvd library views">
+                        <button class="showcase-tab is-active" type="button" role="tab" aria-selected="true" data-showcase-tab="shelf">Shelf</button>
+                        <button class="showcase-tab" type="button" role="tab" aria-selected="false" data-showcase-tab="grid">Grid</button>
+                        <button class="showcase-tab" type="button" role="tab" aria-selected="false" data-showcase-tab="globe">Globe</button>
+                    </div>
+                    <div class="showcase-mode" id="showcase-mode-copy">Now viewing <strong>Shelf</strong></div>
+                    <a href="/index.html" class="showcase-cta">Open the full library</a>
                 </div>
             </div>
-            <div class="showcase-label">Your shelf, in 3D</div>
+            <div class="showcase-viewport">
+                <div class="showcase-scene showcase-stack-scene is-active" data-showcase-scene="shelf">
+                    <div class="showcase-stack-wrapper">
+                        <div class="showcase-stack" id="showcase-stack">
+                            <div class="showcase-spine" style="height:22px;background:linear-gradient(90deg,#8b7355,#a0845c);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Dune</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Herbert</span></div>
+                            <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#c4b8a0,#d4c8b0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">El Almuerzo Desnudo</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Burroughs</span></div>
+                            <div class="showcase-spine" style="height:15px;background:linear-gradient(90deg,#bfb8a8,#d0c8b8);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">El Amor en los Tiempos del Colera</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Garcia Marquez</span></div>
+                            <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#5a6e5a,#6d856d);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">El Cisne Negro</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Taleb</span></div>
+                            <div class="showcase-spine" style="height:13px;background:linear-gradient(90deg,#9e3b3b,#b54545);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">El Club de la Lucha</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Palahniuk</span></div>
+                            <div class="showcase-spine" style="height:15px;background:linear-gradient(90deg,#8a7a6a,#9a8a7a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">El Corazon de las Tinieblas</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Conrad</span></div>
+                            <div class="showcase-spine" style="height:12px;background:linear-gradient(90deg,#c8bca8,#d8ccb8);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">El Principito</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Saint-Exupery</span></div>
+                            <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#a09080,#b0a090);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">El Retrato de Dorian Gray</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Wilde</span></div>
+                            <div class="showcase-spine" style="height:22px;background:linear-gradient(90deg,#7a8a5a,#8a9a6a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Empire of Pain</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Keefe</span></div>
+                            <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#a0946e,#b0a47e);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">En el Camino</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Kerouac</span></div>
+                            <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#c4b090,#d4c0a0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">Factfulness</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Rosling</span></div>
+                            <div class="showcase-spine" style="height:13px;background:linear-gradient(90deg,#c85a3a,#d86a4a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Fahrenheit 451</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Bradbury</span></div>
+                            <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#8a7a5a,#9a8a6a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Grandes Esperanzas</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Dickens</span></div>
+                            <div class="showcase-spine" style="height:24px;background:linear-gradient(90deg,#6b7ba3,#8090b8);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Gravity's Rainbow</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Pynchon</span></div>
+                            <div class="showcase-spine" style="height:22px;background:linear-gradient(90deg,#c4a882,#d4b892);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">Gray's Anatomy</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Gray</span></div>
+                            <div class="showcase-spine" style="height:18px;background:linear-gradient(90deg,#6a8a6a,#7a9a7a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Libertad</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Franzen</span></div>
+                            <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#a0906a,#b0a07a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">Lolita</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Nabokov</span></div>
+                            <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#7ac0d0,#8ad0e0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.7);">Moby Dick</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.35);">Melville</span></div>
+                            <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#2a2a2a,#3a3a3a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.8);">On the Origin of Species</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.35);">Darwin</span></div>
+                            <div class="showcase-spine" style="height:16px;background:linear-gradient(90deg,#5a8a3a,#6a9a4a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">One Flew Over the Cuckoo's Nest</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Kesey</span></div>
+                            <div class="showcase-spine" style="height:18px;background:linear-gradient(90deg,#c8ba90,#d8caa0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">Principles</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Dalio</span></div>
+                            <div class="showcase-spine" style="height:13px;background:linear-gradient(90deg,#c8a050,#d8b060);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.7);">Steppenwolf</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.35);">Hesse</span></div>
+                            <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#8a7a6a,#9a8a7a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">The Grapes of Wrath</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Steinbeck</span></div>
+                            <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#d85a5a,#e86a6a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">The Subtle Art</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Manson</span></div>
+                            <div class="showcase-spine" style="height:22px;background:linear-gradient(90deg,#8b7355,#a0845c);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">Dune</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Herbert</span></div>
+                            <div class="showcase-spine" style="height:14px;background:linear-gradient(90deg,#c4b8a0,#d4c8b0);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">El Almuerzo Desnudo</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Burroughs</span></div>
+                            <div class="showcase-spine" style="height:15px;background:linear-gradient(90deg,#bfb8a8,#d0c8b8);"><span class="showcase-spine-title" style="color:rgba(0,0,0,0.65);">El Amor en los Tiempos del Colera</span><span class="showcase-spine-author" style="color:rgba(0,0,0,0.3);">Garcia Marquez</span></div>
+                            <div class="showcase-spine" style="height:20px;background:linear-gradient(90deg,#5a6e5a,#6d856d);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">El Cisne Negro</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Taleb</span></div>
+                            <div class="showcase-spine" style="height:13px;background:linear-gradient(90deg,#9e3b3b,#b54545);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.9);">El Club de la Lucha</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.45);">Palahniuk</span></div>
+                            <div class="showcase-spine" style="height:15px;background:linear-gradient(90deg,#8a7a6a,#9a8a7a);"><span class="showcase-spine-title" style="color:rgba(255,255,255,0.85);">El Corazon de las Tinieblas</span><span class="showcase-spine-author" style="color:rgba(255,255,255,0.4);">Conrad</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="showcase-scene showcase-grid-scene" data-showcase-scene="grid">
+                    <div class="showcase-grid">
+                        <article class="showcase-cover" style="background:linear-gradient(180deg,#1f263f,#5667a3);--offset:-14px;">
+                            <span class="showcase-cover-kicker">Shelvd Grid</span>
+                            <span class="showcase-cover-title">The Left Hand of Darkness</span>
+                            <span class="showcase-cover-author">Le Guin</span>
+                        </article>
+                        <article class="showcase-cover" style="background:linear-gradient(180deg,#7f2f2f,#c95858);--offset:8px;">
+                            <span class="showcase-cover-kicker">Shelvd Grid</span>
+                            <span class="showcase-cover-title">Just Kids</span>
+                            <span class="showcase-cover-author">Patti Smith</span>
+                        </article>
+                        <article class="showcase-cover" style="background:linear-gradient(180deg,#8e7753,#d9b178);--offset:-10px;">
+                            <span class="showcase-cover-kicker">Shelvd Grid</span>
+                            <span class="showcase-cover-title">Ficciones</span>
+                            <span class="showcase-cover-author">Borges</span>
+                        </article>
+                        <article class="showcase-cover" style="background:linear-gradient(180deg,#2c4932,#5d8b67);--offset:16px;">
+                            <span class="showcase-cover-kicker">Shelvd Grid</span>
+                            <span class="showcase-cover-title">The Savage Detectives</span>
+                            <span class="showcase-cover-author">Bolano</span>
+                        </article>
+                        <article class="showcase-cover" style="background:linear-gradient(180deg,#3f3f3f,#929292);--offset:18px;">
+                            <span class="showcase-cover-kicker">Shelvd Grid</span>
+                            <span class="showcase-cover-title">Play It As It Lays</span>
+                            <span class="showcase-cover-author">Didion</span>
+                        </article>
+                        <article class="showcase-cover" style="background:linear-gradient(180deg,#0f4560,#3da2c9);--offset:-6px;">
+                            <span class="showcase-cover-kicker">Shelvd Grid</span>
+                            <span class="showcase-cover-title">Moby Dick</span>
+                            <span class="showcase-cover-author">Melville</span>
+                        </article>
+                        <article class="showcase-cover" style="background:linear-gradient(180deg,#5b3d5f,#9c6daa);--offset:12px;">
+                            <span class="showcase-cover-kicker">Shelvd Grid</span>
+                            <span class="showcase-cover-title">Beloved</span>
+                            <span class="showcase-cover-author">Morrison</span>
+                        </article>
+                        <article class="showcase-cover" style="background:linear-gradient(180deg,#8b6d45,#ddbc7f);--offset:-18px;">
+                            <span class="showcase-cover-kicker">Shelvd Grid</span>
+                            <span class="showcase-cover-title">Stoner</span>
+                            <span class="showcase-cover-author">Williams</span>
+                        </article>
+                    </div>
+                </div>
+                <div class="showcase-scene showcase-globe-scene" data-showcase-scene="globe">
+                    <div class="showcase-globe-stage" id="showcase-globe-stage" aria-label="Interactive globe library demo">
+                        <div class="showcase-globe-core" aria-hidden="true"></div>
+                        <div class="showcase-globe-books" id="showcase-globe-books">
+                            <article class="showcase-globe-book" style="background:linear-gradient(180deg,#6b7ba3,#8090b8);">
+                                <span class="showcase-globe-book-kicker">Orbit</span>
+                                <span class="showcase-globe-book-title">Gravity's Rainbow</span>
+                                <span class="showcase-globe-book-author">Pynchon</span>
+                            </article>
+                            <article class="showcase-globe-book" style="background:linear-gradient(180deg,#9e3b3b,#c64a4a);">
+                                <span class="showcase-globe-book-kicker">Orbit</span>
+                                <span class="showcase-globe-book-title">Fight Club</span>
+                                <span class="showcase-globe-book-author">Palahniuk</span>
+                            </article>
+                            <article class="showcase-globe-book" style="background:linear-gradient(180deg,#2b3e72,#5876ce);">
+                                <span class="showcase-globe-book-kicker">Orbit</span>
+                                <span class="showcase-globe-book-title">The Waves</span>
+                                <span class="showcase-globe-book-author">Woolf</span>
+                            </article>
+                            <article class="showcase-globe-book" style="background:linear-gradient(180deg,#476046,#6f8d70);">
+                                <span class="showcase-globe-book-kicker">Orbit</span>
+                                <span class="showcase-globe-book-title">Labyrinths</span>
+                                <span class="showcase-globe-book-author">Borges</span>
+                            </article>
+                            <article class="showcase-globe-book" style="background:linear-gradient(180deg,#8d6f47,#c29b65);">
+                                <span class="showcase-globe-book-kicker">Orbit</span>
+                                <span class="showcase-globe-book-title">Stoner</span>
+                                <span class="showcase-globe-book-author">Williams</span>
+                            </article>
+                            <article class="showcase-globe-book" style="background:linear-gradient(180deg,#0f5364,#2ca1c3);">
+                                <span class="showcase-globe-book-kicker">Orbit</span>
+                                <span class="showcase-globe-book-title">Bluets</span>
+                                <span class="showcase-globe-book-author">Nelson</span>
+                            </article>
+                            <article class="showcase-globe-book" style="background:linear-gradient(180deg,#63336b,#a15cb5);">
+                                <span class="showcase-globe-book-kicker">Orbit</span>
+                                <span class="showcase-globe-book-title">Beloved</span>
+                                <span class="showcase-globe-book-author">Morrison</span>
+                            </article>
+                            <article class="showcase-globe-book" style="background:linear-gradient(180deg,#3f3f3f,#7a7a7a);">
+                                <span class="showcase-globe-book-kicker">Orbit</span>
+                                <span class="showcase-globe-book-title">Didion</span>
+                                <span class="showcase-globe-book-author">Essays</span>
+                            </article>
+                            <article class="showcase-globe-book" style="background:linear-gradient(180deg,#7c5b36,#ba9262);">
+                                <span class="showcase-globe-book-kicker">Orbit</span>
+                                <span class="showcase-globe-book-title">Dune</span>
+                                <span class="showcase-globe-book-author">Herbert</span>
+                            </article>
+                            <article class="showcase-globe-book" style="background:linear-gradient(180deg,#1e5836,#4d9c68);">
+                                <span class="showcase-globe-book-kicker">Orbit</span>
+                                <span class="showcase-globe-book-title">Open Veins</span>
+                                <span class="showcase-globe-book-author">Galeano</span>
+                            </article>
+                        </div>
+                        <div class="showcase-globe-hint">
+                            <span>Drag to rotate. Enter to move inside the orbit.</span>
+                            <button class="showcase-globe-enter" type="button" id="showcase-globe-enter">Enter globe</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -1949,6 +2468,48 @@
         window.addEventListener('resize', init);
     });
 
+    const showcaseViewCopy = {
+        shelf: {
+            mode: 'Shelf',
+            description: 'Scroll the shelf as a physical stack of spines, with the library behaving more like furniture than a list.'
+        },
+        grid: {
+            mode: 'Grid',
+            description: 'Switch to a visual atlas of covers when you want recognition, browsing speed, and a clean overview of the whole collection.'
+        },
+        globe: {
+            mode: 'Globe',
+            description: 'Spin the library in space, then move inside the orbit to feel books circling around you like a navigable memory map.'
+        }
+    };
+
+    const showcaseTabs = Array.from(document.querySelectorAll('[data-showcase-tab]'));
+    const showcaseScenes = Array.from(document.querySelectorAll('[data-showcase-scene]'));
+    const showcaseModeCopy = document.getElementById('showcase-mode-copy');
+    const showcaseDescription = document.getElementById('showcase-description');
+
+    function setShowcaseView(view) {
+        showcaseTabs.forEach((tab) => {
+            const isActive = tab.dataset.showcaseTab === view;
+            tab.classList.toggle('is-active', isActive);
+            tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+
+        showcaseScenes.forEach((scene) => {
+            scene.classList.toggle('is-active', scene.dataset.showcaseScene === view);
+        });
+
+        const copy = showcaseViewCopy[view];
+        if (copy && showcaseModeCopy && showcaseDescription) {
+            showcaseModeCopy.innerHTML = `Now viewing <strong>${copy.mode}</strong>`;
+            showcaseDescription.textContent = copy.description;
+        }
+    }
+
+    showcaseTabs.forEach((tab) => {
+        tab.addEventListener('click', () => setShowcaseView(tab.dataset.showcaseTab));
+    });
+
     // Apply messy rotations and offsets to showcase spines
     const showcaseSpines = document.querySelectorAll('.showcase-spine');
     showcaseSpines.forEach((spine, i) => {
@@ -1959,6 +2520,106 @@
         const widthVariance = 85 + Math.random() * 15; // 85% to 100%
         spine.style.width = widthVariance + '%';
     });
+
+    const globeScene = document.querySelector('[data-showcase-scene="globe"]');
+    const globeStage = document.getElementById('showcase-globe-stage');
+    const globeBooks = Array.from(document.querySelectorAll('.showcase-globe-book'));
+    const globeEnterBtn = document.getElementById('showcase-globe-enter');
+
+    if (globeScene && globeStage && globeBooks.length) {
+        let rotationY = -0.35;
+        let rotationX = 0.18;
+        let targetRotationY = rotationY;
+        let targetRotationX = rotationX;
+        let dragging = false;
+        let pointerId = null;
+        let lastPointerX = 0;
+        let lastPointerY = 0;
+        let insideMode = false;
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        function clamp(value, min, max) {
+            return Math.min(max, Math.max(min, value));
+        }
+
+        function updateGlobeBooks(time) {
+            const stageRect = globeStage.getBoundingClientRect();
+            const radiusBase = Math.min(stageRect.width, stageRect.height) * (insideMode ? 0.19 : 0.29);
+            const depthBase = Math.min(stageRect.width, stageRect.height) * (insideMode ? 0.26 : 0.2);
+
+            globeBooks.forEach((book, index) => {
+                const angle = (index / globeBooks.length) * Math.PI * 2 + rotationY + time * (insideMode ? 0.00036 : 0.00022);
+                const elevation = Math.sin(index * 1.7 + rotationX * 2.1 + time * 0.00045) * (insideMode ? 90 : 54);
+                const x = Math.cos(angle) * radiusBase;
+                const z = Math.sin(angle) * depthBase;
+                const y = Math.sin(angle * 1.4 + rotationX) * 42 + elevation * 0.38;
+                const depthNorm = (z + depthBase) / (depthBase * 2);
+                const scale = insideMode ? 0.92 + depthNorm * 0.82 : 0.72 + depthNorm * 0.52;
+                const opacity = insideMode ? 0.42 + depthNorm * 0.82 : 0.26 + depthNorm * 0.8;
+                const rotateY = -angle + (insideMode ? Math.PI : 0);
+
+                book.style.transform = `translate3d(${x}px, ${y}px, 0) rotateY(${rotateY}rad) rotateX(${rotationX * 0.65}rad) scale(${scale})`;
+                book.style.opacity = opacity.toFixed(3);
+                book.style.zIndex = String(Math.round(depthNorm * 100));
+                book.style.filter = `blur(${((1 - depthNorm) * (insideMode ? 1.6 : 0.8)).toFixed(2)}px)`;
+            });
+        }
+
+        function animateGlobe(time) {
+            if (!dragging && !prefersReducedMotion) {
+                targetRotationY += insideMode ? 0.0022 : 0.0012;
+            }
+
+            rotationY += (targetRotationY - rotationY) * 0.08;
+            rotationX += (targetRotationX - rotationX) * 0.08;
+            updateGlobeBooks(time);
+            requestAnimationFrame(animateGlobe);
+        }
+
+        function onPointerMove(event) {
+            if (!dragging || event.pointerId !== pointerId) return;
+            const dx = event.clientX - lastPointerX;
+            const dy = event.clientY - lastPointerY;
+            lastPointerX = event.clientX;
+            lastPointerY = event.clientY;
+            targetRotationY += dx * 0.008;
+            targetRotationX = clamp(targetRotationX + dy * 0.004, -0.85, 0.85);
+        }
+
+        function stopDragging(event) {
+            if (event.pointerId !== pointerId) return;
+            dragging = false;
+            pointerId = null;
+            globeStage.classList.remove('is-dragging');
+        }
+
+        globeStage.addEventListener('pointerdown', (event) => {
+            dragging = true;
+            pointerId = event.pointerId;
+            lastPointerX = event.clientX;
+            lastPointerY = event.clientY;
+            globeStage.classList.add('is-dragging');
+            globeStage.setPointerCapture(event.pointerId);
+        });
+
+        globeStage.addEventListener('pointermove', onPointerMove);
+        globeStage.addEventListener('pointerup', stopDragging);
+        globeStage.addEventListener('pointercancel', stopDragging);
+        globeStage.addEventListener('pointerleave', (event) => {
+            if (dragging && event.pointerId === pointerId) stopDragging(event);
+        });
+
+        if (globeEnterBtn) {
+            globeEnterBtn.addEventListener('click', () => {
+                insideMode = !insideMode;
+                globeScene.classList.toggle('is-inside', insideMode);
+                globeEnterBtn.textContent = insideMode ? 'Exit globe' : 'Enter globe';
+            });
+        }
+
+        updateGlobeBooks(0);
+        requestAnimationFrame(animateGlobe);
+    }
 
     // ── Hero eyebrow: one-shot typing ──
     const heroEyebrow = document.getElementById('hero-eyebrow');
