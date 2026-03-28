@@ -1181,13 +1181,12 @@
             padding: 58px 16px 26px;
             display: flex;
             align-items: center;
-            justify-content: flex-start;
-            overflow: hidden;
+            justify-content: center;
         }
 
         .showcase-grid-real {
-            width: max-content;
-            display: inline-flex;
+            width: 100%;
+            display: flex;
             gap: 14px;
             align-items: flex-start;
             will-change: transform;
@@ -1196,7 +1195,7 @@
 
         @keyframes showcaseGridMarquee {
             0% { transform: translateX(0); }
-            100% { transform: translateX(calc(-50% - 7px)); }
+            100% { transform: translateX(-50%); }
         }
 
         .showcase-grid-book {
@@ -2479,7 +2478,7 @@ function populateGrid() {
     const grid = document.getElementById('showcase-grid-real');
     if (!grid) return;
 
-    const marqueeBooks = [...showcaseBooks, ...showcaseBooks];
+    const marqueeBooks = [...showcaseBooks, ...showcaseBooks, ...showcaseBooks];
 
     grid.innerHTML = marqueeBooks.map((book) => {
         const palette = generateBookColor(book.title);
