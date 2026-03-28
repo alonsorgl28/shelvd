@@ -1181,12 +1181,13 @@
             padding: 58px 16px 26px;
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
+            overflow: hidden;
         }
 
         .showcase-grid-real {
             width: max-content;
-            display: flex;
+            display: inline-flex;
             gap: 14px;
             align-items: flex-start;
             will-change: transform;
@@ -1195,7 +1196,7 @@
 
         @keyframes showcaseGridMarquee {
             0% { transform: translateX(0); }
-            100% { transform: translateX(-33.3333%); }
+            100% { transform: translateX(calc(-50% - 7px)); }
         }
 
         .showcase-grid-book {
@@ -1764,6 +1765,7 @@
         <canvas class="showcase-canvas" aria-hidden="true"></canvas>
         <div class="showcase-inner" style="grid-template-areas: 'shelf grid';">
             <section class="showcase-panel showcase-panel-shelf">
+                <div class="showcase-label">Shelf</div>
                 <div class="showcase-stack-scene">
                     <div class="showcase-stack-wrapper">
                         <div class="showcase-stack" id="showcase-stack">
@@ -2477,7 +2479,7 @@ function populateGrid() {
     const grid = document.getElementById('showcase-grid-real');
     if (!grid) return;
 
-    const marqueeBooks = [...showcaseBooks, ...showcaseBooks, ...showcaseBooks];
+    const marqueeBooks = [...showcaseBooks, ...showcaseBooks];
 
     grid.innerHTML = marqueeBooks.map((book) => {
         const palette = generateBookColor(book.title);
