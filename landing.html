@@ -226,6 +226,8 @@
             display: flex;
             gap: 12px;
             align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         .btn-primary {
@@ -308,6 +310,72 @@
             stroke-width: 2.5;
             stroke-linecap: round;
             stroke-linejoin: round;
+        }
+
+        .btn-download-mac {
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 248px;
+            padding: 10px 18px 10px 14px;
+            border: 1px solid rgba(0,0,0,0.12);
+            border-radius: 22px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(242,242,242,0.96));
+            color: #111111;
+            cursor: pointer;
+            box-shadow: 0 16px 40px rgba(20,26,46,0.08), inset 0 1px 0 rgba(255,255,255,0.85);
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s ease, box-shadow 0.25s ease;
+        }
+
+        .btn-download-mac:hover {
+            transform: translateY(-1px) scale(1.02);
+            border-color: rgba(0,0,0,0.2);
+            box-shadow: 0 18px 48px rgba(20,26,46,0.12), inset 0 1px 0 rgba(255,255,255,0.92);
+        }
+
+        .btn-download-mac:active {
+            transform: scale(0.985);
+        }
+
+        .btn-download-mac-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #141a2e;
+            color: #ffffff;
+            box-shadow: 0 10px 24px rgba(20,26,46,0.18);
+            flex: 0 0 auto;
+        }
+
+        .btn-download-mac-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .btn-download-mac-copy {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+            text-align: left;
+        }
+
+        .btn-download-mac-kicker {
+            font-size: 10px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: rgba(0,0,0,0.36);
+        }
+
+        .btn-download-mac-label {
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            color: #111111;
         }
 
         /* ── Brand Reveal Section ── */
@@ -1157,9 +1225,14 @@
                 max-width: 300px;
             }
 
-            .btn-primary, .btn-secondary {
+            .btn-primary, .btn-secondary, .btn-download-mac {
                 width: 100%;
                 justify-content: center;
+            }
+
+            .btn-download-mac-copy {
+                align-items: center;
+                text-align: center;
             }
 
             .cta-section { padding: 100px 20px; }
@@ -1221,6 +1294,17 @@
             <span>Start your shelf</span>
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
         </a>
+        <button type="button" class="btn-download-mac" aria-label="Download for macOS">
+            <span class="btn-download-mac-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M16.37 12.22c.02 2.12 1.86 2.83 1.88 2.84-.02.05-.29.98-.95 1.95-.57.83-1.16 1.66-2.09 1.68-.91.02-1.2-.54-2.24-.54-1.04 0-1.37.52-2.23.56-.9.03-1.58-.9-2.15-1.73-1.16-1.67-2.05-4.72-.86-6.79.59-1.03 1.65-1.68 2.81-1.7.88-.02 1.7.6 2.23.6.53 0 1.53-.74 2.58-.63.44.02 1.67.18 2.46 1.33-.06.04-1.47.86-1.44 2.43Zm-1.98-5.42c.47-.57.79-1.37.71-2.16-.68.03-1.5.45-1.99 1.01-.44.5-.83 1.31-.72 2.09.76.06 1.53-.39 2-.94Z"/>
+                </svg>
+            </span>
+            <span class="btn-download-mac-copy">
+                <span class="btn-download-mac-kicker">Desktop app</span>
+                <span class="btn-download-mac-label">Download for macOS</span>
+            </span>
+        </button>
         <a href="#features" class="btn-secondary">
             See how it works
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="8 12 12 16 16 12"/></svg>
